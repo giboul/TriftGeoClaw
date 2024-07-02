@@ -73,7 +73,7 @@ c      endif
             q(2,1-ibc) = q0
          else if (t < 10) then
             q(1,1-ibc) = h0*(10-t)/5
-            q(2,1-ibc) = q0*(10-t)/5
+            q(2,1-ibc) = q0*((10-t)/5)**2
          else
             q(1,1-ibc) = 0
             q(2,1-ibc) = 0

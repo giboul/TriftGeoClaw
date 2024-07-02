@@ -25,7 +25,7 @@ ax.set_ylabel(r'$h(x, t)$')
 # Function for water line udpating
 def update(i):
     frame = solution.Solution(i, path=dir, file_format='ascii')
-    h  = frame.state.q[0]
+    h = frame.state.q[0]
     water.set_data(x, h+s)
     water.set_label(rf"$ t = {frame.t:.1f}$ s")
     ax.legend(loc='upper right')
@@ -33,11 +33,15 @@ def update(i):
     fig.canvas.flush_events()
 # Animate
 anim = FuncAnimation(fig, update, frames=len(files), interval=500/len(files))
-if True:
+if False:
     plt.show()
-elif False:
+elif True:
     anim.save("movie.gif", fps=len(files)/5, dpi=100)
 else:
-
+    del anim
+    nstr = len(str(len(files)))
     for i, f in enumerate(files):
-        anim.save()
+        update(i)
+        print(f"\rSaving _plots/fig{i:>0{nstr}}.svg...", end="")
+        fig.savefig(f"_plots/fig{i:>0{nstr}}.svg")
+    print("\nFigures saved")

@@ -72,8 +72,10 @@ include $(CLAWMAKE)
 topo:
 	$(CLAW_PYTHON) make_topo.py
 
+fmt ?= show
+dpi ?= None
 plots:
-	$(CLAW_PYTHON) reading.py
+	$(CLAW_PYTHON) reading.py --fmt $(fmt) --dpi $(dpi)
 
 all: 
 	$(MAKE) topo

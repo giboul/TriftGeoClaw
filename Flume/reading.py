@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -33,15 +34,29 @@ def update(i):
     fig.canvas.flush_events()
 # Animate
 anim = FuncAnimation(fig, update, frames=len(files), interval=500/len(files))
-if False:
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--fmt')
+parser.add_argument('--dpi')
+args = parser.parse_args()
+fmt = args.fmt
+dpi = eval(args.dpi)
+
+if fmt == "show":
     plt.show()
-elif True:
-    anim.save("movie.gif", fps=len(files)/5, dpi=100)
-else:
+
+elif fmt in ["png", "svg", "pdf", "jpg", "jpeg"]:
     del anim
+    Path("_plots").mkdir(exist_ok=True)
     nstr = len(str(len(files)))
     for i, f in enumerate(files):
         update(i)
-        print(f"\rSaving _plots/fig{i:>0{nstr}}.svg...", end="")
-        fig.savefig(f"_plots/fig{i:>0{nstr}}.svg")
-    print("\nFigures saved")
+        print(f"\rSaving _plots/fig{i:>0{nstr}}.{fmt} ...", end="")
+        fig.savefig(f"_plots/fig{i:>0{nstr}}.{fmt}", dpi=dpi)
+    print("\nFigures saved.")
+
+elif fmt in ["gif", "mp4"]:
+    anim.save(f"movie.{fmt}", fps=len(files)/5, dpi=dpi)
+
+else:
+    print(f"Is the {fmt} format supported?")

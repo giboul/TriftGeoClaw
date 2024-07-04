@@ -29,7 +29,7 @@ def gdaltranslate() -> None:
 
     xRes = yRes = 10
     # Temporary directory
-    ifile = Path("..")/".."/"qgis-trift"/"swissALTI3D_merged.tif"
+    ifile = Path("..")/"swissALTI3D_merged.tif"
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 

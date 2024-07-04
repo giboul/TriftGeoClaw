@@ -1,58 +1,6 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Data files
-*.data
-!AVAC/voellmy.data
-
-# Output files
-*.output
-*.plots
-*.html
-*.pyc
-_output
-_plots
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# Topography files
-*.xyz
-*.asc
-*.tif
-
-# Logs
-*.log
-
-# Executable
-xgeo*
+*
+!*.md
+!*.py
+!*.f*
+!Makefile
+!*.gif

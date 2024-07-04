@@ -1,6 +1,6 @@
 *
-!*.md
-!*.py
-!*.f*
-!Makefile
-!*.gif
+!*/*.md
+!*/*.py
+!*/*.f*
+!*/*Makefile
+!*/**.gif

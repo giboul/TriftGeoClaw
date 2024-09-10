@@ -21,11 +21,6 @@ PLOTDIR = _plots               # Directory for plots
 
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
-# Compiler flags can be specified here or set as an environment variable
-FFLAGS ?=-O2 -fopenmp
-OMP_NUM_THREADS=8
-
-
 # ---------------------------------
 # package sources for this program:
 # ---------------------------------
@@ -68,7 +63,7 @@ topo:
 	$(CLAW_PYTHON) maketopo.py
 
 movie:
-	$(CLAW_PYTHON) ../Tsunami/movie.py
+	$(CLAW_PYTHON) ../movie.py
 
 all: 
 	$(MAKE) topo

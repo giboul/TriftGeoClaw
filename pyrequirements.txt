@@ -1,5 +1,5 @@
--e git+https://github.com/clawpack/clawpack.git@f14729a399cc2cf55cf36c94c436394a8f316e08#egg=Clawpack
+# https://github.com/clawpack/clawpack.git@v5.11.0#egg=clawpack
 GDAL==3.4.1
 matplotlib==3.7.0
-numpy==1.25.0
+numpy==1.26.4
 meson-python==0.16.0

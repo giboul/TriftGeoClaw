@@ -54,9 +54,11 @@ include $(CLAWMAKE)
 .PHONY: topo all
 topo:
 	$(CLAW_PYTHON) maketopo.py
-
+test:
+	@echo $(FFLAGS)
+	@echo OMP=$(OMP_NUM_THREADS) 
 movie:
-	$(CLAW_PYTHON) movie.py
+	$(CLAW_PYTHON) ../movie.py
 
 all: 
 	$(MAKE) clobber

@@ -1,6 +1,6 @@
 # TODO
 - [x] Traiter les données de Gruner pour en tirer une topographie utilisable et assez légère pour des calculs rapides.
-- [x] Installer Clawpack correctement (5.9.0). La version 5.9.2 ne résout pas les équations de Boussinesq et la 5.10.0 exige la librairie PETSC.
+- [x] Installer Clawpack correctement (5.9.0).
 - [x] Simuler une première vague depuis un champ de vitesse ou de hauteur initial.
 - [x] Simuler une première avalanche avec AVAC.
 - [ ] Introduire la quantité de mouvement par les conditions de bord et non par la solution initiale.

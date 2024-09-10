@@ -1,4 +1,4 @@
-# pip install --src=$HOME/clawpack --no-build-isolation -e git+https://github.com/clawpack/clawpack.git@v5.11.0#egg=clawpack
+# pip install --src=$HOME --no-build-isolation -e git+https://github.com/clawpack/clawpack.git@v5.11.0#egg=clawpack
 GDAL==3.4.1
 matplotlib==3.7.0
 numpy==1.26.4

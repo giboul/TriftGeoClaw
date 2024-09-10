@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Script for generating the topography file and the extents.
 

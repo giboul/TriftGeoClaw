@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from PIL import Image
 from glob import glob
 import argparse

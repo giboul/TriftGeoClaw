@@ -67,6 +67,9 @@ include $(CLAWMAKE)
 topo:
 	$(CLAW_PYTHON) maketopo.py
 
+movie:
+	$(CLAW_PYTHON) ../Tsunami/movie.py
+
 all: 
 	$(MAKE) topo
 	$(MAKE) data

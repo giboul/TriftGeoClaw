@@ -1,5 +1,4 @@
-
-
+#!/usr/bin/env python
 import os, sys
 from clawpack.visclaw import geoplot
 from clawpack.geoclaw.nonuniform_grid_tools import make_mapc2p

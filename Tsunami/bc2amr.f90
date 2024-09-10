@@ -133,8 +133,7 @@ case(0) ! User defined boundary condition
         aux(:, i, j) = aux(:, nxl + 1, j)
         val(:, i, j) = val(:, nxl + 1, j)
         if (ylo_patch>0.5 .and. yhi_patch<2.0 .and. time<1000) then
-          print *, "Introducing avalanche !!", xlo_patch, ylo_patch
-          print *, aux(:, i, j)
+          print *, "# Introducing avalanche", xlo_patch, ylo_patch
           aux(2, i, j) = aux(2, i, j) + 10000000000.
           val(2, i, j) = val(2, i, j) + 0.002 ! Normal speed
           ! val(3, i, j) = val(3, i, j) + 0.005 ! TODO WHAT DO WE DO for height

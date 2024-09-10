@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Module to set up run time parameters for Clawpack.
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Script for generating the topography file and the extents.
 
@@ -9,7 +10,7 @@ Currently
 """
 from pathlib import Path
 from shutil import rmtree
-from osgeo.gdal import Open, Translate, Warp
+from osgeo.gdal import UseExceptions, Open, Translate, Warp
 
 import numpy as np
 from clawpack.geoclaw.topotools import Topography
@@ -52,6 +53,8 @@ cystop  = cystop  - ystart
 
 
 def gdaltranslate() -> None:
+
+    UseExceptions()
 
     xRes = yRes = 10
     # Temporary directory

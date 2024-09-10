@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 xlower = 0
 x_A    = 100.
 xupper = 400.

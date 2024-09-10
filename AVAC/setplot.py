@@ -1,4 +1,4 @@
-#!~/.virtualenvs/claw/bin/python
+#!/usr/bin/env python
 """ 
 Set up the plot figures, axes, and items to be done for each frame.
 

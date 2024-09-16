@@ -1,0 +1,784 @@
+Gridding level   1 at t =  0.000000E+00:     1 grids with        2500 cells
+  max threads set to            4
+
+ amrclaw parameters:
+
+ error tol            -0.10000E+01
+ spatial error tol     0.50000E-01
+ order of integrator             2
+ error checking interval         1
+ buffer zone size                1
+ nghost                          2
+ volume ratio cutoff   0.70000E+00
+ max. refinement level           3
+ user sub. calling times 999999999
+ cfl # (if var. delt)  0.75000E+00
+
+ xupper(upper corner)  0.15000E+01
+ yupper(upper corner)  0.15000E+01
+ xlower(lower corner) -0.15000E+01
+ ylower(lower corner) -0.15000E+01
+ nx = no. cells in x dir.       50
+ ny = no. cells in y dir.       50
+ refinement ratios       
+ refinement ratios:           2    2    0
+ refinement ratios:           2    2    0
+ no. auxiliary vars.             1
+       var     1 of type center    
+ the subtree is
+ +---------------------------------------------------------------------------+
+ ! grid no:     1                                                            !
+ ! nestlevel=  1, time mult=    0.000000000000000E+00, level ptr =     0     !
+ ! storage locs =      17497          1  bndry locs =     256025          0  !
+ ! corners of rectangle:                                                     !
+ !           (  -1.5000000,    1.5000000)(   1.5000000,    1.5000000)        !
+ !           (  -1.5000000,   -1.5000000)(   1.5000000,   -1.5000000)        !
+ ! integer index space :                                                     !
+ !                   (       0,       49)(      49,       49)                !
+ !                   (       0,        0)(      49,        0)                !
+ ! hrow=      0.06000000000, hcol=      0.06000000000, ktime=     0.020318564!
+ +---------------------------------------------------------------------------+
+
+    1 grids at level     1 go from         0        0 to       49       49
+
+ +---------------------------------------------------------------------------+
+ ! grid no:     3                                                            !
+ ! nestlevel=  2, time mult=    0.000000000000000E+00, level ptr =     2     !
+ ! storage locs =      87157      67717  bndry locs =     266242     253693  !
+ ! corners of rectangle:                                                     !
+ !           (   0.0000000,    0.6600000)(   1.5000000,    0.6600000)        !
+ !           (   0.0000000,   -1.0200000)(   1.5000000,   -1.0200000)        !
+ ! integer index space :                                                     !
+ !                   (      50,       71)(      99,       71)                !
+ !                   (      50,       16)(      99,       16)                !
+ ! hrow=      0.03000000000, hcol=      0.03000000000, ktime=     0.010159282!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     2                                                            !
+ ! nestlevel=  2, time mult=    0.000000000000000E+00, level ptr =     0     !
+ ! storage locs =      51517      32077  bndry locs =     268057     254859  !
+ ! corners of rectangle:                                                     !
+ !           (  -1.5000000,    0.6600000)(   0.0000000,    0.6600000)        !
+ !           (  -1.5000000,   -1.0200000)(   0.0000000,   -1.0200000)        !
+ ! integer index space :                                                     !
+ !                   (       0,       71)(      49,       71)                !
+ !                   (       0,       16)(      49,       16)                !
+ ! hrow=      0.03000000000, hcol=      0.03000000000, ktime=     0.010159282!
+ +---------------------------------------------------------------------------+
+
+    2 grids at level     2 go from         0       16 to       99       71
+
+ +---------------------------------------------------------------------------+
+ ! grid no:    11                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     9     !
+ ! storage locs =     234901          0  bndry locs =          0     257090  !
+ ! corners of rectangle:                                                     !
+ !           (   0.7500000,    0.6300000)(   1.5000000,    0.6300000)        !
+ !           (   0.7500000,   -0.1800000)(   1.5000000,   -0.1800000)        !
+ ! integer index space :                                                     !
+ !                   (     150,      141)(     199,      141)                !
+ !                   (     150,       88)(     199,       88)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     9                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =    10     !
+ ! storage locs =     216109          0  bndry locs =          0     258234  !
+ ! corners of rectangle:                                                     !
+ !           (   0.7500000,   -0.1800000)(   1.5000000,   -0.1800000)        !
+ !           (   0.7500000,   -0.9900000)(   1.5000000,   -0.9900000)        !
+ ! integer index space :                                                     !
+ !                   (     150,       87)(     199,       87)                !
+ !                   (     150,       34)(     199,       34)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:    10                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     5     !
+ ! storage locs =     197317          0  bndry locs =          0     259378  !
+ ! corners of rectangle:                                                     !
+ !           (   0.0000000,    0.6300000)(   0.7500000,    0.6300000)        !
+ !           (   0.0000000,   -0.1800000)(   0.7500000,   -0.1800000)        !
+ ! integer index space :                                                     !
+ !                   (     100,      141)(     149,      141)                !
+ !                   (     100,       88)(     149,       88)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     5                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     8     !
+ ! storage locs =     178525          0  bndry locs =          0     260522  !
+ ! corners of rectangle:                                                     !
+ !           (   0.0000000,   -0.1800000)(   0.7500000,   -0.1800000)        !
+ !           (   0.0000000,   -0.9900000)(   0.7500000,   -0.9900000)        !
+ ! integer index space :                                                     !
+ !                   (     100,       87)(     149,       87)                !
+ !                   (     100,       34)(     149,       34)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     8                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     6     !
+ ! storage locs =     159733          0  bndry locs =          0     261666  !
+ ! corners of rectangle:                                                     !
+ !           (  -0.7500000,    0.6300000)(   0.0000000,    0.6300000)        !
+ !           (  -0.7500000,   -0.1800000)(   0.0000000,   -0.1800000)        !
+ ! integer index space :                                                     !
+ !                   (      50,      141)(      99,      141)                !
+ !                   (      50,       88)(      99,       88)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     6                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     7     !
+ ! storage locs =     140941          0  bndry locs =          0     262810  !
+ ! corners of rectangle:                                                     !
+ !           (  -0.7500000,   -0.1800000)(   0.0000000,   -0.1800000)        !
+ !           (  -0.7500000,   -0.9900000)(   0.0000000,   -0.9900000)        !
+ ! integer index space :                                                     !
+ !                   (      50,       87)(      99,       87)                !
+ !                   (      50,       34)(      99,       34)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     7                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     4     !
+ ! storage locs =     122149          0  bndry locs =          0     263954  !
+ ! corners of rectangle:                                                     !
+ !           (  -1.5000000,    0.6300000)(  -0.7500000,    0.6300000)        !
+ !           (  -1.5000000,   -0.1800000)(  -0.7500000,   -0.1800000)        !
+ ! integer index space :                                                     !
+ !                   (       0,      141)(      49,      141)                !
+ !                   (       0,       88)(      49,       88)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+ +---------------------------------------------------------------------------+
+ ! grid no:     4                                                            !
+ ! nestlevel=  3, time mult=    0.000000000000000E+00, level ptr =     0     !
+ ! storage locs =     103357          0  bndry locs =          0     265098  !
+ ! corners of rectangle:                                                     !
+ !           (  -1.5000000,   -0.1800000)(  -0.7500000,   -0.1800000)        !
+ !           (  -1.5000000,   -0.9900000)(  -0.7500000,   -0.9900000)        !
+ ! integer index space :                                                     !
+ !                   (       0,       87)(      49,       87)                !
+ !                   (       0,       34)(      49,       34)                !
+ ! hrow=      0.01500000000, hcol=      0.01500000000, ktime=     0.005079641!
+ +---------------------------------------------------------------------------+
+
+    8 grids at level     3 go from         0       34 to      199      141
+
+   original total mass ...
+time t =  0.00000E+00,  total mass =  0.172360356596600E+01  diff =  0.0000E+00
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.2032E-01  final t = 0.203186E-01
+*** WARNING *** Courant number  =  0.1424D+01  is larger than input cfl_max =   0.1000D+01  on grid   2 level   2
+*** WARNING *** Courant number  =  0.1424D+01  is larger than input cfl_max =   0.1000D+01  on grid   3 level   2
+ AMRCLAW: level  2  CFL = .142E+01  dt = 0.1016E-01  final t = 0.101593E-01
+ AMRCLAW: level  3  CFL = .635E+00  dt = 0.2540E-02  final t = 0.253982E-02
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.2540E-02  final t = 0.507964E-02
+ AMRCLAW: level  3  CFL = .483E+00  dt = 0.2540E-02  final t = 0.761946E-02
+ AMRCLAW: level  3  CFL = .537E+00  dt = 0.2540E-02  final t = 0.101593E-01
+ AMRCLAW: level  2  CFL = .724E+00  dt = 0.5080E-02  final t = 0.152389E-01
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.2540E-02  final t = 0.126991E-01
+ AMRCLAW: level  3  CFL = .523E+00  dt = 0.2540E-02  final t = 0.152389E-01
+ AMRCLAW: level  2  CFL = .390E+00  dt = 0.5080E-02  final t = 0.203186E-01
+ AMRCLAW: level  3  CFL = .490E+00  dt = 0.2540E-02  final t = 0.177787E-01
+ AMRCLAW: level  3  CFL = .527E+00  dt = 0.2540E-02  final t = 0.203186E-01
+time t =  0.20319E-01,  total mass =  0.171715221488981E+01  diff = -0.6451E-02
+ AMRCLAW: level  1  CFL = .767E+00  dt = 0.2032E-01  final t = 0.406371E-01
+ AMRCLAW: level  2  CFL = .525E+00  dt = 0.6773E-02  final t = 0.270914E-01
+ AMRCLAW: level  3  CFL = .572E+00  dt = 0.3386E-02  final t = 0.237050E-01
+ AMRCLAW: level  3  CFL = .529E+00  dt = 0.3386E-02  final t = 0.270914E-01
+ AMRCLAW: level  2  CFL = .708E+00  dt = 0.6773E-02  final t = 0.338643E-01
+ AMRCLAW: level  3  CFL = .533E+00  dt = 0.3386E-02  final t = 0.304778E-01
+ AMRCLAW: level  3  CFL = .525E+00  dt = 0.3386E-02  final t = 0.338643E-01
+ AMRCLAW: level  2  CFL = .720E+00  dt = 0.6773E-02  final t = 0.406371E-01
+ AMRCLAW: level  3  CFL = .686E+00  dt = 0.3386E-02  final t = 0.372507E-01
+ AMRCLAW: level  3  CFL = .523E+00  dt = 0.3386E-02  final t = 0.406371E-01
+time t =  0.40637E-01,  total mass =  0.171616489284947E+01  diff = -0.7439E-02
+ AMRCLAW: level  1  CFL = .760E+00  dt = 0.1986E-01  final t = 0.605007E-01
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6621E-02  final t = 0.472583E-01
+ AMRCLAW: level  3  CFL = .599E+00  dt = 0.3311E-02  final t = 0.439477E-01
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3311E-02  final t = 0.472583E-01
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6621E-02  final t = 0.538795E-01
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3311E-02  final t = 0.505689E-01
+ AMRCLAW: level  3  CFL = .688E+00  dt = 0.3311E-02  final t = 0.538795E-01
+ AMRCLAW: level  2  CFL = .512E+00  dt = 0.6621E-02  final t = 0.605007E-01
+ AMRCLAW: level  3  CFL = .514E+00  dt = 0.3311E-02  final t = 0.571901E-01
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3311E-02  final t = 0.605007E-01
+time t =  0.60501E-01,  total mass =  0.171660391773204E+01  diff = -0.7000E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1959E-01  final t = 0.800905E-01
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6530E-02  final t = 0.670306E-01
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3265E-02  final t = 0.637657E-01
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3265E-02  final t = 0.670306E-01
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6530E-02  final t = 0.735606E-01
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3265E-02  final t = 0.702956E-01
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3265E-02  final t = 0.735606E-01
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6530E-02  final t = 0.800905E-01
+ AMRCLAW: level  3  CFL = .510E+00  dt = 0.3265E-02  final t = 0.768255E-01
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3265E-02  final t = 0.800905E-01
+time t =  0.80091E-01,  total mass =  0.171662708003665E+01  diff = -0.6976E-02
+ AMRCLAW: level  1  CFL = .753E+00  dt = 0.1962E-01  final t = 0.997060E-01
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6538E-02  final t = 0.866290E-01
+ AMRCLAW: level  3  CFL = .526E+00  dt = 0.3269E-02  final t = 0.833598E-01
+ AMRCLAW: level  3  CFL = .676E+00  dt = 0.3269E-02  final t = 0.866290E-01
+ AMRCLAW: level  2  CFL = .512E+00  dt = 0.6538E-02  final t = 0.931675E-01
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3269E-02  final t = 0.898982E-01
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3269E-02  final t = 0.931675E-01
+ AMRCLAW: level  2  CFL = .508E+00  dt = 0.6538E-02  final t = 0.997060E-01
+ AMRCLAW: level  3  CFL = .654E+00  dt = 0.3269E-02  final t = 0.964367E-01
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3269E-02  final t = 0.997060E-01
+time t =  0.99706E-01,  total mass =  0.171655295139862E+01  diff = -0.7051E-02
+ AMRCLAW: level  1  CFL = .113E-01  dt = 0.2940E-03  final t = 0.100000E+00
+ AMRCLAW: level  2  CFL = .227E-01  dt = 0.2940E-03  final t = 0.100000E+00
+ AMRCLAW: level  3  CFL = .460E-01  dt = 0.2940E-03  final t = 0.100000E+00
+time t =  0.10000E+00,  total mass =  0.171655164822990E+01  diff = -0.7052E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1954E-01  final t = 0.119543E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6514E-02  final t = 0.106514E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3257E-02  final t = 0.103257E+00
+ AMRCLAW: level  3  CFL = .547E+00  dt = 0.3257E-02  final t = 0.106514E+00
+ AMRCLAW: level  2  CFL = .669E+00  dt = 0.6514E-02  final t = 0.113029E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3257E-02  final t = 0.109772E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3257E-02  final t = 0.113029E+00
+ AMRCLAW: level  2  CFL = .698E+00  dt = 0.6514E-02  final t = 0.119543E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3257E-02  final t = 0.116286E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3257E-02  final t = 0.119543E+00
+time t =  0.11954E+00,  total mass =  0.171647512521650E+01  diff = -0.7128E-02
+ AMRCLAW: level  1  CFL = .745E+00  dt = 0.1954E-01  final t = 0.139085E+00
+ AMRCLAW: level  2  CFL = .701E+00  dt = 0.6514E-02  final t = 0.126057E+00
+ AMRCLAW: level  3  CFL = .591E+00  dt = 0.3257E-02  final t = 0.122800E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3257E-02  final t = 0.126057E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6514E-02  final t = 0.132571E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3257E-02  final t = 0.129314E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3257E-02  final t = 0.132571E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6514E-02  final t = 0.139085E+00
+ AMRCLAW: level  3  CFL = .655E+00  dt = 0.3257E-02  final t = 0.135828E+00
+ AMRCLAW: level  3  CFL = .653E+00  dt = 0.3257E-02  final t = 0.139085E+00
+time t =  0.13909E+00,  total mass =  0.171655877456955E+01  diff = -0.7045E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1967E-01  final t = 0.158755E+00
+ AMRCLAW: level  2  CFL = .507E+00  dt = 0.6557E-02  final t = 0.145642E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3278E-02  final t = 0.142363E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3278E-02  final t = 0.145642E+00
+ AMRCLAW: level  2  CFL = .507E+00  dt = 0.6557E-02  final t = 0.152199E+00
+ AMRCLAW: level  3  CFL = .510E+00  dt = 0.3278E-02  final t = 0.148920E+00
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3278E-02  final t = 0.152199E+00
+ AMRCLAW: level  2  CFL = .508E+00  dt = 0.6557E-02  final t = 0.158755E+00
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3278E-02  final t = 0.155477E+00
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3278E-02  final t = 0.158755E+00
+time t =  0.15876E+00,  total mass =  0.171667949040071E+01  diff = -0.6924E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1966E-01  final t = 0.178419E+00
+ AMRCLAW: level  2  CFL = .507E+00  dt = 0.6555E-02  final t = 0.165310E+00
+ AMRCLAW: level  3  CFL = .511E+00  dt = 0.3277E-02  final t = 0.162033E+00
+ AMRCLAW: level  3  CFL = .658E+00  dt = 0.3277E-02  final t = 0.165310E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6555E-02  final t = 0.171865E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3277E-02  final t = 0.168587E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3277E-02  final t = 0.171865E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6555E-02  final t = 0.178419E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3277E-02  final t = 0.175142E+00
+ AMRCLAW: level  3  CFL = .678E+00  dt = 0.3277E-02  final t = 0.178419E+00
+time t =  0.17842E+00,  total mass =  0.171675150755967E+01  diff = -0.6852E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1963E-01  final t = 0.198053E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6544E-02  final t = 0.184964E+00
+ AMRCLAW: level  3  CFL = .522E+00  dt = 0.3272E-02  final t = 0.181692E+00
+ AMRCLAW: level  3  CFL = .522E+00  dt = 0.3272E-02  final t = 0.184964E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6544E-02  final t = 0.191508E+00
+ AMRCLAW: level  3  CFL = .678E+00  dt = 0.3272E-02  final t = 0.188236E+00
+ AMRCLAW: level  3  CFL = .646E+00  dt = 0.3272E-02  final t = 0.191508E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6544E-02  final t = 0.198053E+00
+ AMRCLAW: level  3  CFL = .684E+00  dt = 0.3272E-02  final t = 0.194780E+00
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.3272E-02  final t = 0.198053E+00
+time t =  0.19805E+00,  total mass =  0.171666333255586E+01  diff = -0.6940E-02
+ AMRCLAW: level  1  CFL = .744E-01  dt = 0.1947E-02  final t = 0.200000E+00
+ AMRCLAW: level  2  CFL = .150E+00  dt = 0.1947E-02  final t = 0.200000E+00
+ AMRCLAW: level  3  CFL = .404E+00  dt = 0.1947E-02  final t = 0.200000E+00
+time t =  0.20000E+00,  total mass =  0.171663699280114E+01  diff = -0.6967E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1963E-01  final t = 0.219631E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6544E-02  final t = 0.206544E+00
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.3272E-02  final t = 0.203272E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3272E-02  final t = 0.206544E+00
+ AMRCLAW: level  2  CFL = .707E+00  dt = 0.6544E-02  final t = 0.213087E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3272E-02  final t = 0.209815E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3272E-02  final t = 0.213087E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6544E-02  final t = 0.219631E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3272E-02  final t = 0.216359E+00
+ AMRCLAW: level  3  CFL = .654E+00  dt = 0.3272E-02  final t = 0.219631E+00
+time t =  0.21963E+00,  total mass =  0.171651831422227E+01  diff = -0.7085E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1964E-01  final t = 0.239269E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6546E-02  final t = 0.226177E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3273E-02  final t = 0.222904E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3273E-02  final t = 0.226177E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6546E-02  final t = 0.232723E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3273E-02  final t = 0.229450E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3273E-02  final t = 0.232723E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6546E-02  final t = 0.239269E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3273E-02  final t = 0.235996E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3273E-02  final t = 0.239269E+00
+time t =  0.23927E+00,  total mass =  0.171652291695556E+01  diff = -0.7081E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1962E-01  final t = 0.258893E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6541E-02  final t = 0.245810E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3271E-02  final t = 0.242540E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3271E-02  final t = 0.245810E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6541E-02  final t = 0.252351E+00
+ AMRCLAW: level  3  CFL = .629E+00  dt = 0.3271E-02  final t = 0.249081E+00
+ AMRCLAW: level  3  CFL = .654E+00  dt = 0.3271E-02  final t = 0.252351E+00
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6541E-02  final t = 0.258893E+00
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3271E-02  final t = 0.255622E+00
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3271E-02  final t = 0.258893E+00
+time t =  0.25889E+00,  total mass =  0.171660600982857E+01  diff = -0.6998E-02
+ AMRCLAW: level  1  CFL = .764E+00  dt = 0.1964E-01  final t = 0.278529E+00
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6545E-02  final t = 0.265438E+00
+ AMRCLAW: level  3  CFL = .514E+00  dt = 0.3273E-02  final t = 0.262165E+00
+ AMRCLAW: level  3  CFL = .655E+00  dt = 0.3273E-02  final t = 0.265438E+00
+ AMRCLAW: level  2  CFL = .508E+00  dt = 0.6545E-02  final t = 0.271983E+00
+ AMRCLAW: level  3  CFL = .511E+00  dt = 0.3273E-02  final t = 0.268711E+00
+ AMRCLAW: level  3  CFL = .533E+00  dt = 0.3273E-02  final t = 0.271983E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6545E-02  final t = 0.278529E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3273E-02  final t = 0.275256E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3273E-02  final t = 0.278529E+00
+time t =  0.27853E+00,  total mass =  0.171664468589674E+01  diff = -0.6959E-02
+ AMRCLAW: level  1  CFL = .737E+00  dt = 0.1928E-01  final t = 0.297806E+00
+ AMRCLAW: level  2  CFL = .742E+00  dt = 0.9639E-02  final t = 0.288167E+00
+ AMRCLAW: level  3  CFL = .744E+00  dt = 0.4819E-02  final t = 0.283348E+00
+ AMRCLAW: level  3  CFL = .976E+00  dt = 0.4819E-02  final t = 0.288167E+00
+ AMRCLAW: level  2  CFL = .743E+00  dt = 0.9639E-02  final t = 0.297806E+00
+ AMRCLAW: level  3  CFL = .982E+00  dt = 0.4819E-02  final t = 0.292986E+00
+ AMRCLAW: level  3  CFL = .372E+00  dt = 0.2410E-02  final t = 0.295396E+00
+ AMRCLAW: level  3  CFL = .373E+00  dt = 0.2410E-02  final t = 0.297806E+00
+time t =  0.29781E+00,  total mass =  0.171663245250865E+01  diff = -0.6971E-02
+ AMRCLAW: level  1  CFL = .842E-01  dt = 0.2194E-02  final t = 0.300000E+00
+ AMRCLAW: level  2  CFL = .169E+00  dt = 0.2194E-02  final t = 0.300000E+00
+ AMRCLAW: level  3  CFL = .340E+00  dt = 0.2194E-02  final t = 0.300000E+00
+time t =  0.30000E+00,  total mass =  0.171662980460987E+01  diff = -0.6974E-02
+ AMRCLAW: level  1  CFL = .752E+00  dt = 0.1954E-01  final t = 0.319539E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6513E-02  final t = 0.306513E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3257E-02  final t = 0.303257E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3257E-02  final t = 0.306513E+00
+ AMRCLAW: level  2  CFL = .696E+00  dt = 0.6513E-02  final t = 0.313026E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3257E-02  final t = 0.309770E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3257E-02  final t = 0.313026E+00
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6513E-02  final t = 0.319539E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3257E-02  final t = 0.316283E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3257E-02  final t = 0.319539E+00
+time t =  0.31954E+00,  total mass =  0.171660896418420E+01  diff = -0.6995E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1949E-01  final t = 0.339026E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6496E-02  final t = 0.326035E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3248E-02  final t = 0.322787E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3248E-02  final t = 0.326035E+00
+ AMRCLAW: level  2  CFL = .668E+00  dt = 0.6496E-02  final t = 0.332531E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3248E-02  final t = 0.329283E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3248E-02  final t = 0.332531E+00
+ AMRCLAW: level  2  CFL = .669E+00  dt = 0.6496E-02  final t = 0.339026E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3248E-02  final t = 0.335778E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3248E-02  final t = 0.339026E+00
+time t =  0.33903E+00,  total mass =  0.171661600249686E+01  diff = -0.6988E-02
+ AMRCLAW: level  1  CFL = .744E+00  dt = 0.1948E-01  final t = 0.358509E+00
+*** WARNING *** Courant number  =  0.1003D+01  is larger than input cfl_max =   0.1000D+01  on grid  31 level   2
+*** WARNING *** Courant number  =  0.1003D+01  is larger than input cfl_max =   0.1000D+01  on grid  33 level   2
+ AMRCLAW: level  2  CFL = .100E+01  dt = 0.9741E-02  final t = 0.348768E+00
+ AMRCLAW: level  3  CFL = .375E+00  dt = 0.2435E-02  final t = 0.341462E+00
+ AMRCLAW: level  3  CFL = .374E+00  dt = 0.2435E-02  final t = 0.343897E+00
+ AMRCLAW: level  3  CFL = .386E+00  dt = 0.2435E-02  final t = 0.346332E+00
+ AMRCLAW: level  3  CFL = .374E+00  dt = 0.2435E-02  final t = 0.348768E+00
+ AMRCLAW: level  2  CFL = .373E+00  dt = 0.4871E-02  final t = 0.353638E+00
+ AMRCLAW: level  3  CFL = .748E+00  dt = 0.4871E-02  final t = 0.353638E+00
+ AMRCLAW: level  2  CFL = .372E+00  dt = 0.4871E-02  final t = 0.358509E+00
+ AMRCLAW: level  3  CFL = .511E+00  dt = 0.2435E-02  final t = 0.356074E+00
+ AMRCLAW: level  3  CFL = .376E+00  dt = 0.2435E-02  final t = 0.358509E+00
+time t =  0.35851E+00,  total mass =  0.171660295196315E+01  diff = -0.7001E-02
+ AMRCLAW: level  1  CFL = .748E+00  dt = 0.1964E-01  final t = 0.378150E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6547E-02  final t = 0.365056E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3273E-02  final t = 0.361782E+00
+ AMRCLAW: level  3  CFL = .673E+00  dt = 0.3273E-02  final t = 0.365056E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6547E-02  final t = 0.371603E+00
+ AMRCLAW: level  3  CFL = .511E+00  dt = 0.3273E-02  final t = 0.368329E+00
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3273E-02  final t = 0.371603E+00
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6547E-02  final t = 0.378150E+00
+ AMRCLAW: level  3  CFL = .514E+00  dt = 0.3273E-02  final t = 0.374876E+00
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3273E-02  final t = 0.378150E+00
+time t =  0.37815E+00,  total mass =  0.171656339207290E+01  diff = -0.7040E-02
+ AMRCLAW: level  1  CFL = .761E+00  dt = 0.1968E-01  final t = 0.397832E+00
+ AMRCLAW: level  2  CFL = .513E+00  dt = 0.6561E-02  final t = 0.384710E+00
+ AMRCLAW: level  3  CFL = .514E+00  dt = 0.3280E-02  final t = 0.381430E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3280E-02  final t = 0.384710E+00
+ AMRCLAW: level  2  CFL = .513E+00  dt = 0.6561E-02  final t = 0.391271E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3280E-02  final t = 0.387991E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3280E-02  final t = 0.391271E+00
+ AMRCLAW: level  2  CFL = .511E+00  dt = 0.6561E-02  final t = 0.397832E+00
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3280E-02  final t = 0.394552E+00
+ AMRCLAW: level  3  CFL = .511E+00  dt = 0.3280E-02  final t = 0.397832E+00
+time t =  0.39783E+00,  total mass =  0.171658116827890E+01  diff = -0.7022E-02
+ AMRCLAW: level  1  CFL = .836E-01  dt = 0.2168E-02  final t = 0.400000E+00
+ AMRCLAW: level  2  CFL = .168E+00  dt = 0.2168E-02  final t = 0.400000E+00
+ AMRCLAW: level  3  CFL = .337E+00  dt = 0.2168E-02  final t = 0.400000E+00
+time t =  0.40000E+00,  total mass =  0.171658676719852E+01  diff = -0.7017E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1946E-01  final t = 0.419460E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6487E-02  final t = 0.406487E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3243E-02  final t = 0.403243E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3243E-02  final t = 0.406487E+00
+ AMRCLAW: level  2  CFL = .500E+00  dt = 0.6487E-02  final t = 0.412973E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3243E-02  final t = 0.409730E+00
+ AMRCLAW: level  3  CFL = .499E+00  dt = 0.3243E-02  final t = 0.412973E+00
+ AMRCLAW: level  2  CFL = .497E+00  dt = 0.6487E-02  final t = 0.419460E+00
+ AMRCLAW: level  3  CFL = .497E+00  dt = 0.3243E-02  final t = 0.416217E+00
+ AMRCLAW: level  3  CFL = .497E+00  dt = 0.3243E-02  final t = 0.419460E+00
+time t =  0.41946E+00,  total mass =  0.171668079069091E+01  diff = -0.6923E-02
+ AMRCLAW: level  1  CFL = .743E+00  dt = 0.1949E-01  final t = 0.438953E+00
+ AMRCLAW: level  2  CFL = .746E+00  dt = 0.9746E-02  final t = 0.429207E+00
+ AMRCLAW: level  3  CFL = .747E+00  dt = 0.4873E-02  final t = 0.424333E+00
+ AMRCLAW: level  3  CFL = .751E+00  dt = 0.4873E-02  final t = 0.429207E+00
+ AMRCLAW: level  2  CFL = .753E+00  dt = 0.9746E-02  final t = 0.438953E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3249E-02  final t = 0.432455E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3249E-02  final t = 0.435704E+00
+ AMRCLAW: level  3  CFL = .624E+00  dt = 0.3249E-02  final t = 0.438953E+00
+time t =  0.43895E+00,  total mass =  0.171690438768584E+01  diff = -0.6699E-02
+ AMRCLAW: level  1  CFL = .756E+00  dt = 0.1968E-01  final t = 0.458637E+00
+ AMRCLAW: level  2  CFL = .510E+00  dt = 0.6562E-02  final t = 0.445514E+00
+ AMRCLAW: level  3  CFL = .510E+00  dt = 0.3281E-02  final t = 0.442234E+00
+ AMRCLAW: level  3  CFL = .510E+00  dt = 0.3281E-02  final t = 0.445514E+00
+ AMRCLAW: level  2  CFL = .508E+00  dt = 0.6562E-02  final t = 0.452076E+00
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.3281E-02  final t = 0.448795E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3281E-02  final t = 0.452076E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6562E-02  final t = 0.458637E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3281E-02  final t = 0.455357E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3281E-02  final t = 0.458637E+00
+time t =  0.45864E+00,  total mass =  0.171723660144633E+01  diff = -0.6367E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1954E-01  final t = 0.478176E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6513E-02  final t = 0.465150E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3256E-02  final t = 0.461894E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3256E-02  final t = 0.465150E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6513E-02  final t = 0.471663E+00
+ AMRCLAW: level  3  CFL = .654E+00  dt = 0.3256E-02  final t = 0.468407E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3256E-02  final t = 0.471663E+00
+ AMRCLAW: level  2  CFL = .499E+00  dt = 0.6513E-02  final t = 0.478176E+00
+ AMRCLAW: level  3  CFL = .531E+00  dt = 0.3256E-02  final t = 0.474920E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3256E-02  final t = 0.478176E+00
+time t =  0.47818E+00,  total mass =  0.171743445939065E+01  diff = -0.6169E-02
+ AMRCLAW: level  1  CFL = .745E+00  dt = 0.1958E-01  final t = 0.497752E+00
+ AMRCLAW: level  2  CFL = .748E+00  dt = 0.9788E-02  final t = 0.487964E+00
+*** WARNING *** Courant number  =  0.1014D+01  is larger than input cfl_max =   0.1000D+01  on grid  10 level   3
+*** WARNING *** Courant number  =  0.1014D+01  is larger than input cfl_max =   0.1000D+01  on grid   6 level   3
+ AMRCLAW: level  3  CFL = .101E+01  dt = 0.4894E-02  final t = 0.483070E+00
+ AMRCLAW: level  3  CFL = .376E+00  dt = 0.2447E-02  final t = 0.485517E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.2447E-02  final t = 0.487964E+00
+ AMRCLAW: level  2  CFL = .755E+00  dt = 0.9788E-02  final t = 0.497752E+00
+ AMRCLAW: level  3  CFL = .667E+00  dt = 0.3263E-02  final t = 0.491227E+00
+ AMRCLAW: level  3  CFL = .540E+00  dt = 0.3263E-02  final t = 0.494489E+00
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.3263E-02  final t = 0.497752E+00
+time t =  0.49775E+00,  total mass =  0.171726083470155E+01  diff = -0.6343E-02
+ AMRCLAW: level  1  CFL = .863E-01  dt = 0.2248E-02  final t = 0.500000E+00
+ AMRCLAW: level  2  CFL = .174E+00  dt = 0.2248E-02  final t = 0.500000E+00
+ AMRCLAW: level  3  CFL = .348E+00  dt = 0.2248E-02  final t = 0.500000E+00
+time t =  0.50000E+00,  total mass =  0.171722920723800E+01  diff = -0.6374E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1955E-01  final t = 0.519548E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6516E-02  final t = 0.506516E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3258E-02  final t = 0.503258E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3258E-02  final t = 0.506516E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6516E-02  final t = 0.513032E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3258E-02  final t = 0.509774E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3258E-02  final t = 0.513032E+00
+ AMRCLAW: level  2  CFL = .500E+00  dt = 0.6516E-02  final t = 0.519548E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3258E-02  final t = 0.516290E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3258E-02  final t = 0.519548E+00
+time t =  0.51955E+00,  total mass =  0.171701164556146E+01  diff = -0.6592E-02
+ AMRCLAW: level  1  CFL = .746E+00  dt = 0.1955E-01  final t = 0.539095E+00
+ AMRCLAW: level  2  CFL = .749E+00  dt = 0.9774E-02  final t = 0.529321E+00
+ AMRCLAW: level  3  CFL = .922E+00  dt = 0.4887E-02  final t = 0.524435E+00
+ AMRCLAW: level  3  CFL = .374E+00  dt = 0.2443E-02  final t = 0.526878E+00
+ AMRCLAW: level  3  CFL = .391E+00  dt = 0.2443E-02  final t = 0.529321E+00
+ AMRCLAW: level  2  CFL = .750E+00  dt = 0.9774E-02  final t = 0.539095E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3258E-02  final t = 0.532579E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3258E-02  final t = 0.535837E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3258E-02  final t = 0.539095E+00
+time t =  0.53909E+00,  total mass =  0.171698247108077E+01  diff = -0.6621E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1964E-01  final t = 0.558739E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6548E-02  final t = 0.545643E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3274E-02  final t = 0.542369E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3274E-02  final t = 0.545643E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6548E-02  final t = 0.552191E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3274E-02  final t = 0.548917E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3274E-02  final t = 0.552191E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6548E-02  final t = 0.558739E+00
+ AMRCLAW: level  3  CFL = .630E+00  dt = 0.3274E-02  final t = 0.555465E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3274E-02  final t = 0.558739E+00
+time t =  0.55874E+00,  total mass =  0.171694911892272E+01  diff = -0.6654E-02
+ AMRCLAW: level  1  CFL = .746E+00  dt = 0.1961E-01  final t = 0.578353E+00
+ AMRCLAW: level  2  CFL = .701E+00  dt = 0.6538E-02  final t = 0.565277E+00
+ AMRCLAW: level  3  CFL = .540E+00  dt = 0.3269E-02  final t = 0.562008E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3269E-02  final t = 0.565277E+00
+ AMRCLAW: level  2  CFL = .704E+00  dt = 0.6538E-02  final t = 0.571815E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3269E-02  final t = 0.568546E+00
+ AMRCLAW: level  3  CFL = .524E+00  dt = 0.3269E-02  final t = 0.571815E+00
+ AMRCLAW: level  2  CFL = .499E+00  dt = 0.6538E-02  final t = 0.578353E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3269E-02  final t = 0.575084E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3269E-02  final t = 0.578353E+00
+time t =  0.57835E+00,  total mass =  0.171682340711992E+01  diff = -0.6780E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1972E-01  final t = 0.598069E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6572E-02  final t = 0.584925E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3286E-02  final t = 0.581639E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3286E-02  final t = 0.584925E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6572E-02  final t = 0.591497E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3286E-02  final t = 0.588211E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3286E-02  final t = 0.591497E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6572E-02  final t = 0.598069E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3286E-02  final t = 0.594783E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3286E-02  final t = 0.598069E+00
+time t =  0.59807E+00,  total mass =  0.171670144540970E+01  diff = -0.6902E-02
+ AMRCLAW: level  1  CFL = .733E-01  dt = 0.1931E-02  final t = 0.600000E+00
+ AMRCLAW: level  2  CFL = .147E+00  dt = 0.1931E-02  final t = 0.600000E+00
+ AMRCLAW: level  3  CFL = .295E+00  dt = 0.1931E-02  final t = 0.600000E+00
+time t =  0.60000E+00,  total mass =  0.171669328288035E+01  diff = -0.6910E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1976E-01  final t = 0.619756E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6585E-02  final t = 0.606585E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3293E-02  final t = 0.603293E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3293E-02  final t = 0.606585E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6585E-02  final t = 0.613171E+00
+ AMRCLAW: level  3  CFL = .622E+00  dt = 0.3293E-02  final t = 0.609878E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3293E-02  final t = 0.613171E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6585E-02  final t = 0.619756E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3293E-02  final t = 0.616463E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3293E-02  final t = 0.619756E+00
+time t =  0.61976E+00,  total mass =  0.171666524834507E+01  diff = -0.6938E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1975E-01  final t = 0.639507E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6584E-02  final t = 0.626340E+00
+ AMRCLAW: level  3  CFL = .528E+00  dt = 0.3292E-02  final t = 0.623048E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3292E-02  final t = 0.626340E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6584E-02  final t = 0.632923E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3292E-02  final t = 0.629631E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3292E-02  final t = 0.632923E+00
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6584E-02  final t = 0.639507E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3292E-02  final t = 0.636215E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3292E-02  final t = 0.639507E+00
+time t =  0.63951E+00,  total mass =  0.171669922485827E+01  diff = -0.6904E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1977E-01  final t = 0.659272E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6589E-02  final t = 0.646095E+00
+ AMRCLAW: level  3  CFL = .508E+00  dt = 0.3294E-02  final t = 0.642801E+00
+ AMRCLAW: level  3  CFL = .660E+00  dt = 0.3294E-02  final t = 0.646095E+00
+ AMRCLAW: level  2  CFL = .859E+00  dt = 0.6589E-02  final t = 0.652684E+00
+ AMRCLAW: level  3  CFL = .337E+00  dt = 0.2196E-02  final t = 0.648291E+00
+ AMRCLAW: level  3  CFL = .342E+00  dt = 0.2196E-02  final t = 0.650488E+00
+ AMRCLAW: level  3  CFL = .335E+00  dt = 0.2196E-02  final t = 0.652684E+00
+ AMRCLAW: level  2  CFL = .436E+00  dt = 0.3294E-02  final t = 0.655978E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3294E-02  final t = 0.655978E+00
+ AMRCLAW: level  2  CFL = .442E+00  dt = 0.3294E-02  final t = 0.659272E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3294E-02  final t = 0.659272E+00
+time t =  0.65927E+00,  total mass =  0.171679915709810E+01  diff = -0.6804E-02
+ AMRCLAW: level  1  CFL = .748E+00  dt = 0.1974E-01  final t = 0.679013E+00
+ AMRCLAW: level  2  CFL = .897E+00  dt = 0.6580E-02  final t = 0.665853E+00
+ AMRCLAW: level  3  CFL = .449E+00  dt = 0.2193E-02  final t = 0.661466E+00
+ AMRCLAW: level  3  CFL = .338E+00  dt = 0.2193E-02  final t = 0.663659E+00
+ AMRCLAW: level  3  CFL = .339E+00  dt = 0.2193E-02  final t = 0.665853E+00
+ AMRCLAW: level  2  CFL = .338E+00  dt = 0.4387E-02  final t = 0.670239E+00
+ AMRCLAW: level  3  CFL = .877E+00  dt = 0.4387E-02  final t = 0.670239E+00
+ AMRCLAW: level  2  CFL = .338E+00  dt = 0.4387E-02  final t = 0.674626E+00
+ AMRCLAW: level  3  CFL = .679E+00  dt = 0.4387E-02  final t = 0.674626E+00
+ AMRCLAW: level  2  CFL = .338E+00  dt = 0.4387E-02  final t = 0.679013E+00
+ AMRCLAW: level  3  CFL = .679E+00  dt = 0.4387E-02  final t = 0.679013E+00
+time t =  0.67901E+00,  total mass =  0.171686113594029E+01  diff = -0.6742E-02
+ AMRCLAW: level  1  CFL = .758E+00  dt = 0.1979E-01  final t = 0.698798E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6595E-02  final t = 0.685608E+00
+ AMRCLAW: level  3  CFL = .684E+00  dt = 0.3298E-02  final t = 0.682310E+00
+ AMRCLAW: level  3  CFL = .674E+00  dt = 0.3298E-02  final t = 0.685608E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6595E-02  final t = 0.692203E+00
+ AMRCLAW: level  3  CFL = .540E+00  dt = 0.3298E-02  final t = 0.688906E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3298E-02  final t = 0.692203E+00
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6595E-02  final t = 0.698798E+00
+ AMRCLAW: level  3  CFL = .667E+00  dt = 0.3298E-02  final t = 0.695501E+00
+ AMRCLAW: level  3  CFL = .515E+00  dt = 0.3298E-02  final t = 0.698798E+00
+time t =  0.69880E+00,  total mass =  0.171676923831169E+01  diff = -0.6834E-02
+ AMRCLAW: level  1  CFL = .459E-01  dt = 0.1202E-02  final t = 0.700000E+00
+ AMRCLAW: level  2  CFL = .921E-01  dt = 0.1202E-02  final t = 0.700000E+00
+ AMRCLAW: level  3  CFL = .190E+00  dt = 0.1202E-02  final t = 0.700000E+00
+time t =  0.70000E+00,  total mass =  0.171676346883987E+01  diff = -0.6840E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1966E-01  final t = 0.719658E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6553E-02  final t = 0.706553E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3276E-02  final t = 0.703276E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3276E-02  final t = 0.706553E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6553E-02  final t = 0.713106E+00
+ AMRCLAW: level  3  CFL = .521E+00  dt = 0.3276E-02  final t = 0.709829E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3276E-02  final t = 0.713106E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6553E-02  final t = 0.719658E+00
+ AMRCLAW: level  3  CFL = .686E+00  dt = 0.3276E-02  final t = 0.716382E+00
+ AMRCLAW: level  3  CFL = .691E+00  dt = 0.3276E-02  final t = 0.719658E+00
+time t =  0.71966E+00,  total mass =  0.171669657473662E+01  diff = -0.6907E-02
+ AMRCLAW: level  1  CFL = .753E+00  dt = 0.1965E-01  final t = 0.739311E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6551E-02  final t = 0.726209E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3275E-02  final t = 0.722934E+00
+ AMRCLAW: level  3  CFL = .520E+00  dt = 0.3275E-02  final t = 0.726209E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6551E-02  final t = 0.732760E+00
+ AMRCLAW: level  3  CFL = .664E+00  dt = 0.3275E-02  final t = 0.729484E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3275E-02  final t = 0.732760E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6551E-02  final t = 0.739311E+00
+ AMRCLAW: level  3  CFL = .605E+00  dt = 0.3275E-02  final t = 0.736035E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3275E-02  final t = 0.739311E+00
+time t =  0.73931E+00,  total mass =  0.171664047809510E+01  diff = -0.6963E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1959E-01  final t = 0.758896E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6528E-02  final t = 0.745839E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3264E-02  final t = 0.742575E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3264E-02  final t = 0.745839E+00
+ AMRCLAW: level  2  CFL = .704E+00  dt = 0.6528E-02  final t = 0.752367E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3264E-02  final t = 0.749103E+00
+ AMRCLAW: level  3  CFL = .654E+00  dt = 0.3264E-02  final t = 0.752367E+00
+ AMRCLAW: level  2  CFL = .499E+00  dt = 0.6528E-02  final t = 0.758896E+00
+ AMRCLAW: level  3  CFL = .649E+00  dt = 0.3264E-02  final t = 0.755632E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3264E-02  final t = 0.758896E+00
+time t =  0.75890E+00,  total mass =  0.171665609777037E+01  diff = -0.6947E-02
+ AMRCLAW: level  1  CFL = .745E+00  dt = 0.1956E-01  final t = 0.778458E+00
+ AMRCLAW: level  2  CFL = .749E+00  dt = 0.9781E-02  final t = 0.768677E+00
+ AMRCLAW: level  3  CFL = .749E+00  dt = 0.4891E-02  final t = 0.763786E+00
+ AMRCLAW: level  3  CFL = .749E+00  dt = 0.4891E-02  final t = 0.768677E+00
+ AMRCLAW: level  2  CFL = .746E+00  dt = 0.9781E-02  final t = 0.778458E+00
+ AMRCLAW: level  3  CFL = .748E+00  dt = 0.4891E-02  final t = 0.773568E+00
+ AMRCLAW: level  3  CFL = .965E+00  dt = 0.4891E-02  final t = 0.778458E+00
+time t =  0.77846E+00,  total mass =  0.171670376344046E+01  diff = -0.6900E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1968E-01  final t = 0.798139E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6560E-02  final t = 0.785018E+00
+ AMRCLAW: level  3  CFL = .680E+00  dt = 0.3280E-02  final t = 0.781738E+00
+ AMRCLAW: level  3  CFL = .537E+00  dt = 0.3280E-02  final t = 0.785018E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6560E-02  final t = 0.791579E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3280E-02  final t = 0.788298E+00
+ AMRCLAW: level  3  CFL = .678E+00  dt = 0.3280E-02  final t = 0.791579E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6560E-02  final t = 0.798139E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3280E-02  final t = 0.794859E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3280E-02  final t = 0.798139E+00
+time t =  0.79814E+00,  total mass =  0.171676035957845E+01  diff = -0.6843E-02
+ AMRCLAW: level  1  CFL = .710E-01  dt = 0.1861E-02  final t = 0.800000E+00
+ AMRCLAW: level  2  CFL = .142E+00  dt = 0.1861E-02  final t = 0.800000E+00
+ AMRCLAW: level  3  CFL = .374E+00  dt = 0.1861E-02  final t = 0.800000E+00
+time t =  0.80000E+00,  total mass =  0.171676427620306E+01  diff = -0.6839E-02
+ AMRCLAW: level  1  CFL = .749E+00  dt = 0.1967E-01  final t = 0.819674E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6558E-02  final t = 0.806558E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3279E-02  final t = 0.803279E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3279E-02  final t = 0.806558E+00
+ AMRCLAW: level  2  CFL = .699E+00  dt = 0.6558E-02  final t = 0.813116E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3279E-02  final t = 0.809837E+00
+ AMRCLAW: level  3  CFL = .500E+00  dt = 0.3279E-02  final t = 0.813116E+00
+ AMRCLAW: level  2  CFL = .700E+00  dt = 0.6558E-02  final t = 0.819674E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3279E-02  final t = 0.816395E+00
+ AMRCLAW: level  3  CFL = .501E+00  dt = 0.3279E-02  final t = 0.819674E+00
+time t =  0.81967E+00,  total mass =  0.171676424431116E+01  diff = -0.6839E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1970E-01  final t = 0.839371E+00
+ AMRCLAW: level  2  CFL = .703E+00  dt = 0.6566E-02  final t = 0.826239E+00
+ AMRCLAW: level  3  CFL = .640E+00  dt = 0.3283E-02  final t = 0.822957E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3283E-02  final t = 0.826239E+00
+ AMRCLAW: level  2  CFL = .705E+00  dt = 0.6566E-02  final t = 0.832805E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3283E-02  final t = 0.829522E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3283E-02  final t = 0.832805E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6566E-02  final t = 0.839371E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3283E-02  final t = 0.836088E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3283E-02  final t = 0.839371E+00
+time t =  0.83937E+00,  total mass =  0.171665679508781E+01  diff = -0.6947E-02
+ AMRCLAW: level  1  CFL = .757E+00  dt = 0.1967E-01  final t = 0.859045E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6558E-02  final t = 0.845929E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3279E-02  final t = 0.842650E+00
+ AMRCLAW: level  3  CFL = .507E+00  dt = 0.3279E-02  final t = 0.845929E+00
+ AMRCLAW: level  2  CFL = .506E+00  dt = 0.6558E-02  final t = 0.852487E+00
+ AMRCLAW: level  3  CFL = .509E+00  dt = 0.3279E-02  final t = 0.849208E+00
+ AMRCLAW: level  3  CFL = .512E+00  dt = 0.3279E-02  final t = 0.852487E+00
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6558E-02  final t = 0.859045E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3279E-02  final t = 0.855766E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3279E-02  final t = 0.859045E+00
+time t =  0.85904E+00,  total mass =  0.171665550866088E+01  diff = -0.6948E-02
+ AMRCLAW: level  1  CFL = .745E+00  dt = 0.1950E-01  final t = 0.878545E+00
+ AMRCLAW: level  2  CFL = .746E+00  dt = 0.9750E-02  final t = 0.868795E+00
+ AMRCLAW: level  3  CFL = .759E+00  dt = 0.4875E-02  final t = 0.863920E+00
+ AMRCLAW: level  3  CFL = .744E+00  dt = 0.4875E-02  final t = 0.868795E+00
+ AMRCLAW: level  2  CFL = .743E+00  dt = 0.9750E-02  final t = 0.878545E+00
+ AMRCLAW: level  3  CFL = .744E+00  dt = 0.4875E-02  final t = 0.873670E+00
+ AMRCLAW: level  3  CFL = .744E+00  dt = 0.4875E-02  final t = 0.878545E+00
+time t =  0.87855E+00,  total mass =  0.171676931970263E+01  diff = -0.6834E-02
+ AMRCLAW: level  1  CFL = .747E+00  dt = 0.1964E-01  final t = 0.898180E+00
+ AMRCLAW: level  2  CFL = .749E+00  dt = 0.9818E-02  final t = 0.888363E+00
+ AMRCLAW: level  3  CFL = .750E+00  dt = 0.4909E-02  final t = 0.883454E+00
+ AMRCLAW: level  3  CFL = .749E+00  dt = 0.4909E-02  final t = 0.888363E+00
+ AMRCLAW: level  2  CFL = .748E+00  dt = 0.9818E-02  final t = 0.898180E+00
+ AMRCLAW: level  3  CFL = .749E+00  dt = 0.4909E-02  final t = 0.893271E+00
+ AMRCLAW: level  3  CFL = .771E+00  dt = 0.4909E-02  final t = 0.898180E+00
+time t =  0.89818E+00,  total mass =  0.171696360857180E+01  diff = -0.6640E-02
+ AMRCLAW: level  1  CFL = .689E-01  dt = 0.1820E-02  final t = 0.900000E+00
+ AMRCLAW: level  2  CFL = .138E+00  dt = 0.1820E-02  final t = 0.900000E+00
+ AMRCLAW: level  3  CFL = .277E+00  dt = 0.1820E-02  final t = 0.900000E+00
+time t =  0.90000E+00,  total mass =  0.171698399091154E+01  diff = -0.6620E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1982E-01  final t = 0.919820E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6607E-02  final t = 0.906607E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3303E-02  final t = 0.903303E+00
+ AMRCLAW: level  3  CFL = .532E+00  dt = 0.3303E-02  final t = 0.906607E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6607E-02  final t = 0.913213E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3303E-02  final t = 0.909910E+00
+ AMRCLAW: level  3  CFL = .504E+00  dt = 0.3303E-02  final t = 0.913213E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6607E-02  final t = 0.919820E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3303E-02  final t = 0.916517E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3303E-02  final t = 0.919820E+00
+time t =  0.91982E+00,  total mass =  0.171715270766891E+01  diff = -0.6451E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1982E-01  final t = 0.939644E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6608E-02  final t = 0.926428E+00
+ AMRCLAW: level  3  CFL = .545E+00  dt = 0.3304E-02  final t = 0.923124E+00
+ AMRCLAW: level  3  CFL = .522E+00  dt = 0.3304E-02  final t = 0.926428E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6608E-02  final t = 0.933036E+00
+ AMRCLAW: level  3  CFL = .527E+00  dt = 0.3304E-02  final t = 0.929732E+00
+ AMRCLAW: level  3  CFL = .524E+00  dt = 0.3304E-02  final t = 0.933036E+00
+ AMRCLAW: level  2  CFL = .504E+00  dt = 0.6608E-02  final t = 0.939644E+00
+ AMRCLAW: level  3  CFL = .520E+00  dt = 0.3304E-02  final t = 0.936340E+00
+ AMRCLAW: level  3  CFL = .519E+00  dt = 0.3304E-02  final t = 0.939644E+00
+time t =  0.93964E+00,  total mass =  0.171712190540825E+01  diff = -0.6482E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1980E-01  final t = 0.959447E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6601E-02  final t = 0.946245E+00
+ AMRCLAW: level  3  CFL = .520E+00  dt = 0.3301E-02  final t = 0.942944E+00
+ AMRCLAW: level  3  CFL = .526E+00  dt = 0.3301E-02  final t = 0.946245E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6601E-02  final t = 0.952846E+00
+ AMRCLAW: level  3  CFL = .534E+00  dt = 0.3301E-02  final t = 0.949545E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3301E-02  final t = 0.952846E+00
+ AMRCLAW: level  2  CFL = .502E+00  dt = 0.6601E-02  final t = 0.959447E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3301E-02  final t = 0.956147E+00
+ AMRCLAW: level  3  CFL = .539E+00  dt = 0.3301E-02  final t = 0.959447E+00
+time t =  0.95945E+00,  total mass =  0.171695853073330E+01  diff = -0.6645E-02
+ AMRCLAW: level  1  CFL = .751E+00  dt = 0.1977E-01  final t = 0.979216E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6590E-02  final t = 0.966037E+00
+ AMRCLAW: level  3  CFL = .502E+00  dt = 0.3295E-02  final t = 0.962742E+00
+ AMRCLAW: level  3  CFL = .513E+00  dt = 0.3295E-02  final t = 0.966037E+00
+ AMRCLAW: level  2  CFL = .501E+00  dt = 0.6590E-02  final t = 0.972627E+00
+ AMRCLAW: level  3  CFL = .530E+00  dt = 0.3295E-02  final t = 0.969332E+00
+ AMRCLAW: level  3  CFL = .503E+00  dt = 0.3295E-02  final t = 0.972627E+00
+ AMRCLAW: level  2  CFL = .678E+00  dt = 0.6590E-02  final t = 0.979216E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3295E-02  final t = 0.975921E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3295E-02  final t = 0.979216E+00
+time t =  0.97922E+00,  total mass =  0.171691458070052E+01  diff = -0.6689E-02
+ AMRCLAW: level  1  CFL = .750E+00  dt = 0.1975E-01  final t = 0.998970E+00
+ AMRCLAW: level  2  CFL = .677E+00  dt = 0.6584E-02  final t = 0.985801E+00
+ AMRCLAW: level  3  CFL = .662E+00  dt = 0.3292E-02  final t = 0.982509E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3292E-02  final t = 0.985801E+00
+ AMRCLAW: level  2  CFL = .505E+00  dt = 0.6584E-02  final t = 0.992385E+00
+ AMRCLAW: level  3  CFL = .506E+00  dt = 0.3292E-02  final t = 0.989093E+00
+ AMRCLAW: level  3  CFL = .505E+00  dt = 0.3292E-02  final t = 0.992385E+00
+ AMRCLAW: level  2  CFL = .503E+00  dt = 0.6584E-02  final t = 0.998970E+00
+ AMRCLAW: level  3  CFL = .615E+00  dt = 0.3292E-02  final t = 0.995677E+00
+ AMRCLAW: level  3  CFL = .659E+00  dt = 0.3292E-02  final t = 0.998970E+00
+time t =  0.99897E+00,  total mass =  0.171687750664039E+01  diff = -0.6726E-02
+ AMRCLAW: level  1  CFL = .391E-01  dt = 0.1030E-02  final t = 0.100000E+01
+ AMRCLAW: level  2  CFL = .784E-01  dt = 0.1030E-02  final t = 0.100000E+01
+ AMRCLAW: level  3  CFL = .157E+00  dt = 0.1030E-02  final t = 0.100000E+01
+time t =  0.10000E+01,  total mass =  0.171687537585711E+01  diff = -0.6728E-02
+
+
+for level   1 average num. grids =       1.00 over          1 regridding steps
+for level   1  current num. grids =       1
+for level   2 average num. grids =       3.97 over         60 regridding steps
+for level   2  current num. grids =       4
+for level   3 average num. grids =      11.92 over        155 regridding steps
+for level   3  current num. grids =      12
+
+
+alloc array statistics:
+    current alloc usage =       307957
+    maximum alloc usage =       454337
+required alloc memsize >=       459757
+
+number of cells advanced for time integration =       8167600.000000
+   # cells advanced on level    1 =            150000.00
+   # cells advanced on level    2 =           1050400.00
+   # cells advanced on level    3 =           6967200.00
+number of cells advanced for error estimation =             0.000000
+
+ percentage of cells advanced in time  =     100.00
+ maximum Courant number seen =       1.42
+
+
+ ------  end of AMRCLAW integration --------  

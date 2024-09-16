@@ -1,0 +1,9 @@
+    0.20000000E+00    time
+     6                 meqn
+    17                 ngrids
+     1                 naux
+     2                 ndim
+     2                 nghost
+  binary64             format
+
+

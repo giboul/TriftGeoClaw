@@ -19,8 +19,8 @@ if __name__ == "__main__":
   np.savetxt("bathymetry.xyz", np.vstack((x.flatten(), y.flatten(), z.flatten())).T)
 
   q0 = np.full_like(z, 0.5)
-  q0[y > 0.3*x**2] = 0
-  q0[y < -1] = 0
+  q0[y > 0.3*x**2 + 0.2] = 0
+  q0[y < -1.1] = 0
   np.savetxt("qinit.xyz", np.vstack((x.flatten(), y.flatten(), q0.flatten())).T)
 
   plt.imshow(z, cmap="inferno")

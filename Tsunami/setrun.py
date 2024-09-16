@@ -8,7 +8,7 @@ that will be read in by the Fortran code.
 import argparse
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
-from params import cxmin, cxmax, cymin, cymax, sea_level
+from params import cxmin, cxmax, cymin, cymax, lake_level
 
 
 def setrun(claw_pkg='geoclaw') -> ClawRunData:
@@ -303,7 +303,6 @@ def setgeo(rundata: ClawRunData) -> ClawRunData:
     geo_data.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geo_data.sea_level = 0. 
     geo_data.dry_tolerance = 1.e-5
     geo_data.friction_forcing = True
     geo_data.manning_coefficient =.025

@@ -48,8 +48,12 @@ def main():
     print(f"\tFile size is {Path('bathy_with_dam.xyz').stat().st_size}")
 
     print("\tINFO: Writing qinit.xyz... ")
-    z_lake = np.full_like(z, params.sea_level)
-    z_lake[y > dam_y1] = z.min() - 1
+    z_lake = np.full_like(z, params.lake_level)
+    no_alt = z.min() - 1
+    z_lake[y > dam_y2] = no_alt
+    z_lake[
+      (x < 2669800) | (2670900 < x) | (y < 1170300) | (1172000 < y)
+    ] = no_alt
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
     print(f"\tFile size is {Path('qinit.xyz').stat().st_size}")
 

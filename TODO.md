@@ -1,16 +1,19 @@
 # TODO
 - [x] Traiter les données de Gruner pour en tirer une topographie utilisable et assez légère pour des calculs rapides.
-- [x] Installer Clawpack correctement (5.9.0).
-- [x] Simuler une première vague depuis un champ de vitesse ou de hauteur initial.
+- [x] Installer Clawpack correctement (5.11.0).
+- [ ] Déterminer une nivométrie selon Burkard-Salm (-3cm V/100m V).
 - [x] Simuler une première avalanche avec AVAC.
-- [ ] Introduire la quantité de mouvement par les conditions de bord et non par la solution initiale.
-- [x] Apprendre à transférer la quantité de mouvement de la neige vers l'eau (Flume).
+- [x] Simuler une vague par solution initial et/ou conditions de bord.
+- [x] Automatiser le transfert de quantité de mouvemeent.i
+- [ ] Utiliser les codes BoussClaw en plus de Geoclaw
 - [ ] Ajouter des graphes de l’intumescence au barrage (ligne de jauges).
 - [ ] Inclure le barrage dans la topographie.
 - [ ] Benchmark selon les expériences VAW+LHE (test des conditions de bord)?
 
 # Questions
-- Y a-t-il des effets d'échelle ?
+- Des sources à conseiller pour le manteau neigeux?
+- Comment sont définis les panneaux de départ? Par analyse experte sur le terrain?
+- Introduction de la quantité de mouvement: remplacer la neige par de l'eau (h/3) et de même quantité énergie?
 - David L. George, D-CLAW => simplement mettre un coefficient de transfert de quantité de mouvement?
 
 # Problèmes
@@ -20,9 +23,7 @@ MODULES = \
   ./module_voellmy.f90 \
   ./qinit_module.f90 \
 ```
-Par ailleurs, les versions les plus récentes de Clawpack remplacent toutes les mentions de `python` par la variable `$(PYTHON)` définie dans le `Makefile.common`.
 - AVAC/GRASS: L'archive `toraval.fr/r.avac.tar.gz` n'existe plus, tout est dans le git mais le manuel renvoie vers le site de toraval.
-- La mémoire fait parfois défaut dans le code, les coordonnées en mètres sont trop grandes. D'où la question sur les effets d'échelle.
 
 # Avancement du projet
 Je mettrai ici à jour mon avancement à chaque étape.
@@ -45,17 +46,7 @@ De plus, il en reste beaucoup d'autres à faire.
 
 <img src="Flume/movie.gif">
 
-# Divers
-- Notes de cours sur ClawPack: là où il est écrit "or directly in the Makefile:", il faut remplacer le code par:
-```Makefile
-parallel:
-	export FFLAGS='-O2 -fopenmp'
-	export OMP_NUM_THREADS=4
-```
-- Installation de Clawpack: Boussinesq n'est pas inclus dans la v5.9.2, la v5.10.0 utilise PETSC pour résoudre ces équations. La version 5.9.0 est ici utilisée car j'ai surchauffé en essayant les deux dernières versions.
-
 # À explorer 
-- Réessayer de lancer les exemples `tsunami_benchmarks: problem1 & problem1_take2`.
-- code cayle mandeli : two layer shallow water (water and avalanche?) rpn2_layered (clawpack/dev)
+- code cayle mandeli : two layer shallow water (water and avalanche?) `rpn2_layered` (clawpack/dev)
 - Créer des fichiers setrun et setplot en [yaml](https://python.land/data-processing/python-yaml)?
 

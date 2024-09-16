@@ -132,11 +132,13 @@ case(0) ! User defined boundary condition
     do i=1, nxl
         aux(:, i, j) = aux(:, nxl + 1, j)
         val(:, i, j) = val(:, nxl + 1, j)
-        if (ylo_patch>0.5 .and. yhi_patch<2.0 .and. time<1000) then
-          print *, "# Introducing avalanche", xlo_patch, ylo_patch
-          aux(2, i, j) = aux(2, i, j) + 10000000000.
+        ! print *,time,ylo_patch,yhi_patch,xlo_patch,xhi_patch
+        ! if (ylo_patch>1000 .and. yhi_patch<1500 .and. time<1) then
+        if (time < 10) then
+          ! print *, "# Introducing avalanche", xlo_patch, ylo_patch
+          ! aux(2, i, j) = aux(2, i, j) + 1.
           val(2, i, j) = val(2, i, j) + 0.002 ! Normal speed
-          ! val(3, i, j) = val(3, i, j) + 0.005 ! TODO WHAT DO WE DO for height
+          ! val(3, i, j) = val(3, i, j) + 1.0 ! TODO WHAT DO WE DO for height
         end if
     end do
   end do

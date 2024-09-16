@@ -13,7 +13,7 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-from maketopo import sea_level, scale
+from params import sea_level
 
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -27,7 +27,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = 'ascii'    # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = 'binary'    # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -51,7 +51,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
         # addgauges(current_data)
         t = current_data.t
-        plt.title(f'Surface at {t/scale//60:.0f}min {t/scale%60}s', fontsize=20)
+        plt.title(f'Surface at {t//60:.0f}min {t%60:.2f}s', fontsize=20)
         # plt.title("")
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
@@ -61,10 +61,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Water
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
-    plotitem.plot_var = geoplot.surface_or_depth
+    # plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = geoplot.tsunami_colormap
-    plotitem.pcolor_cmin = -4e-7
-    plotitem.pcolor_cmax = 4e-6
+    plotitem.pcolor_cmax = sea_level + 10
+    plotitem.pcolor_cmin = 2*sea_level - plotitem.pcolor_cmax
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [1,1,0]
     plotitem.patchedges_show = 1
@@ -72,9 +72,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 100.0
+    plotitem.pcolor_cmap = plt.inferno()
+    # plotitem.pcolor_cmin = 0.0
+    # plotitem.pcolor_cmax = 100.0
     plotitem.add_colorbar = False
     plotitem.amr_celledges_show = [1,1,0]
     plotitem.patchedges_show = 1

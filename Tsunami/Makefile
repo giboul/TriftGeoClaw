@@ -41,10 +41,10 @@ EXCLUDE_SOURCES = \
 MODULES = \
 
 SOURCES = \
+  ./bc2amr.f90 \
   $(CLAW)/riemann/src/rpn2_geoclaw.f \
   $(CLAW)/riemann/src/rpt2_geoclaw.f \
   $(CLAW)/riemann/src/geoclaw_riemann_utils.f \
-  ./bc2amr.f90
 
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:
@@ -58,7 +58,9 @@ test:
 	@echo $(FFLAGS)
 	@echo OMP=$(OMP_NUM_THREADS) 
 movie:
+	$(MAKE) .plots
 	$(CLAW_PYTHON) ../movie.py
+	xdg-open movie.gif
 
 all: 
 	$(MAKE) clobber

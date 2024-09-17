@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, PillowWriter
 from params import xmin, xmax, ymin, ymax, out_format
 from clawpack.visclaw import colormaps, frametools, geoplot, gridtools
 from clawpack.pyclaw import solution
@@ -54,7 +54,6 @@ parser = ArgumentParser()
 parser.add_argument("-f", "--file", action="store_true")
 args = parser.parse_args()
 if args.file:
-    html = anim.to_jshtml()
-    with open("stairs.html", "w") as file:
-        file.write(html)
+    w = PillowWriter(fps=2)
+    anim.save("stairs.gif", writer=w)
 

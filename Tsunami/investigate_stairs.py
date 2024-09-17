@@ -27,16 +27,16 @@ def extract(i):
     )
     return q, frame_sol.t
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(layout="tight")
 q, t = extract(0)
 h, hu, hv, _1, _2, eta = q
 eta_steps = ax.stairs(eta, l, baseline=eta-h, fill=True, label=r"$\eta$", color="skyblue")
 ax.stairs(eta-h, l, baseline=eta.min()-0.1*(eta.max()-eta.min()), label=r"$z_b$", fill=True, hatch="//", fc="none", ec="sienna", lw=1)
 
-title = f"Cut @(t=%f, x={x[0]:.0f})"
+title = "Cut @ t=%.2f"
 ax.set_title(title % t)
-ax.set_aspect("equal")
-ax.legend()
+# ax.set_aspect("equal")
+# ax.legend()
 
 def update(frame_num):
     frame_sol = solution.Solution(frame_num, path="_output", file_format=out_format)
@@ -48,12 +48,13 @@ def update(frame_num):
     ax.set_title(title % t)
 
 anim = FuncAnimation(fig, update, len(files), interval=500)
-plt.show()
 
 parser = ArgumentParser()
 parser.add_argument("-f", "--file", action="store_true")
 args = parser.parse_args()
 if args.file:
     w = PillowWriter(fps=2)
-    anim.save("stairs.gif", writer=w)
+    anim.save("stairs.gif", writer=w, savefig_kwargs=dict(bbox_inches="tight"))
+else:
+    plt.show()
 

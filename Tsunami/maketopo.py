@@ -40,22 +40,19 @@ def main():
     mask = (dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_z)
     z[mask] = params.dam_z
 
-    # print(f"\tINFO: Stripping lake level to altitude 0... ")
-    # z = z - params.sea_level  # TODO: Should be set with geo_data.sea_level
-    
     print(f"\tINFO: Saving bathy_with_dam.xyz... ")
     np.savetxt("bathy_with_dam.xyz", np.vstack((x, y, z)).T)
-    print(f"\tFile size is {Path('bathy_with_dam.xyz').stat().st_size}")
+    print(f"\t\tFile size is {Path('bathy_with_dam.xyz').stat().st_size:.2g} bytes")
 
     print("\tINFO: Writing qinit.xyz... ")
     z_lake = np.full_like(z, params.lake_level)
-    no_alt = z.min() - 1
+    no_alt = 0
     z_lake[y > dam_y2] = no_alt
     z_lake[
       (x < 2669800) | (2670900 < x) | (y < 1170300) | (1172000 < y)
     ] = no_alt
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
-    print(f"\tFile size is {Path('qinit.xyz').stat().st_size}")
+    print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes")
 
     rmtree(tempdir)
     

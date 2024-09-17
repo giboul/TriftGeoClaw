@@ -13,7 +13,7 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-from params import lake_level
+from params import lake_level, out_format
 
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -27,7 +27,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = 'binary'    # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = out_format  # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:

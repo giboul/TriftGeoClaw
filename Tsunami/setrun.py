@@ -8,7 +8,7 @@ that will be read in by the Fortran code.
 import argparse
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
-from params import cxmin, cxmax, cymin, cymax, lake_level
+from params import cxmin, cxmax, cymin, cymax, lake_level, out_format
 
 
 def setrun(claw_pkg='geoclaw') -> ClawRunData:
@@ -93,7 +93,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = 'binary'  # 'ascii' or 'binary' 
+    clawdata.output_format = out_format   # 'ascii' or 'binary' 
     clawdata.output_q_components = 'all'   # need all
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -202,12 +202,12 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = 60
+    amrdata.max1d = 30
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 8]
-    amrdata.refinement_ratios_y = [2, 8]
-    amrdata.refinement_ratios_t = [2, 8]
+    amrdata.refinement_ratios_x = [4]
+    amrdata.refinement_ratios_y = [4]
+    amrdata.refinement_ratios_t = [4]
 
     # max number of refinement levels:
     max_levels = 1 + max(map(len, (

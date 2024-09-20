@@ -8,8 +8,7 @@ that will be read in by the Fortran code.
 import argparse
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
-from params import cxmin, cxmax, cymin, cymax, lake_level, out_format
-
+import params
 
 def setrun(claw_pkg='geoclaw') -> ClawRunData:
     """
@@ -19,6 +18,14 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     ------
         ClawRunData
     """
+    with open("bc_avac.data", "w") as file:
+        file.write(
+            f"{1.17125e6} := y_0\n"
+            f"{1.17150e6} := y_1\n"
+            f"{1.} := h0\n"
+            f"{20.} := hu0\n"
+            f"{20.} := hv0\n"
+        )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
     rundata = setgeo(rundata)
@@ -37,16 +44,14 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = cxmin  # west longitude
-    clawdata.upper[0] = cxmax  # east longitude
-    clawdata.lower[1] = cymin  # south latitude
-    clawdata.upper[1] = cymax  # north latitude
-    print(f"{clawdata.lower = }")
-    print(f"{clawdata.upper = }")
+    clawdata.lower[0] = params.xmin  # west longitude
+    clawdata.upper[0] = params.xmax  # east longitude
+    clawdata.lower[1] = params.ymin  # south latitude
+    clawdata.upper[1] = params.ymax  # north latitude
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 10
-    clawdata.num_cells[1] = 10
+    clawdata.num_cells[0] = 50
+    clawdata.num_cells[1] = 50
 
     # ---------------
     # Size of system:
@@ -80,7 +85,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 10
-        clawdata.tfinal = 10
+        clawdata.tfinal = 30
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -93,8 +98,8 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = out_format   # 'ascii' or 'binary' 
-    clawdata.output_q_components = 'all'   # need all
+    clawdata.output_format = params.out_format   # 'ascii' or 'binary' 
+    clawdata.output_q_components = 'none'   # need all
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
 
@@ -176,9 +181,9 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    clawdata.bc_lower[0] = 'wall'
+    clawdata.bc_lower[0] = 'user'
     clawdata.bc_upper[0] = 'wall'
-    clawdata.bc_lower[1] = 'wall'
+    clawdata.bc_lower[1] = 'user'
     clawdata.bc_upper[1] = 'wall'
 
     # --------------
@@ -202,12 +207,12 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = 30
+    amrdata.max1d = 300
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [4]
-    amrdata.refinement_ratios_y = [4]
-    amrdata.refinement_ratios_t = [4]
+    amrdata.refinement_ratios_x = params.amr_ratios["x"]
+    amrdata.refinement_ratios_y = params.amr_ratios["y"]
+    amrdata.refinement_ratios_t = params.amr_ratios["t"]
 
     # max number of refinement levels:
     max_levels = 1 + max(map(len, (

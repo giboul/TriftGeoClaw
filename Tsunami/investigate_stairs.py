@@ -27,16 +27,18 @@ def extract(i):
     )
     return q, frame_sol.t
 
-fig, ax = plt.subplots(layout="tight")
-q, t = extract(0)
-h, hu, hv, _1, _2, eta = q
-eta_steps = ax.stairs(eta, l, baseline=eta-h, fill=True, label=r"$\eta$", color="skyblue")
-ax.stairs(eta-h, l, baseline=eta.min()-0.1*(eta.max()-eta.min()), label=r"$z_b$", fill=True, hatch="//", fc="none", ec="sienna", lw=1)
-
-title = "Cut @ t=%.2f"
-ax.set_title(title % t)
-# ax.set_aspect("equal")
-# ax.legend()
+with plt.style.context("bmh"):
+    fig, ax = plt.subplots(layout="tight")
+    q, t = extract(0)
+    h, hu, hv, _1, _2, eta = q
+    eta_steps = ax.stairs(eta, l, baseline=eta-h, fill=True, label="water", color="skyblue")
+    ax.stairs(eta-h, l, baseline=eta.min()-0.1*(eta.max()-eta.min()), label="land", fill=True, color="sienna", lw=1)
+    title = "Cut @ t=%.2f"
+    ax.set_title(title % t)
+    # ax.set_aspect("equal")
+    ax.legend()
+    ax.set_xlabel("Distance [m]")
+    ax.set_ylabel("Elevation [MASL]")
 
 def update(frame_num):
     frame_sol = solution.Solution(frame_num, path="_output", file_format=out_format)

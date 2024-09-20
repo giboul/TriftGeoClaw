@@ -100,13 +100,29 @@ real(kind=8), intent(in) :: xlo_patch, xhi_patch
 real(kind=8), intent(in) :: ylo_patch, yhi_patch
 real(kind=8), intent(in out) :: val(meqn, nrow, ncol)
 real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
+real(kind=8) :: h0, hu0, hv0
 
 ! Local storage
 integer :: i, j, ibeg, jbeg, nxl, nxr, nyb, nyt
-real(kind=8) :: hxmarg, hymarg
+real(kind=8) :: hxmarg, hymarg, yc, y_0, y_1
+real(kind=8) :: xc, x_0, x_1
 
 hxmarg = hx * .01d0
 hymarg = hy * .01d0
+!   open(unit=1,file='bc_avac.data')
+!       ! rewind(1) ! TODO does not read correctly with multiple levels of amr
+!       read(1,*) y_0
+!       read(1,*) y_1
+!       read(1,*) h0
+!       read(1,*) hu0
+!       read(1,*) hv0
+!   close(1)
+  y_0 = 1171250.0
+  y_1 = 1171500.0
+  h0 = 1.0
+  hu0 = 20.0
+  hv0 = 10.0
+  ! print *, "y_0, y_1 h, hu, hv", y_0, y_1, h0, hu0, hv0
 
 ! Use periodic boundary condition specialized code only, if only one 
 ! boundary is periodic we still proceed below
@@ -127,21 +143,35 @@ select case(mthbc(1))
 case(0) ! User defined boundary condition
   ! Replace this code with a user defined boundary condition
   ! stop "A user defined boundary condition was not provided. (mthbc(1))"
-  ! First, extrapolate  (case(1))
-  do j = 1, ncol
-    do i=1, nxl
-        aux(:, i, j) = aux(:, nxl + 1, j)
-        val(:, i, j) = val(:, nxl + 1, j)
-        ! print *,time,ylo_patch,yhi_patch,xlo_patch,xhi_patch
-        ! if (ylo_patch>1000 .and. yhi_patch<1500 .and. time<1) then
-        if (time < 10) then
-          ! print *, "# Introducing avalanche", xlo_patch, ylo_patch
-          ! aux(2, i, j) = aux(2, i, j) + 1.
-          val(2, i, j) = val(2, i, j) + 0.002 ! Normal speed
-          ! val(3, i, j) = val(3, i, j) + 1.0 ! TODO WHAT DO WE DO for height
-        end if
-    end do
-  end do
+  ! h_e    = interpole1(time, fichier_h_e, ndata_e)*amorti
+  ! hu_e   = interpole1(time, fichier_q_e, ndata_e)*amorti
+  ! h_s    = interpole1(time, fichier_h_s, ndata_s)*amorti
+  ! hv_s   = interpole1(time, fichier_q_s, ndata_s)*amorti
+  
+  open(unit=2,file='bclog.txt',status='unknown')
+      write(2,"(A42)") "    i    j     ylop     yhip         yc in"
+      do j = 1, ncol
+          yc = ylo_patch + (j - 0.5d0) * hy
+          write(2,"(i5,i5,f9.0,f9.0,f11.2)", advance='no') &
+              i, j, ylo_patch, yhi_patch, yc 
+          if (time <= 30 .and. y_0 <= yc .and. yc <= y_1) then
+              write(2,*) " T"
+              ! Avalanche
+              do i=1, nxl
+                  val(1, i, j) = h0
+                  val(2, i, j) = hu0
+                  val(3, i, j) = hv0
+              end do
+          else
+              write(2,*) " F"
+              ! Zero-order extrapolation
+              do i=1, nxl
+                  aux(:, i, j) = aux(:, nxl + 1, j)
+                  val(:, i, j) = val(:, nxl + 1, j)
+              end do
+          end if
+      end do
+  close(2)
 
 case(1) ! Zero-order extrapolation
   do j = 1, ncol
@@ -190,6 +220,8 @@ select case(mthbc(2))
 case(0) ! User defined boundary condition
   ! Replace this code with a user defined boundary condition
   stop "A user defined boundary condition was not provided. (mthbc(2))"
+
+
 case(1) ! Zero-order extrapolation
   do i = ibeg, nrow
       do j = 1, ncol
@@ -236,7 +268,34 @@ nyb = int((ylower + hymarg - ylo_patch) / hy)
 select case(mthbc(3))
 case(0) ! User defined boundary condition
   ! Replace this code with a user defined boundary condition
-  stop "A user defined boundary condition was not provided. (mthbc(3))"
+  ! stop "A user defined boundary condition was not provided. (mthbc(3))"
+
+  open(unit=2,file='bclog.txt',status='unknown')
+      write(2,"(A42)") "    i    j     ylop     yhip         yc in"
+      do i = 1, nrow
+          xc = xlo_patch + (i - 0.5d0) * hx
+          write(2,"(i5,i5,f9.0,f9.0,f11.2)", advance='no') &
+              i, j, ylo_patch, yhi_patch, xc 
+          if (xc <= 2.67e6) then
+              write(2,*) " T"
+              ! Avalanche
+              do j=1, nyb
+                  val(1, i, j) = h0
+                  val(2, i, j) = hv0
+                  val(3, i, j) = hu0
+              end do
+          else
+              write(2,*) " F"
+              ! Zero-order extrapolation
+              do j=1, nyb
+                  aux(:, i, j) = aux(:, nyb + 1, j)
+                  ! val(:, i, j) = val(:, nyb + 1, j)
+                  val(:, i, j) = 0.  ! TODO
+              end do
+          end if
+      end do
+  close(2)
+
 
 case(1) ! Zero-order extrapolation
   do j = 1, nyb

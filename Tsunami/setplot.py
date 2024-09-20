@@ -66,7 +66,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmax = lake_level + 10
     plotitem.pcolor_cmin = 2*lake_level - plotitem.pcolor_cmax
     plotitem.add_colorbar = True
-    plotitem.amr_celledges_show = [1,1,0]
+    plotitem.amr_celledges_show = [0,0,0]
     plotitem.patchedges_show = 1
 
     # Land
@@ -76,7 +76,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmin = 1615
     plotitem.pcolor_cmax = 2300
     plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [1,1,0]
+    plotitem.amr_celledges_show = [0,0,0]
     plotitem.patchedges_show = 1
 
     # add contour lines of bathy if desired:

@@ -54,10 +54,15 @@ include $(CLAWMAKE)
 .PHONY: topo all
 topo:
 	$(CLAW_PYTHON) maketopo.py
-test:
-	@echo $(FFLAGS)
-	@echo OMP=$(OMP_NUM_THREADS) 
+
+iplot:
+	$(CLAW_PYTHON) ../iplot.py
+
 movie:
+	$(CLAW_PYTHON) ../movie.py
+	xdg-open movie.gif
+
+.movie:
 	$(MAKE) .plots
 	$(CLAW_PYTHON) ../movie.py
 	xdg-open movie.gif

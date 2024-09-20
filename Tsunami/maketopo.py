@@ -62,12 +62,12 @@ def main():
     if args.plot:
         ny = np.unique(y).size
         nx = y.size // ny
-        plt.imshow(z.reshape(ny, nx), cmap="inferno")
+        extent = (ulx, lrx, lry, uly)
+        print(f"{extent = }")
+        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         h = z_lake - z
         h[h <= 0] = float("nan")
         plt.imshow(h.reshape(ny, nx), cmap="Blues")
-        plt.gca().set_xticks((0, nx-1), (x.min(), x.max()))
-        plt.gca().set_yticks((0, ny-1), (y.min(), y.max()))
         plt.gca().set_aspect("equal")
         plt.show()
 

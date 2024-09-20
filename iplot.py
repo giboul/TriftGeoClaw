@@ -82,7 +82,7 @@ def plot_output(directory, fmt, animate):
         while plt.fignum_exists(fig.number):
             # Loop over images
             update(solix['i'])
-            plt.waitforbuttonpress()
+            fig.waitforbuttonpress()
 
     if animate is False:
         iplot()

@@ -58,6 +58,9 @@ topo:
 iplot:
 	$(CLAW_PYTHON) ../iplot.py
 
+plotloop:
+	$(CLAW_PYTHON) ../plotloop.py
+
 movie:
 	$(CLAW_PYTHON) ../movie.py
 	xdg-open movie.gif

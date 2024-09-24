@@ -63,11 +63,17 @@ def main():
         ny = np.unique(y).size
         nx = y.size // ny
         extent = (ulx, lrx, lry, uly)
-        print(f"{extent = }")
         plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         h = z_lake - z
-        h[h <= 0] = float("nan")
-        plt.imshow(h.reshape(ny, nx), cmap="Blues")
+        mask = h <= 0
+        h[mask] = float("nan")
+        extent_q0 = (
+            x[np.nanargmin(x[~mask])],
+            x[np.nanargmax(x[~mask])],
+            y[np.nanargmin(y[~mask])],
+            y[np.nanargmax(y[~mask])],
+        )
+        plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
         plt.gca().set_aspect("equal")
         plt.show()
 

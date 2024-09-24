@@ -34,19 +34,19 @@ ymin = cystart
 ymax = cystop
 
 #======= Computation =======
-nx = 20
-ny = 20
+nx = 50
+ny = 50
 
-nsim = 100
-tmax = 100
+nsim = 50
+tmax = 10
 
 dt_init = 1
 
 cfl_desired = 0.5
 nb_max_iter = 500
 
-refinement = 2
-refinement_area = 1
+refinement = 3
+refinement_area = 0
 DryWetLimit = 0.0001
 
 nodatavalue = 1  # ??

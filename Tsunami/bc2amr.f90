@@ -166,10 +166,13 @@ case(0) ! User defined boundary condition
               write(2,*) " F"
               ! Zero-order extrapolation
               do i=1, nxl
-                  aux(:, i, j) = aux(:, nxl + 1, j)
                   val(:, i, j) = val(:, nxl + 1, j)
               end do
           end if
+          ! Extend flat bathymetry
+          do i=1, nxl
+              aux(:, i, j) = aux(:, nxl + 1, j)
+          end do
       end do
   close(2)
 
@@ -220,7 +223,6 @@ select case(mthbc(2))
 case(0) ! User defined boundary condition
   ! Replace this code with a user defined boundary condition
   stop "A user defined boundary condition was not provided. (mthbc(2))"
-
 
 case(1) ! Zero-order extrapolation
   do i = ibeg, nrow
@@ -283,14 +285,14 @@ case(0) ! User defined boundary condition
                   val(1, i, j) = h0
                   val(2, i, j) = hv0
                   val(3, i, j) = hu0
+                  aux(:, i, j) = aux(:, nyb + 1, j)
               end do
           else
               write(2,*) " F"
               ! Zero-order extrapolation
               do j=1, nyb
                   aux(:, i, j) = aux(:, nyb + 1, j)
-                  ! val(:, i, j) = val(:, nyb + 1, j)
-                  val(:, i, j) = 0.  ! TODO
+                  val(:, i, j) = val(:, nyb + 1, j)
               end do
           end if
       end do

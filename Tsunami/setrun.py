@@ -24,7 +24,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
             f"{1.17150e6} := y_1\n"
             f"{1.} := h0\n"
             f"{20.} := hu0\n"
-            f"{20.} := hv0\n"
+            f"{0.} := hv0\n"
         )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -50,8 +50,8 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     clawdata.upper[1] = params.ymax  # north latitude
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 50
-    clawdata.num_cells[1] = 50
+    clawdata.num_cells[0] = params.nx
+    clawdata.num_cells[1] = params.ny
 
     # ---------------
     # Size of system:
@@ -181,10 +181,10 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    clawdata.bc_lower[0] = 'user'
-    clawdata.bc_upper[0] = 'wall'
-    clawdata.bc_lower[1] = 'user'
-    clawdata.bc_upper[1] = 'wall'
+    clawdata.bc_lower[0] = 'extrap'
+    clawdata.bc_upper[0] = 'extrap'
+    clawdata.bc_lower[1] = 'extrap'
+    clawdata.bc_upper[1] = 'extrap'
 
     # --------------
     # Checkpointing:

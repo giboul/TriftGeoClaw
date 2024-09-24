@@ -17,11 +17,8 @@ from clawpack.geoclaw.topotools import Topography
 
 from matplotlib import pyplot as plt
 from AddSetrun import (
-    xstart, xstop,
-    ystart, ystop,
-    cxstart, cxstop,
-    cystart, cystop,
-    scale,
+    xmin, xmax,
+    ymin, ymax,
     sea_level
 )
 
@@ -34,7 +31,7 @@ def gdaltranslate() -> None:
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    ulx, uly, lrx, lry = map(lambda x: x*scale, (xstart, ystop, xstop, ystart))
+    ulx, uly, lrx, lry = xmin, ymax, xmax, ymin
 
     data = Open(str(ifile))
     print(f"\tINFO: Cropping {ifile} to {tempdir / 'b1.tif'}")
@@ -46,10 +43,8 @@ def gdaltranslate() -> None:
     Translate(f"bathymetry.xyz", data, format="xyz")
 
     print(f"\tINFO: Rescaling bathymetry.xyz to computable values")
-    x, y, z = np.loadtxt("bathymetry.xyz").T/scale
+    x, y, z = np.loadtxt("bathymetry.xyz").T
     print(f"\tINFO: Stripping lake level to altitude 0 (bathymetry.xyz)")
-    x = x - xstart
-    y = y - ystart
     z = z - sea_level
     np.savetxt(f"bathymetry.xyz", np.vstack((x, y, z)).T)
 
@@ -92,20 +87,20 @@ def plot(asc=False, h0=False) -> None:
 
     # Plot approximate computational domain limits
     walls_kwargs = dict(facecolor='red', alpha=.2)
-    Xc, Zc = np.meshgrid((cxstart, cxstop), (z.min(), z.max()))
-    Yc = np.full_like(Xc, cystart)
+    Xc, Zc = np.meshgrid((xmin, xmax), (z.min(), z.max()))
+    Yc = np.full_like(Xc, ymin)
     ax.plot_surface(Xc, Yc, Zc, **walls_kwargs, label="Computational bounds")
 
-    Xc, Zc = np.meshgrid((cxstart, cxstop), (z.min(), z.max()))
-    Yc = np.full_like(Xc, cystop)
+    Xc, Zc = np.meshgrid((xmin, xmax), (z.min(), z.max()))
+    Yc = np.full_like(Xc, ymax)
     ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
 
-    Yc, Zc = np.meshgrid((cystart, cystop), (z.min(), z.max()))
-    Xc = np.full_like(Xc, cxstart)
+    Yc, Zc = np.meshgrid((ymin, ymax), (z.min(), z.max()))
+    Xc = np.full_like(Xc, xmin)
     ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
 
-    Yc, Zc = np.meshgrid((cystart, cystop), (z.min(), z.max()))
-    Xc = np.full_like(Xc, cxstop)
+    Yc, Zc = np.meshgrid((ymin, ymax), (z.min(), z.max()))
+    Xc = np.full_like(Xc, xmax)
     ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
 
     ax.set_aspect("equal")
@@ -142,11 +137,11 @@ def qinit(x, y):
     """"""
     q = np.zeros_like(x+y, dtype=np.float16)
     # q[(np.abs(x-cxstart) <= 1e-3) & (np.abs(y-1.1714) <= 1e-3)] = 100
-    xm = 0.7  # (xstart+xstop)/2
-    ym = 0.3  # 1171400./scale-ystart  # (ystart+ystop)/2
+    xm = 2.6690e6  # (xstart+xstop)/2
+    ym = 1.1704e6  # 1171400.-ystart  # (ystart+ystop)/2
     # q += sea_level
-    domain = (x-xm)**2+(y-ym)**2 <= (0.2)**2
-    q[domain] = 10/scale
+    domain = (x-xm)**2+(y-ym)**2 <= (2e2)**2
+    q[domain] = 10
     # print(q.min(), q.max())
     return q
 

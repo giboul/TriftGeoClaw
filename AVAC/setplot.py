@@ -13,8 +13,6 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-from AddSetrun import scale
-
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 

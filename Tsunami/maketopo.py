@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from argparse import ArgumentParser
 import params
-from skimage.segmentation import flood_fill
+from skimage.morphology import flood
 # from clawpack.geoclaw.marching_front import select_by_flooding
 
 
@@ -40,62 +40,53 @@ def main():
     
     print(f"\tINFO: Drawing dam... ")
     x, y, z = np.loadtxt(tempdir / "bathymetry.xyz").T
- 
     dam_y1 = params.dam_upstream(x, y)
     dam_y2 = params.dam_downstream(x, y) 
-
-    # Insert dam
-    mask = (dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_z)
-    z[mask] = params.dam_z
- 
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_z)] = params.dam_z
     print(f"\tINFO: Saving bathy_with_dam.xyz... ")
     np.savetxt("bathy_with_dam.xyz", np.vstack((x, y, z)).T)
     print(f"\t\tFile size is {Path('bathy_with_dam.xyz').stat().st_size:.2g} bytes")
 
     print("\tINFO: Writing qinit.xyz... ")
-    mask = y > dam_y1
     ny = np.unique(y).size
     nx = y.size // ny
-    z_lake = flood(
-        z.reshape(ny, nx),
-        params.lake_level
-    ).flatten()
+    z_lake = z.reshape(ny, nx).copy()
+    seed_x = 2.6703e6
+    seed_y = 1.1715e6
+    seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
+    seed = seed//nx, seed%nx
+    print(f"\t\tFlooding around {seed_x} {seed_y}...")
+    flooded = flood(z_lake < params.lake_level, seed)
+    z_lake[flooded] = params.lake_level
+    z_lake[~flooded] = 0
+    z_lake = z_lake.flatten()
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
     print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes")
 
     rmtree(tempdir)
-    
+
     parser = ArgumentParser()
     parser.add_argument("-p", "--plot", action="store_true")
     args = parser.parse_args()
-    if args.plot:
+    if args.plot or True:
         extent = (ulx, lrx, lry, uly)
         plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         h = z_lake - z
-        mask = h <= 0
-        h[mask] = float("nan")
-        extent_q0 = (
-            x[np.nanargmin(x[~mask])],
-            x[np.nanargmax(x[~mask])],
-            y[np.nanargmin(y[~mask])],
-            y[np.nanargmax(y[~mask])],
-        )
+        h[h < 0] = float("nan")
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
+        plt.scatter(seed_x, seed_y, label="flood seed", c='k')
         plt.gca().set_aspect("equal")
+        plt.legend()
         plt.show()
 
 
-def flood(z, max_level=0, mask=None):
-    print(f"{mask = }")
-    print(f"{params.lake_level}")
-    mask = None
-    zimage = np.ma.MaskedArray(z, mask)
-    zimage = np.ma.MaskedArray(zimage, zimage > max_level)
-    seed_point = np.unravel_index(zimage.argmin(), zimage.shape)
-    seed_point = (0, 0)
-    flooded = flood_fill(zimage, seed_point, max_level)
+def flood_mask(zimage, seed_point, max_level=0):
+    plt.imshow(zimage)
+    plt.gcf().show()
+    below_water_level = zimage < max_level
+    flooded = flood(below_water_level, seed_point)
     plt.scatter(*seed_point[::-1], c='r')
-    plt.imshow(((1,),), extent=(-100, 2*flooded.shape[1], -100, 2*flooded.shape[0]))
+    plt.figure()
     im = plt.imshow(flooded)
     plt.colorbar(im)
     plt.show()

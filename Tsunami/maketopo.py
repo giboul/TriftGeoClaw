@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from argparse import ArgumentParser
 import params
+from skimage.segmentation import flood_fill
 # from clawpack.geoclaw.marching_front import select_by_flooding
 
 
@@ -16,9 +17,15 @@ def main():
     ifile = Path("..") / "swissALTI3D_merged.tif"
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
-    
-    ulx, uly, lrx, lry = params.xmin, params.ymax, params.xmax, params.ymin
-    
+
+    if True:
+        ulx, uly, lrx, lry = params.xmin, params.ymax, params.xmax, params.ymin
+    else:
+        ulx = params.xmin - 0.5*(params.xmax - params.xmin)
+        uly = params.ymax + 0.5*(params.ymax - params.ymin)
+        lrx = params.xmax + 0.5*(params.xmax - params.xmin)
+        lry = params.ymin - 0.5*(params.ymax - params.ymin)
+
     print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
 
@@ -37,20 +44,22 @@ def main():
     dam_y1 = params.dam_upstream(x, y)
     dam_y2 = params.dam_downstream(x, y) 
 
+    # Insert dam
     mask = (dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_z)
     z[mask] = params.dam_z
-
+ 
     print(f"\tINFO: Saving bathy_with_dam.xyz... ")
     np.savetxt("bathy_with_dam.xyz", np.vstack((x, y, z)).T)
     print(f"\t\tFile size is {Path('bathy_with_dam.xyz').stat().st_size:.2g} bytes")
 
     print("\tINFO: Writing qinit.xyz... ")
-    z_lake = np.full_like(z, params.lake_level)
-    no_alt = 0
-    z_lake[y > dam_y2] = no_alt
-    z_lake[
-      (x < 2669800) | (2670900 < x) | (y < 1170300) | (1172000 < y)
-    ] = no_alt
+    mask = y > dam_y1
+    ny = np.unique(y).size
+    nx = y.size // ny
+    z_lake = flood(
+        z.reshape(ny, nx),
+        params.lake_level
+    ).flatten()
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
     print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes")
 
@@ -60,8 +69,6 @@ def main():
     parser.add_argument("-p", "--plot", action="store_true")
     args = parser.parse_args()
     if args.plot:
-        ny = np.unique(y).size
-        nx = y.size // ny
         extent = (ulx, lrx, lry, uly)
         plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         h = z_lake - z
@@ -76,6 +83,23 @@ def main():
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
         plt.gca().set_aspect("equal")
         plt.show()
+
+
+def flood(z, max_level=0, mask=None):
+    print(f"{mask = }")
+    print(f"{params.lake_level}")
+    mask = None
+    zimage = np.ma.MaskedArray(z, mask)
+    zimage = np.ma.MaskedArray(zimage, zimage > max_level)
+    seed_point = np.unravel_index(zimage.argmin(), zimage.shape)
+    seed_point = (0, 0)
+    flooded = flood_fill(zimage, seed_point, max_level)
+    plt.scatter(*seed_point[::-1], c='r')
+    plt.imshow(((1,),), extent=(-100, 2*flooded.shape[1], -100, 2*flooded.shape[0]))
+    im = plt.imshow(flooded)
+    plt.colorbar(im)
+    plt.show()
+    return flooded
 
 
 if __name__ == "__main__":

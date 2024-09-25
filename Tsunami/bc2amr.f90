@@ -120,8 +120,8 @@ hymarg = hy * .01d0
   y_0 = 1171250.0
   y_1 = 1171500.0
   h0 = 1.0
-  hu0 = 20.0
-  hv0 = 10.0
+  hu0 = 50.0
+  hv0 = 0.0
   ! print *, "y_0, y_1 h, hu, hv", y_0, y_1, h0, hu0, hv0
 
 ! Use periodic boundary condition specialized code only, if only one 
@@ -181,6 +181,7 @@ case(1) ! Zero-order extrapolation
       do i=1, nxl
           aux(:, i, j) = aux(:, nxl + 1, j)
           val(:, i, j) = val(:, nxl + 1, j)
+          print *, "Left extrap: aux(:, i, j)", aux(:, i, j)
       end do
   end do
 
@@ -229,6 +230,7 @@ case(1) ! Zero-order extrapolation
       do j = 1, ncol
           aux(:, i, j) = aux(:, ibeg - 1, j)
           val(:, i, j) = val(:, ibeg - 1, j)
+          print *, "Right extrap: aux(:, i, j)", aux(:, i, j)
       end do
   end do
 
@@ -285,14 +287,14 @@ case(0) ! User defined boundary condition
                   val(1, i, j) = h0
                   val(2, i, j) = hv0
                   val(3, i, j) = hu0
-                  aux(:, i, j) = aux(:, nyb + 1, j)
+                  aux(:, i, j) = aux(:, i, nyb + 1)
               end do
           else
               write(2,*) " F"
               ! Zero-order extrapolation
               do j=1, nyb
-                  aux(:, i, j) = aux(:, nyb + 1, j)
-                  val(:, i, j) = val(:, nyb + 1, j)
+                  aux(:, i, j) = aux(:, i, nyb + 1)
+                  val(:, i, j) = val(:, i, nyb + 1)
               end do
           end if
       end do
@@ -304,6 +306,7 @@ case(1) ! Zero-order extrapolation
       do i = 1, nrow
           aux(:,i,j) = aux(:, i, nyb + 1)
           val(:,i,j) = val(:, i, nyb + 1)
+          print *, "Bottom extrap: aux(:, i, j)", aux(:, i, j)
       end do
   end do
 
@@ -353,6 +356,7 @@ case(1) ! Zero-order extrapolation
       do i = 1, nrow
           aux(:, i, j) = aux(:, i, jbeg - 1)
           val(:, i, j) = val(:, i, jbeg - 1)
+          print *, "Top extrap: aux(:, i, j)", aux(:, i, j)
       end do
   end do
 
@@ -384,3 +388,6 @@ end select
 end if
 
 end subroutine bc2amr
+
+
+

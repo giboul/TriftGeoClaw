@@ -45,7 +45,6 @@ def gdaltranslate() -> None:
     print(f"\tINFO: Rescaling bathymetry.xyz to computable values")
     x, y, z = np.loadtxt("bathymetry.xyz").T
     print(f"\tINFO: Stripping lake level to altitude 0 (bathymetry.xyz)")
-    z = z - sea_level
     np.savetxt(f"bathymetry.xyz", np.vstack((x, y, z)).T)
 
     # Adding dam
@@ -57,61 +56,6 @@ def gdaltranslate() -> None:
     # Translate(f"bathymetry.asc", data, format="AAIGrid")  # Not in the right format
 
     rmtree(tempdir)
-
-
-def plot(asc=False, h0=False) -> None:
-
-    print(f"\tINFO: plotting bathymetry and approximate computational domain")
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-
-    if asc is True:
-        nx, ny, x0, y0, cs = np.loadtxt("bathymetry.asc", max_rows=5, usecols=1)
-        nx, ny = int(nx), int(ny)
-        x = np.linspace(x0, x0 + nx*cs, num=nx)
-        y = np.linspace(y0, y0 + ny*cs, num=ny)
-        z = np.loadtxt("bathymetry.asc", skiprows=5)
-        x, y = np.meshgrid(x, y)
-    else:
-        x, y, z = np.loadtxt("bathymetry.xyz").T
-
-    ax.plot_trisurf(x[::20], y[::20], z[::20], color='gray', alpha=0.7, label="Bathymetry")
-
-    if h0 is True:
-        xw, yw, zw = np.loadtxt("qinit.xyz").T
-        above = zw >= z
-        # above = 0 >= z
-        if above.sum() >= 3:
-            ax.plot_trisurf(x[above], y[above], np.full(above.sum(), 0), label="q0")
-
-    # Plot approximate computational domain limits
-    walls_kwargs = dict(facecolor='red', alpha=.2)
-    Xc, Zc = np.meshgrid((xmin, xmax), (z.min(), z.max()))
-    Yc = np.full_like(Xc, ymin)
-    ax.plot_surface(Xc, Yc, Zc, **walls_kwargs, label="Computational bounds")
-
-    Xc, Zc = np.meshgrid((xmin, xmax), (z.min(), z.max()))
-    Yc = np.full_like(Xc, ymax)
-    ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
-
-    Yc, Zc = np.meshgrid((ymin, ymax), (z.min(), z.max()))
-    Xc = np.full_like(Xc, xmin)
-    ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
-
-    Yc, Zc = np.meshgrid((ymin, ymax), (z.min(), z.max()))
-    Xc = np.full_like(Xc, xmax)
-    ax.plot_surface(Xc, Yc, Zc, **walls_kwargs)
-
-    ax.set_aspect("equal")
-    ax.legend(loc="upper left")
-    if True:
-        file = "Topography.png"
-        print(f"\tINFO: Saving {file}...", end=" ")
-        fig.savefig(file, bbox_inches='tight')
-        print("Done.")
-    else:
-        plt.show()
 
 
 def make_qinit():
@@ -150,4 +94,3 @@ if __name__ == "__main__":
     print(f"INFO: running {__file__}")
     gdaltranslate()
     make_qinit()
-    plot(h0=True)

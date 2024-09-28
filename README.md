@@ -7,7 +7,7 @@ This work is divided in two parts which are both base on David George's [Geoclaw
 
 This part is copied from Christophe Ancey's (cancey) work on avalanches, see his [AVAC](https://github.com/cancey/avac.git) repo.
 
-# 3. Wave modelling: [Tsunami](https://github.com/giboul/TriftGeoclaw/blob/main/Tsunami/README.md)
+# 2. Wave modelling: [Tsunami](https://github.com/giboul/TriftGeoclaw/blob/main/Tsunami/README.md)
 
 Here, David George's [Geoclaw](https://www.clawpack.org/geoclaw) covers everything.
 

@@ -44,7 +44,7 @@ fmt = args.fmt
 dpi = eval(args.dpi)
 
 if fmt == "show":
-    plt.show()
+    plt.show(block=True)
 
 elif fmt in ["png", "svg", "pdf", "jpg", "jpeg"]:
     del anim

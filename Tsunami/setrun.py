@@ -10,7 +10,7 @@ import numpy as np
 from clawpack.clawutil.data import ClawRunData
 import params
 
-def setrun(claw_pkg='geoclaw') -> ClawRunData:
+def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -28,7 +28,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
         )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
-    rundata = setgeo(rundata)
+    rundata = setgeo(rundata, bouss)
 
     # Standard Clawpack parameters to be written to claw.data:
     # (or to amr2ez.data for AMR)
@@ -44,10 +44,10 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = params.xmin  # west longitude
-    clawdata.upper[0] = params.xmax  # east longitude
-    clawdata.lower[1] = params.ymin  # south latitude
-    clawdata.upper[1] = params.ymax  # north latitude
+    clawdata.lower[0] = params.xmin - 0*(params.xmax - params.xmin)/20  # west longitude
+    clawdata.upper[0] = params.xmax + 0*(params.xmax - params.xmin)/20  # east longitude
+    clawdata.lower[1] = params.ymin - 0*(params.ymax - params.ymin)/20  # south latitude
+    clawdata.upper[1] = params.ymax + 0*(params.ymax - params.ymin)/20  # north latitude
 
     # Number of grid cells: Coarsest grid
     clawdata.num_cells[0] = params.nx
@@ -57,7 +57,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     # Size of system:
     # ---------------
     # Number of equations in the system:
-    clawdata.num_eqn = 5
+    clawdata.num_eqn = 5 if bouss else 3
     # Number of auxiliary variables in the aux array (initialized in setaux)
     clawdata.num_aux = 1
     # Index of aux array corresponding to capacity function, if there is one:
@@ -109,7 +109,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 1
+    clawdata.verbosity = 2
 
     # --------------
     # Time stepping:
@@ -181,10 +181,10 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    clawdata.bc_lower[0] = 'extrap'
-    clawdata.bc_upper[0] = 'extrap'
-    clawdata.bc_lower[1] = 'extrap'
-    clawdata.bc_upper[1] = 'extrap'
+    clawdata.bc_lower[0] = 'user'
+    clawdata.bc_upper[0] = 'user'
+    clawdata.bc_lower[1] = 'user'
+    clawdata.bc_upper[1] = 'user'
 
     # --------------
     # Checkpointing:
@@ -288,7 +288,7 @@ def setrun(claw_pkg='geoclaw') -> ClawRunData:
     return rundata
 
 
-def setgeo(rundata: ClawRunData) -> ClawRunData:
+def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     """
     Set GeoClaw specific runtime parameters.
     For documentation see ....
@@ -322,7 +322,7 @@ def setgeo(rundata: ClawRunData) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles.append([1, "bathy_with_dam.xyz"])
+    topo_data.topofiles.append([2, "bathy_with_dam.asc"])
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -342,7 +342,6 @@ def setgeo(rundata: ClawRunData) -> ClawRunData:
     # if lines and not lines[0].strip().startswith("#"):
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
-    print("INFO: Using the initial solution for momentum introcution.")
     rundata.qinit_data.qinit_type = 4
     rundata.qinit_data.qinitfiles = []
     rundata.qinit_data.qinitfiles.append(['qinit.xyz'])
@@ -350,27 +349,32 @@ def setgeo(rundata: ClawRunData) -> ClawRunData:
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)
     # fixed_grid_data script doesn't exist anymore...
-
-    from clawpack.geoclaw.data import BoussData
-    rundata.add_data(BoussData(),'bouss_data')
     
-    rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN
-    rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
-    rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss
-    rundata.bouss_data.bouss_min_depth = 1.  # depth to switch to SWE
-    rundata.bouss_data.bouss_solver = 3       # 1=GMRES, 2=Pardiso, 3=PETSc
-    rundata.bouss_data.bouss_tstart = 0.      # time to switch from SWE
+    if bouss is True:
+        print("Adding BoussData")
+        from clawpack.geoclaw.data import BoussData
+        rundata.add_data(BoussData(), 'bouss_data')
+        
+        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN
+        rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
+        rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss
+        rundata.bouss_data.bouss_min_depth = 1.   # depth to switch to SWE
+        rundata.bouss_data.bouss_solver = 3       # 1=GMRES, 2=Pardiso, 3=PETSc
+        rundata.bouss_data.bouss_tstart = 0.      # time to switch from SWE
 
     return rundata
 
 
 def main():
     # Treating command line arguments
+    with open('.data', 'w') as file:
+        pass
     parser = argparse.ArgumentParser()
-    parser.add_argument('claw_pkg')
+    parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()
 
-    rundata = setrun(args.claw_pkg)
+    rundata = setrun(**args.__dict__)
     rundata.write()
     # kmltools.make_input_data_kmls(rundata)
 

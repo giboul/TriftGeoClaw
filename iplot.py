@@ -95,12 +95,11 @@ def plot_output(directory, fmt, animate):
 
     if animate is False:
         update(0)
-        while plt.fignum_exists(fig.number):
-            fig.waitforbuttonpress()
+        plt.show(block=True)
     else:
         anim = FuncAnimation(fig, update, nsolutions, interval=200)
-        anim.save("test.mp4")
-        plt.show()
+        anim.save("movie.gif")
+        plt.show(block=True)
 
 def read_args():
     parser = ArgumentParser()

@@ -1,7 +1,4 @@
-import numpy as np
-
-
-xRes = yRes = 5
+Resolution = 5
 
 lake_level = 1767
 
@@ -24,24 +21,4 @@ amr_ratios = dict(
     y=(2,),
     t=(2,),
 )
-
-
-def dam_upstream(x, y, l=limit):
-    yd = ymax - 0.3*(x-xmin) - 50000/(x-l) - 300
-    yd[x > l] = float("inf") 
-    return yd
-
-
-def dam_downstream(x, y, thk=dam_thk):
-    d = dam_upstream(x, y)
-    u = dam_upstream(x+thk, y, l=limit-thk) + thk
-    return np.maximum(u, d)
-
-
-if __name__=="__main__":
-    from matplotlib import pyplot as plt
-    x = np.linspace(xmin, xmax)
-    plt.plot(x, dam_downstream(x, 0))
-    plt.plot(x, dam_upstream(x, 0))
-    plt.show()
 

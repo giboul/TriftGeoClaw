@@ -55,9 +55,6 @@ include $(CLAWMAKE)
 topo:
 	$(CLAW_PYTHON) maketopo.py
 
-iplot:
-	$(CLAW_PYTHON) ../iplot.py
-
 plotloop:
 	$(CLAW_PYTHON) ../plotloop.py
 

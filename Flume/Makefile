@@ -50,12 +50,12 @@ EXCLUDE_SOURCES = \
 # ----------------------------------------
 
 MODULES = \
+  myfunctions.f90 \
 
 SOURCES = \
   out1.f \
   src1.f90 \
   b4step1.f90 \
-  myfunctions.f90 \
   bc1.f \
   qinit.f90 \
   setprob.f90 \
@@ -70,7 +70,7 @@ include $(CLAWMAKE)
 .PHONY: topo all
 
 topo:
-	$(CLAW_PYTHON) make_topo.py
+	$(CLAW_PYTHON) maketopo.py
 
 fmt ?= show
 dpi ?= None

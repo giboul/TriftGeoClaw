@@ -66,8 +66,12 @@ def write_topo():
     z_lake = z_lake.flatten()
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
     print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes.")
-    print(f"\t\tWriting lake countour...")
-    np.savetxt("lake_contour.xy", find_contours(flooded, 0.5)[0])
+    print(f"\tINFO: Writing lake countour...")
+    yc, xc = find_contours(flooded, 0.5)[0].T
+    xc = xmin + xc/nx * (xmax - xmin)
+    yc = ymin + yc/ny * (ymax - ymin)
+    yc = ymin + (ymax-yc)
+    np.savetxt("lake_contour.xy", np.vstack((xc, yc)).T)
     print(f"\t\tFile size is {Path('lake_contour.xy').stat().st_size:.2g} bytes.")
 
     rmtree(tempdir)
@@ -81,6 +85,7 @@ def write_topo():
         h[h <= 0] = float("nan")
         plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
+        plt.plot(xc, yc, label="lake contour", c="g")
         plt.scatter(seed_x, seed_y, label="flood seed", c='k')
         plt.legend()
         plt.show()

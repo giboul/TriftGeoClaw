@@ -103,34 +103,18 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
 
 ! Local storage
-    logical :: logging
-    integer :: i, j, ibeg, jbeg, nxl, nxr, nyb, nyt, unit
+    integer :: i, j, ibeg, jbeg, nxl, nxr, nyb, nyt
     real(kind=8) :: hxmarg, hymarg, yc, y_0, y_1
-    real(kind=8) :: xc, x_0, x_1
+    real(kind=8) :: xc
     real(kind=8) :: h0, hu0, hv0
 
     hxmarg = hx*.01d0
     hymarg = hy*.01d0
-!   open(unit=1,file='bc_avac.data')
-!       ! rewind(1) ! TODO does not read correctly with multiple levels of amr
-!       read(1,*) y_0
-!       read(1,*) y_1
-!       read(1,*) h0
-!       read(1,*) hu0
-!       read(1,*) hv0
-!   close(1)
     y_0 = 1171250.0d0
     y_1 = 1171500.0d0
     h0 = 1.d0
     hu0 = 50.d0
-    hv0 = 50.d0
-    unit = 2
-    logging = .false.
-    if (logging) then
-        open (unit=unit, file='bclog.txt', status='replace')
-        write (unit,"(A)") NEW_LINE("A")
-        write (unit,"(A)") "   ix     ylop     yhip         yc in"
-    end if
+    hv0 = 0.d0
 
 ! Use periodic boundary condition specialized code only, if only one
 ! boundary is periodic we still proceed below
@@ -152,24 +136,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
-                if (logging) then
-                    write (unit,"(i5,f9.0,f9.0,f11.2)",advance='no') &
-                        j, ylo_patch, yhi_patch, yc
-                end if
                 if (time <= 30 .and. y_0 <= yc .and. yc <= y_1) then
-                    if (logging) then
-                        write (unit,"(A)") " LT"
-                    end if
-                    ! Avalanche
-                    do i = 1, nxl
+                    do i = 1, nxl ! Avalanche
                         val(1, i, j) = h0
                         val(2, i, j) = hu0
                         val(3, i, j) = hv0
                     end do
                 else
-                    if (logging) then
-                        write (unit,"(A)") " LF"
-                    end if
                     do i = 1, nxl ! Zero-order extrapolation
                         val(:, i, j) = val(:, nxl + 1, j)
                     end do
@@ -226,29 +199,18 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
-                if (logging) then
-                    write (unit,"(i5,f9.0,f9.0,f11.2)",advance='no') &
-                        j, ylo_patch, yhi_patch, yc
-                end if
                 if (.true.) then
-                    if (logging) then
-                        write (unit,"(A)") " RT"
-                    end if
-                    ! Avalanche
-                    do i = ibeg, nrow
+                    do i = ibeg, nrow ! Avalanche
                         val(1, i, j) = h0
-                        val(2, i, j) = hu0
+                        val(2, i, j) = -hu0
                         val(3, i, j) = hv0
                     end do
                 else
-                    if (logging) then
-                        write (unit,"(A)") " RF"
-                    end if
                     do i = ibeg, nrow ! Zero-order extrapolation
                         val(:, i, j) = val(:, ibeg - 1, j)
                     end do
                 end if
-                do i = 1, nxl ! Zero-order extrapolation
+                do i = ibeg, nrow ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, ibeg - 1, j)
                 end do
             end do
@@ -300,24 +262,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
-                if (logging) then
-                    write (unit,"(i5,f9.0,f9.0,f11.2)", advance='no') &
-                        i, ylo_patch, yhi_patch, xc
-                end if
                 if (.true.) then
-                    if (logging) then
-                        write (unit,"(A)") " BT"
-                    end if
-                    ! Avalanche
-                    do j = 1, nyb
+                    do j = 1, nyb ! Avalanche
                         val(1, i, j) = h0
                         val(2, i, j) = hv0
                         val(3, i, j) = hu0
                     end do
                 else
-                    if (logging) then
-                        write (unit,"(A)") " BF"
-                    end if
                     do j = 1, nyb ! Zero-order extrapolation
                         val(:, i, j) = val(:, i, nyb + 1)
                     end do
@@ -375,26 +326,15 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
-                if (logging) then
-                    write (unit,"(i5,f9.0,f9.0,f11.2)", advance='no') &
-                    i, ylo_patch, yhi_patch, xc
-                end if
                 if (.true.) then
-                    if (logging) then
-                        write (unit,"(A)") " TT"
-                    end if
-                    ! Avalanche
-                    do j = jbeg, ncol
+                    do j = jbeg, ncol ! Avalanche
                         ! print *, "h0, hu0, hv0"
                         ! print "(f9.0, f9.0, f9.0)", h0, hu0, hv0
                         val(1, i, j) = h0
                         val(2, i, j) = hv0
-                        val(3, i, j) = hu0
+                        val(3, i, j) = -hu0
                     end do
                 else
-                    if (logging) then
-                        write (unit,"(A)") " TF"
-                    end if
                     do j = 1, nyb ! Zero-order extrapolation
                         val(:, i, j) = val(:, i, jbeg - 1)
                     end do

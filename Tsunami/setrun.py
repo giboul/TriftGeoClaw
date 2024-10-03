@@ -44,10 +44,10 @@ def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = params.xmin - 0*(params.xmax - params.xmin)/20  # west longitude
-    clawdata.upper[0] = params.xmax + 0*(params.xmax - params.xmin)/20  # east longitude
-    clawdata.lower[1] = params.ymin - 0*(params.ymax - params.ymin)/20  # south latitude
-    clawdata.upper[1] = params.ymax + 0*(params.ymax - params.ymin)/20  # north latitude
+    clawdata.lower[0] = params.bounds["xmin"]
+    clawdata.upper[0] = params.bounds["xmax"]
+    clawdata.lower[1] = params.bounds["ymin"]
+    clawdata.upper[1] = params.bounds["ymax"]
 
     # Number of grid cells: Coarsest grid
     clawdata.num_cells[0] = params.nx

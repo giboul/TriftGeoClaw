@@ -2,16 +2,13 @@
 from pathlib import Path
 from argparse import ArgumentParser
 from shutil import rmtree
+import params
 import numpy as np
 from matplotlib import pyplot as plt
-from skimage.morphology import flood
-from yaml import safe_load
+from skimage.morphology import flood, isotropic_dilation
+from skimage.measure import find_contours
 from osgeo.gdal import UseExceptions, Open, Translate, Warp
 # from clawpack.geoclaw.marching_front import select_by_flooding
-
-
-with open("settings.yaml") as file:
-    settings = safe_load(file)
 
 
 def write_topo():
@@ -22,58 +19,56 @@ def write_topo():
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    bds = settings["bounds"]  # Add some room for error
+    bds = params.bounds  # Add some room for error
     xmin = bds["xmin"] - (bds["xmax"] - bds["xmin"])/2
-    ymin = bds["ymax"] + (bds["ymax"] - bds["ymin"])/2
+    ymin = bds["ymin"] - (bds["ymax"] - bds["ymin"])/2
     xmax = bds["xmax"] + (bds["xmax"] - bds["xmin"])/2
-    ymax = bds["ymin"] - (bds["ymax"] - bds["ymin"])/2
+    ymax = bds["ymax"] + (bds["ymax"] - bds["ymin"])/2
 
     print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
 
-    print(f"\tINFO: Downsampling {ifile} to {tempdir / 'b1.tiff'}")
-    data = Warp(str(tempdir / 'b1.tif'), data,
-                xRes=settings["resolution"],
-                yRes=settings["resolution"],
+    print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
+    data = Warp(str(tempdir / 'bathy.tif'), data,
+                xRes=params.resolution,
+                yRes=params.resolution,
                 outputBounds=(xmin, ymin, xmax, ymax))
-    
-    print(f"\tINFO: Cropping {tempdir / 'b1.tif'} to {tempdir / 'b2.tif'}... ")
-    data = Translate(str(tempdir / "b2.tif"), data)
-    print(f"\tINFO: Converting {tempdir / 'b2.tif'} to bathymetry.xyz... ")
-    Translate(str(tempdir / "bathymetry.xyz"), data, format="xyz")
+ 
+    print(f"\tINFO: Converting {tempdir / 'bathy.tif'} to bathy.xyz... ")
+    Translate(str(tempdir / "bathy.xyz"), data, format="xyz")
 
     print(f"\tINFO: Drawing dam... ")
-    x, y, z = np.loadtxt(tempdir / "bathymetry.xyz").T
+    x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
     dam_y1 = dam_upstream(x, y)
     dam_y2 = dam_downstream(x, y) 
-    z[(dam_y1 <= y) & (y <= dam_y2) & (z < settigs["dam_alt"])] = settings["dam_alt"]
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     ny = np.unique(y).size
     nx = y.size // ny
     asc_header = "\n".join((
         f"{nx} ncols",
         f"{ny} nrows",
-        f"{x.min()} xll",
-        f"{y.min()} yll",
-        f"{settings['resolution']} cellsize",
+        f"{x.min()} xllcenter",
+        f"{y.min()} yllcenter",
+        f"{params.resolution} cellsize",
         f"{999999} nodata_value"
     ))
     np.savetxt("bathy_with_dam.asc", z, header=asc_header)
-    print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes")
+    print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
 
     print("\tINFO: Writing qinit.xyz... ")
     z_lake = z.reshape(ny, nx).copy()
-    seed_x = 2.67026e6
-    seed_y = 1.171490e6
+    seed_x, seed_y = params.flood_seed
     seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
     seed = seed//nx, seed%nx
     print(f"\t\tFlooding around {seed_x} {seed_y}...")
-    flooded = flood(z_lake < settings["lake_level"], seed)
-    z_lake[flooded] = params.lake_level
-    z_lake[~flooded] = 0
+    flooded = fill_lake(z_lake, seed, params.lake_alt, 10/params.resolution)
     z_lake = z_lake.flatten()
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
-    print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes")
+    print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes.")
+    print(f"\t\tWriting lake countour...")
+    np.savetxt("lake_contour.xy", find_contours(flooded, 0.5)[0])
+    print(f"\t\tFile size is {Path('lake_contour.xy').stat().st_size:.2g} bytes.")
 
     rmtree(tempdir)
 
@@ -81,19 +76,26 @@ def write_topo():
     parser.add_argument("-p", "--plot", action="store_true")
     args = parser.parse_args()
     if args.plot or True:
-        extent = (ulx, lrx, lry, uly)
-        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
+        extent =(xmin, xmax, ymin, ymax) 
         h = z_lake - z
-        h[h < 0] = float("nan")
+        h[h <= 0] = float("nan")
+        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
         plt.scatter(seed_x, seed_y, label="flood seed", c='k')
-        plt.gca().set_aspect("equal")
         plt.legend()
         plt.show()
 
 
+def fill_lake(topo, seed, max_level=0, dilation_radius=0):
+    flooded = flood(topo < max_level, seed)
+    isotropic_dilation(flooded, dilation_radius, flooded)
+    topo[flooded] = max_level
+    return flooded
+
+
 def dam_upstream(x, y, l=2670561, offset=0):
-    yd = params.ymax - 0.3*(x-params.xmin) - 50000/(x-l+offset) - 300 + offset
+    bds = params.bounds
+    yd = bds["ymax"] - 0.3*(x-bds["xmin"]) - 50000/(x-l+offset) - 300 + offset
     yd[x > l] = float("inf") 
     return yd
 

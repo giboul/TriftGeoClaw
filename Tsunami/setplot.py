@@ -14,7 +14,7 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-from params import lake_level, out_format
+from params import lake_alt, out_format
 
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -64,8 +64,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.plot_var = geoplot.surface
     # plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = geoplot.tsunami_colormap
-    plotitem.pcolor_cmax = lake_level + 10
-    plotitem.pcolor_cmin = 2*lake_level - plotitem.pcolor_cmax
+    plotitem.pcolor_cmax = lake_alt + 10
+    plotitem.pcolor_cmin = 2*lake_alt - plotitem.pcolor_cmax
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0,0,0]
     plotitem.patchedges_show = 1

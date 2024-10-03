@@ -1,15 +1,16 @@
-Resolution = 5
+resolution = 5
 
-lake_level = 1767
+lake_alt = 1767
+dam_alt = lake_alt + 10
+flood_seed = (2.67026e6, 1.171490e6)
 
-xmin = 2669700.
-xmax = 2671000.
-ymin = 1170100.
-ymax = 1172100.
+bounds = dict(
+    xmin = 2669700.,
+    xmax = 2671000.,
+    ymin = 1170100.,
+    ymax = 1172100.,
+)
 
-dam_z = lake_level + 10
-dam_thk = 30
-limit = 2670561
 
 out_format = "binary"
 

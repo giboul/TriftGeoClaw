@@ -98,11 +98,11 @@ def fill_lake(topo, seed, max_level=0, dilation_radius=0):
     return flooded
 
 
-def dam_upstream(x, y, l=2670561, offset=0):
-    bds = params.bounds
-    yd = bds["ymax"] - 0.3*(x-bds["xmin"]) - 50000/(x-l+offset) - 300 + offset
-    yd[x > l] = float("inf") 
+def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
+    yd = y0 - 0.3*(x-x0) - 50000/(x-x1+offset) - 300 + offset
+    yd[(x < x0) | (x > x1)] = float("inf")
     return yd
+
 
 def dam_downstream(x, y, thk=30):
     d = dam_upstream(x, y)

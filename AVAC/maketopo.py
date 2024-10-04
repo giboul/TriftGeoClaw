@@ -1,96 +1,129 @@
 #!/usr/bin/env python
-"""
-Script for generating the topography file and the extents.
-
-Currently
----------
-    `gdaltranslate` crops, coarsens and the converts the file to `bathymetry.xyz`
-    `plot` helps to analyse both created files
-    `make_qinit` as well as `qinit` are in progress
-"""
 from pathlib import Path
+from argparse import ArgumentParser
 from shutil import rmtree
-from osgeo.gdal import Open, Translate, Warp
-
+import params
 import numpy as np
-from clawpack.geoclaw.topotools import Topography
-
 from matplotlib import pyplot as plt
-from AddSetrun import (
-    xmin, xmax,
-    ymin, ymax,
-    sea_level
-)
+from skimage.morphology import flood, isotropic_dilation
+from skimage.measure import find_contours
+from osgeo.gdal import UseExceptions, Open, Translate, Warp
+# from clawpack.geoclaw.marching_front import select_by_flooding
 
 
-def gdaltranslate() -> None:
-
-    xRes = yRes = 10
+def write_topo():
+    UseExceptions()
+    
     # Temporary directory
-    ifile = Path("..")/"swissALTI3D_merged.tif"
+    ifile = Path("..") / "swissALTI3D_merged.tif"
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    ulx, uly, lrx, lry = xmin, ymax, xmax, ymin
+    bds = params.bounds  # Add some room for error
+    xmin = bds["xmin"] - (bds["xmax"] - bds["xmin"])/2
+    ymin = bds["ymin"] - (bds["ymax"] - bds["ymin"])/2
+    xmax = bds["xmax"] + (bds["xmax"] - bds["xmin"])/2
+    ymax = bds["ymax"] + (bds["ymax"] - bds["ymin"])/2
 
+    print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
-    print(f"\tINFO: Cropping {ifile} to {tempdir / 'b1.tif'}")
-    data = Translate(str(tempdir / "b1.tif"), data, projWin=(ulx, uly, lrx, lry))
-    print(f"\tINFO: Downsampling {tempdir / 'b1.tif'} to {xRes=} {yRes=}")
-    data = Warp(str(tempdir / 'b2.tif'), data, xRes=xRes, yRes=yRes)
 
-    print(f"\tINFO: Converting {tempdir / 'b2.tif'} to bathymetry.xyz")
-    Translate(f"bathymetry.xyz", data, format="xyz")
+    print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
+    data = Warp(str(tempdir / 'bathy.tif'), data,
+                xRes=params.resolution,
+                yRes=params.resolution,
+                outputBounds=(xmin, ymin, xmax, ymax))
+ 
+    print(f"\tINFO: Converting {tempdir / 'bathy.tif'} to bathy.xyz... ")
+    Translate(str(tempdir / "bathy.xyz"), data, format="xyz")
 
-    print(f"\tINFO: Rescaling bathymetry.xyz to computable values")
-    x, y, z = np.loadtxt("bathymetry.xyz").T
-    print(f"\tINFO: Stripping lake level to altitude 0 (bathymetry.xyz)")
-    np.savetxt(f"bathymetry.xyz", np.vstack((x, y, z)).T)
+    print(f"\tINFO: Drawing dam... ")
+    x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
+    dam_y1 = dam_upstream(x, y)
+    dam_y2 = dam_downstream(x, y) 
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
+    print(f"\tINFO: Saving bathy_with_dam.asc... ")
+    ny = np.unique(y).size
+    nx = y.size // ny
+    asc_header = "\n".join((
+        f"{nx} ncols",
+        f"{ny} nrows",
+        f"{x.min()} xllcenter",
+        f"{y.min()} yllcenter",
+        f"{params.resolution} cellsize",
+        f"{999999} nodata_value"
+    ))
+    np.savetxt("bathy_with_dam.asc", z, header=asc_header)
+    print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
 
-    # Adding dam
-    # dam = ((x >= 2.6700500) & (x <= 2.6705) &
-    #        (y >= 1.1717714) & (y <= 1.1719301))
-    # z[dam] += 115  # m (hauteur du barrage)
-
-    # print(f"\tINFO: Converting {tempdir / 'b2.tif'} to bathymetry.asc")
-    # Translate(f"bathymetry.asc", data, format="AAIGrid")  # Not in the right format
+    print(f"\tINFO: Writing lake countour...")
+    seed_x, seed_y = params.flood_seed
+    seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
+    seed = seed//nx, seed%nx
+    print(f"\t\tFlooding around {seed_x} {seed_y}...")
+    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, params.lake_alt, 10/params.resolution)
+    print(f"\t\tFinding flood bounding box...")
+    yc, xc = find_contours(flooded, 0.5)[0].T
+    xc = xmin + xc/nx * (xmax - xmin)
+    yc = ymin + yc/ny * (ymax - ymin)
+    yc = ymin + (ymax-yc)
+    with open("lake_bounds.py", "w") as file:
+        file.write("\n".join((
+            f"xmin = {xc.min()}",
+            f"xmax = {xc.max()}",
+            f"ymin = {yc.min()}",
+            f"ymax = {yc.max()}"
+        )))
 
     rmtree(tempdir)
 
-
-def make_qinit():
-    """
-    Create qinit data file
-    """
-    x, y, z = np.loadtxt("bathymetry.xyz").T
-    nxpoints = np.unique(x).size
-    nypoints = np.unique(y).size
-    xlower = x.min()
-    xupper = x.max()
-    ylower = y.min()
-    yupper = y.max()
-    outfile = "qinit.xyz"
-
-    topography = Topography(topo_func=qinit)
-    topography.x = np.linspace(xlower,xupper,nxpoints)
-    topography.y = np.linspace(ylower,yupper,nypoints)
-    topography.write(outfile)
+    parser = ArgumentParser()
+    parser.add_argument("-p", "--plot", action="store_true")
+    args = parser.parse_args()
+    if args.plot or True:
+        extent =(xmin, xmax, ymin, ymax) 
+        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
+        xcmin, xcmax = xc.min(), xc.max()
+        ycmin, ycmax = yc.min(), yc.max()
+        plt.plot((xcmin, xcmax, xcmax, xcmin, xcmin),
+                 (ycmin, ycmin, ycmax, ycmax, ycmin))
+        plt.plot(xc, yc, label="lake contour", c="g")
+        plt.scatter(seed_x, seed_y, label="flood seed", c='k')
+        plt.legend()
+        plt.show()
 
 
-def qinit(x, y):
-    """"""
-    q = np.zeros_like(x+y, dtype=np.float16)
-    # q[(np.abs(x-cxstart) <= 1e-3) & (np.abs(y-1.1714) <= 1e-3)] = 100
-    xm = 2.6690e6  # (xstart+xstop)/2
-    ym = 1.1704e6  # 1171400.-ystart  # (ystart+ystop)/2
-    # q += sea_level
-    domain = (x-xm)**2+(y-ym)**2 <= (2e2)**2
-    q[domain] = 10
-    # print(q.min(), q.max())
-    return q
+def fill_lake(topo, seed, max_level=0, dilation_radius=0):
+    flooded = flood(topo < max_level, seed)
+    isotropic_dilation(flooded, dilation_radius, flooded)
+    topo[flooded] = max_level
+    return flooded
+
+
+def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
+    bds = params.bounds
+    yd = y0 - 0.3*(x-x0) - 50000/(x-x1+offset) - 300 + offset
+    yd[(x < x0) | (x > x1)] = float("inf")
+    return yd
+
+def dam_downstream(x, y, thk=30):
+    d = dam_upstream(x, y)
+    u = dam_upstream(x+thk, y, offset=30)
+    return np.maximum(u, d)
+
+def flood_mask(zimage, seed_point, max_level=0):
+    plt.imshow(zimage)
+    plt.gcf().show()
+    below_water_level = zimage < max_level
+    flooded = flood(below_water_level, seed_point)
+    plt.scatter(*seed_point[::-1], c='r')
+    plt.figure()
+    im = plt.imshow(flooded)
+    plt.colorbar(im)
+    plt.show()
+    return flooded
 
 
 if __name__ == "__main__":
-    print(f"INFO: running {__file__}")
-    gdaltranslate()
-    make_qinit()
+    write_topo()
+

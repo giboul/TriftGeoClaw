@@ -11,7 +11,7 @@ nx = 40
 ny = 40
 
 nsim = 50
-tmax = 50
+tmax = 80
 
 dt_init = 1.
 

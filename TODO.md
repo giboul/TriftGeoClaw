@@ -6,6 +6,7 @@
 - [ ] Ajouter des graphes de l’intumescence au barrage (~~ligne de jauges~~ script python).
 - [ ] Simuler toutes les avalanches proposées.
 - [ ] Comparer les résultats à ceux des expériences VAW+LHE (test des conditions de bord).
+- [ ] Faire un diagramme expliquant le fonctionnement de GeoClaw.
 
 # Avancement du projet
 Je mettrai ici à jour mon avancement à chaque étape.

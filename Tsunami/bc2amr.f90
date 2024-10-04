@@ -94,6 +94,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
     implicit none
 
+    common /params/ damping
+
 ! Input/Output
     integer, intent(in) :: nrow, ncol, meqn, naux, level
     real(kind=8), intent(in) :: hx, hy, time
@@ -113,7 +115,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     y_0 = 1171250.0d0
     y_1 = 1171500.0d0
     h0 = 1.d0
-    hu0 = 50.d0
+    hu0 = 50.d0*damping
     hv0 = 0.d0
 
 ! Use periodic boundary condition specialized code only, if only one

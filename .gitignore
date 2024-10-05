@@ -1,5 +1,6 @@
 *.data
-*fort.*
+fort.*
+cut.*
 *.xyz
 *.asc
 *.mp4
@@ -12,6 +13,6 @@ timing.*
 **/.*
 xgeoclaw
 
-**/__pycache__/**
-**/_plots/**
-**/_output/**
+__pycache__
+_plots
+_output

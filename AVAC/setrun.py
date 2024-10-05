@@ -9,7 +9,6 @@ that will be read in by the Fortran code.
 
 from __future__ import absolute_import
 from __future__ import print_function
-import os
 import numpy as np
 
 
@@ -396,7 +395,7 @@ def setgeo(rundata):
     geo_data.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geo_data.sea_level = AddSetrun.sea_level
+    geo_data.sea_level = 0
     geo_data.dry_tolerance = AddSetrun.DryWetLimit
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025

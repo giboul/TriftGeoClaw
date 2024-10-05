@@ -47,12 +47,14 @@ def pick_seed(z_im, x, y, res=0):
     imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues_r")
     title = "Max altitude: %s   Dilation radius: %i"
 
-    data = dict(alt="", x=0, y=0, r=0)
+    data = dict(alt="", x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
 
-    def redraw():
-        ax.set_title(title % (data["alt"], data["r"]))
+    def redraw(ignore_pause=False):
+        if data["status"] == "pause" and ignore_pause is False:
+            return None
+        fig.canvas.manager.set_window_title(f"Flooding...")
         flooded = fill_lake(z_im.copy(), (data["y"], data["x"]), float(data["alt"] or 0))
         dilated = isotropic_dilation(flooded, data["r"])
         flooded = np.ma.MaskedArray(z_im, ~flooded)
@@ -62,28 +64,34 @@ def pick_seed(z_im, x, y, res=0):
         imf.set(clim=(flooded.min(), flooded.max()))
         imd.set(clim=(dilated.min(), dilated.max()))
         fig.canvas.draw()
+        fig.canvas.manager.set_window_title(f"Status: {data['status']}")
 
-    def enter_alt(event):
+    def key_events(event):
         if event.key.isnumeric() or event.key == ".":
             data["alt"] += event.key
-            redraw()
         elif event.key == "backspace":
             data["alt"] = data["alt"][:-1]
-            redraw()
-    fig.canvas.mpl_connect("key_press_event", enter_alt)
+        if event.key in keys:
+            data["r"] += keys[event.key]
+            redraw(ignore_pause=False)
+        elif event.key == "enter":
+            redraw(ignore_pause=True)
+        elif event.key == " ":
+            if data["status"] == "pause":
+                data["status"] = "waiting"
+            else:
+                data["status"] = "pause"
+            fig.canvas.manager.set_window_title(f"Status: {data['status']}")
+        ax.set_title(title % (data["alt"], data["r"]))
+        fig.canvas.draw()
+    fig.canvas.mpl_connect("key_press_event", key_events)
 
     def flood_pick(event):
         if event.dblclick:
             data["x"] = np.abs(x-event.xdata+res/2).argmin()
             data["y"] = np.abs(y-event.ydata+res/2).argmin()
-            redraw()
+            redraw(ignore_pause=True)
     fig.canvas.mpl_connect("button_press_event", flood_pick)
-
-    def dilate(event):
-        if event.key in keys:
-            data["r"] += keys[event.key]
-            redraw()
-    fig.canvas.mpl_connect("key_press_event", dilate)
 
     plt.show()
     return data["x"], data["y"], data["r"]
@@ -91,8 +99,10 @@ def pick_seed(z_im, x, y, res=0):
 
 def fill_lake(topo, seed, max_level=0):
     mask = topo < max_level
+    initial_value = mask[*seed]
     mask[*seed] = True
     flooded = flood(mask, seed)
+    flooded[*seed] = initial_value
     topo[flooded] = max_level
     return flooded
 

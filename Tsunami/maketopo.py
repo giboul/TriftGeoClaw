@@ -5,8 +5,6 @@ from shutil import rmtree
 import params
 import numpy as np
 from matplotlib import pyplot as plt
-from skimage.morphology import flood, isotropic_dilation
-from skimage.measure import find_contours
 from osgeo.gdal import UseExceptions, Open, Translate, Warp
 # from clawpack.geoclaw.marching_front import select_by_flooding
 
@@ -19,11 +17,9 @@ def write_topo():
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    bds = params.bounds  # Add some room for error
-    xmin = bds["xmin"] - (bds["xmax"] - bds["xmin"])/2
-    ymin = bds["ymin"] - (bds["ymax"] - bds["ymin"])/2
-    xmax = bds["xmax"] + (bds["xmax"] - bds["xmin"])/2
-    ymax = bds["ymax"] + (bds["ymax"] - bds["ymin"])/2
+    # Add some room to avoid interpolation error
+    xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
+    print(f"Expanding bounds to {xmin, ymin, xmax, ymax = }")
 
     print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
@@ -39,9 +35,8 @@ def write_topo():
 
     print(f"\tINFO: Drawing dam... ")
     x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
-    dam_y1 = dam_upstream(x, y)
-    dam_y2 = dam_downstream(x, y) 
-    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
+    insert_dam(x, y, z)
+
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     ny = np.unique(y).size
     nx = y.size // ny
@@ -53,53 +48,39 @@ def write_topo():
         f"{params.resolution} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt("bathy_with_dam.asc", z, header=asc_header)
-    print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
-
-    print("\tINFO: Writing qinit.xyz... ")
-    z_lake = z.reshape(ny, nx).copy()
-    seed_x, seed_y = params.flood_seed
-    seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
-    seed = seed//nx, seed%nx
-    print(f"\t\tFlooding around {seed_x} {seed_y}...")
-    flooded = fill_lake(z_lake, seed, params.lake_alt, 10/params.resolution)
-    z_lake = z_lake.flatten()
-    np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
-    print(f"\t\tFile size is {Path('qinit.xyz').stat().st_size:.2g} bytes.")
-    print(f"\tINFO: Writing lake countour...")
-    yc, xc = find_contours(flooded, 0.5)[0].T
-    xc = xmin + xc/nx * (xmax - xmin)
-    yc = ymin + yc/ny * (ymax - ymin)
-    yc = ymin + (ymax-yc)
-    np.savetxt("lake_contour.xy", np.vstack((xc, yc)).T)
-    print(f"\t\tFile size is {Path('lake_contour.xy').stat().st_size:.2g} bytes.")
+    np.savetxt("bathy_with_dam.asc", z, header=asc_header, comments="")
+    print(f"\tINFO: File size is {Path("bathy_with_dam.asc").stat().st_size:.2g} bytes.")
 
     rmtree(tempdir)
 
     parser = ArgumentParser()
     parser.add_argument("-p", "--plot", action="store_true")
     args = parser.parse_args()
-    if args.plot or True:
-        extent =(xmin, xmax, ymin, ymax) 
-        h = z_lake - z
+    if args.plot:
+        extent = (xmin, xmax, ymin, ymax) 
+        h = params.lake_alt - z
         h[h <= 0] = float("nan")
         plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
-        plt.plot(xc, yc, label="lake contour", c="g")
-        plt.scatter(seed_x, seed_y, label="flood seed", c='k')
-        plt.legend()
         plt.show()
 
 
-def fill_lake(topo, seed, max_level=0, dilation_radius=0):
-    flooded = flood(topo < max_level, seed)
-    isotropic_dilation(flooded, dilation_radius, flooded)
-    topo[flooded] = max_level
-    return flooded
+def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
+    _xmin = xmin - margin*(xmax - xmin)
+    _ymin = ymin - margin*(ymax - ymin)
+    _xmax = xmax + margin*(xmax - xmin)
+    _ymax = ymax + margin*(ymax - ymin)
+    return _xmin, _xmax, _ymin, _ymax
+
+
+def insert_dam(x, y, z):
+    dam_y1 = dam_upstream(x, y)
+    dam_y2 = dam_downstream(x, y) 
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
 
 
 def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
-    yd = y0 - 0.3*(x-x0) - 50000/(x-x1+offset) - 300 + offset
+    yd = y0 - 0.3*(x+offset*0-x0) - 50000/(x+offset*0-x1) - 300 + offset
     yd[(x < x0) | (x > x1)] = float("inf")
     return yd
 
@@ -108,18 +89,6 @@ def dam_downstream(x, y, thk=30):
     d = dam_upstream(x, y)
     u = dam_upstream(x+thk, y, offset=30)
     return np.maximum(u, d)
-
-def flood_mask(zimage, seed_point, max_level=0):
-    plt.imshow(zimage)
-    plt.gcf().show()
-    below_water_level = zimage < max_level
-    flooded = flood(below_water_level, seed_point)
-    plt.scatter(*seed_point[::-1], c='r')
-    plt.figure()
-    im = plt.imshow(flooded)
-    plt.colorbar(im)
-    plt.show()
-    return flooded
 
 
 if __name__ == "__main__":

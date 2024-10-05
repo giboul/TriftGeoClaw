@@ -1,7 +1,7 @@
 # TODO
 - [x] Créer un Iplotclaw plus facile à utiliser: [arrowkeyplot.py](https://github.com/giboul/visclaw/blob/Iplot_mpl/src/python/visclaw/arrowkeyplot.py)
 - [x] Écrire le fichier `qinit.xyz` par un algorithme de remplissage: fonction [`flood_mask`](https://github.com/giboul/TriftGeoClaw/blob/main/Tsunami/makeqinit.py#L26) dans `makeqinit.py`.
-- [ ] Enregistrer les flux de neige entrants.
+- [x] Enregistrer les flux de neige entrants.
 - [ ] Interpoler les flux entrants et les amortir par $\rho_\text{neige}/\rho_\text{eau}$ pour créer la bonne vague d'impulsion.
 - [ ] Ajouter des graphes de l’intumescence au barrage (~~ligne de jauges~~ script python).
 - [ ] Simuler toutes les avalanches proposées.

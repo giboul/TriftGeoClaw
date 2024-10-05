@@ -2,7 +2,7 @@
 from pathlib import Path
 from argparse import ArgumentParser
 from shutil import rmtree
-import params
+import AddSetrun
 import numpy as np
 from matplotlib import pyplot as plt
 from skimage.morphology import flood, isotropic_dilation
@@ -19,19 +19,18 @@ def write_topo():
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    bds = params.bounds  # Add some room for error
-    xmin = bds["xmin"] - (bds["xmax"] - bds["xmin"])/2
-    ymin = bds["ymin"] - (bds["ymax"] - bds["ymin"])/2
-    xmax = bds["xmax"] + (bds["xmax"] - bds["xmin"])/2
-    ymax = bds["ymax"] + (bds["ymax"] - bds["ymin"])/2
+    xmin = AddSetrun.xmin - (AddSetrun.xmax - AddSetrun.xmin)/2
+    ymin = AddSetrun.ymin - (AddSetrun.ymax - AddSetrun.ymin)/2
+    xmax = AddSetrun.xmax + (AddSetrun.xmax - AddSetrun.xmin)/2
+    ymax = AddSetrun.ymax + (AddSetrun.ymax - AddSetrun.ymin)/2
 
     print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
 
     print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
     data = Warp(str(tempdir / 'bathy.tif'), data,
-                xRes=params.resolution,
-                yRes=params.resolution,
+                xRes=AddSetrun.resolution,
+                yRes=AddSetrun.resolution,
                 outputBounds=(xmin, ymin, xmax, ymax))
  
     print(f"\tINFO: Converting {tempdir / 'bathy.tif'} to bathy.xyz... ")
@@ -41,7 +40,7 @@ def write_topo():
     x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
     dam_y1 = dam_upstream(x, y)
     dam_y2 = dam_downstream(x, y) 
-    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < AddSetrun.dam_level)] = AddSetrun.dam_level
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     ny = np.unique(y).size
     nx = y.size // ny
@@ -50,18 +49,18 @@ def write_topo():
         f"{ny} nrows",
         f"{x.min()} xllcenter",
         f"{y.min()} yllcenter",
-        f"{params.resolution} cellsize",
+        f"{AddSetrun.resolution} cellsize",
         f"{999999} nodata_value"
     ))
     np.savetxt("bathy_with_dam.asc", z, header=asc_header)
     print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
 
     print(f"\tINFO: Writing lake countour...")
-    seed_x, seed_y = params.flood_seed
+    seed_x, seed_y = AddSetrun.flood_seed
     seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
     seed = seed//nx, seed%nx
     print(f"\t\tFlooding around {seed_x} {seed_y}...")
-    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, params.lake_alt, 10/params.resolution)
+    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, AddSetrun.lake_level, 10/AddSetrun.resolution)
     print(f"\t\tFinding flood bounding box...")
     yc, xc = find_contours(flooded, 0.5)[0].T
     xc = xmin + xc/nx * (xmax - xmin)
@@ -101,7 +100,6 @@ def fill_lake(topo, seed, max_level=0, dilation_radius=0):
 
 
 def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
-    bds = params.bounds
     yd = y0 - 0.3*(x-x0) - 50000/(x-x1+offset) - 300 + offset
     yd[(x < x0) | (x > x1)] = float("inf")
     return yd

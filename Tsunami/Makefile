@@ -54,6 +54,7 @@ include $(CLAWMAKE)
 .PHONY: topo all
 topo:
 	$(CLAW_PYTHON) maketopo.py
+	$(CLAW_PYTHON) makeqinit.py
 
 plotloop:
 	$(CLAW_PYTHON) ../plotloop.py

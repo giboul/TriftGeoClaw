@@ -6,7 +6,6 @@ import params
 import numpy as np
 from matplotlib import pyplot as plt
 from tifffile import TiffFile
-from scipy.interpolate import RegularGridInterpolator
 
 
 def write_topo():
@@ -19,34 +18,33 @@ def write_topo():
     print(f"\tINFO: Opening {ifile}... ")
     # With just tifffile
     with TiffFile(ifile) as tif:
-        Z = tif.asarray()
+        Ztif = tif.asarray()
         nx = tif.pages[0].tags["ImageWidth"].value
         ny = tif.pages[0].tags["ImageLength"].value
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
-    x = xmin + (np.arange(nx) + 0.5)*x_res
-    y = ymax - (np.arange(ny) + 0.5)*y_res
+    xtif = xmin + (np.arange(nx) + 0.5)*x_res
+    ytif = ymax - (np.arange(ny) + 0.5)*y_res
     # Add some room to avoid interpolation error
     xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
-    print(f"Expanding bounds to {xmin, ymin, xmax, ymax = }")
-    xmask = (xmin <= x) & (x <= xmax)
-    ymask = (ymin <= y) & (y <= ymax)
-    x = x[xmask]
-    y = y[ymask]
-    Z = Z[ymask, :][:, xmask]
-    plt.imshow(Z, extent=(x.min(), x.max(), y.min(), y.max()))
+    
+    print(f"\tCropping to {xmin, ymin, xmax, ymax = }")
+    xmask = (xmin <= xtif) & (xtif <= xmax)
+    ymask = (ymin <= ytif) & (ytif <= ymax)
+    xtif = xtif[xmask]
+    ytif = ytif[ymask][::-1]
+    Ztif = Ztif[ymask, :][:, xmask]
+    
+    print(f"\tDownscaling to resolution = {params.resolution}")
+    x = np.interp(np.arange(xmin, xmax, step=params.resolution), xtif, xtif)
+    y = np.interp(np.arange(ymin, ymax, step=params.resolution), ytif, ytif)
     X, Y = np.meshgrid(x, y)
-    print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
-    interp = RegularGridInterpolator((x, y), Z.T)
-    print(GridInterpolator(x, y, Z, x, y))
-    x = np.interp(np.arange(xmin, xmax, step=params.resolution), x, x)
-    y = np.interp(np.arange(ymin, ymax, step=params.resolution), y[::-1], y[::-1])[::-1]
-    X, Y = np.meshgrid(x, y)
-    Z = interp((X, Y))
+    Z = GridInterpolator(xtif, ytif, Ztif, x, y)
  
     print(f"\tINFO: Adding dam... ")
-    insert_dam(X, Y, Z)
+    fig, ax = plt.subplots(ncols=3)
+    Z = insert_dam(X, Y, Z)
 
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     asc_header = "\n".join((
@@ -75,25 +73,23 @@ def write_topo():
 
 
 def GridInterpolator(xt, yt, Zt, x, y):
-    yt = yt[::-1]
-    y = y[::-1]
+    # Force input array inside bounds
     x = np.maximum(xt[0], np.minimum(xt[-1], x))
     y = np.maximum(yt[0], np.minimum(yt[-1], y))
+    # Find nearest indices
     ix = np.searchsorted(xt, x)
     iy = np.searchsorted(yt, y)
-    print(f"{ix = }")
-    print(f"{iy = }")
+    # Compute slopes
     Zt = np.hstack((Zt[:, :1], Zt, Zt[:, -1:]))
     Zt = np.vstack((Zt[:1, :], Zt, Zt[-1:, :]))
-    print(f"{Zt.shape = }")
-    xslope = (Zt[:, :-2] - Zt[:, 2:])[:, ix]
-    yslope = (Zt[:-2, :] - Zt[2:, :])[iy, :]
-    dx = x - xt[ix-1]
-    dy = y - yt[iy-1]
-    print(f"{Zt.shape = }")
-    np.take_along_axis(Zt, iy, ix)
-    Z = Zt[1:-1, 1:-1][iy, :][:, ix] + xslope*dx + yslope*dy
-    return np.take_along_axis(Z)
+    xslope = (Zt[1:-1, 2:] - Zt[1:-1, :-2])[iy, :][:, ix]
+    yslope = (Zt[2:, 1:-1] - Zt[:-2, 1:-1])[iy, :][:, ix]
+    # Store the nearest values
+    Zt = Zt[1:-1, 1:-1][iy, :][:, ix]
+    dx = x - xt[ix]
+    dy = y - yt[iy]
+    # Add the increments
+    return Zt + xslope*dx + (yslope.T*dy).T
 
 
 def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
@@ -105,9 +101,13 @@ def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
 
 
 def insert_dam(x, y, z):
+    y = y[::-1]
     dam_y1 = dam_upstream(x, y)
     dam_y2 = dam_downstream(x, y) 
+    plt.imshow((dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt))
+    plt.show()
     z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
+    return z
 
 
 def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):

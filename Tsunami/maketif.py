@@ -12,6 +12,7 @@ def write_topo():
     
     # Temporary directory
     ifile = Path("..") / "swissALTI3D_merged.tif"
+    ifile = "mock_topo.tif"
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
@@ -27,8 +28,8 @@ def write_topo():
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
     # Add some room to avoid interpolation error
-    xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
-    
+    xmax, ymin = xtif.max(), ytif.min()  # xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
+
     print(f"\tCropping to {xmin, ymin, xmax, ymax = }")
     xmask = (xmin <= xtif) & (xtif <= xmax)
     ymask = (ymin <= ytif) & (ytif <= ymax)
@@ -37,13 +38,12 @@ def write_topo():
     Ztif = Ztif[ymask, :][:, xmask]
     
     print(f"\tDownscaling to resolution = {params.resolution}")
-    x = np.interp(np.arange(xmin, xmax, step=params.resolution), xtif, xtif)
-    y = np.interp(np.arange(ymin, ymax, step=params.resolution), ytif, ytif)
+    x = np.arange(xmin, xmax+params.resolution, step=params.resolution)
+    y = np.arange(ymin, ymax+params.resolution, step=params.resolution)
     X, Y = np.meshgrid(x, y)
     Z = GridInterpolator(xtif, ytif, Ztif, x, y)
  
     print(f"\tINFO: Adding dam... ")
-    fig, ax = plt.subplots(ncols=3)
     Z = insert_dam(X, Y, Z)
 
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
@@ -74,22 +74,32 @@ def write_topo():
 
 def GridInterpolator(xt, yt, Zt, x, y):
     # Force input array inside bounds
+    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, sharex=True, sharey=True)
+    ax1.imshow(Zt, extent=(xt.min(), xt.max(), yt.min(), yt.max()), cmap="inferno")
     x = np.maximum(xt[0], np.minimum(xt[-1], x))
     y = np.maximum(yt[0], np.minimum(yt[-1], y))
     # Find nearest indices
     ix = np.searchsorted(xt, x)
     iy = np.searchsorted(yt, y)
     # Compute slopes
-    Zt = np.hstack((Zt[:, :1], Zt, Zt[:, -1:]))
-    Zt = np.vstack((Zt[:1, :], Zt, Zt[-1:, :]))
-    xslope = (Zt[1:-1, 2:] - Zt[1:-1, :-2])[iy, :][:, ix]
-    yslope = (Zt[2:, 1:-1] - Zt[:-2, 1:-1])[iy, :][:, ix]
-    # Store the nearest values
-    Zt = Zt[1:-1, 1:-1][iy, :][:, ix]
-    dx = x - xt[ix]
-    dy = y - yt[iy]
+    Zt = np.hstack((Zt, Zt[:, -1:]))
+    Zt = np.vstack((Zt, Zt[-1:, :]))
+    dx = xt[1:] - xt[:-1]
+    dy = yt[1:] - yt[:-1]
+    dx = np.hstack((dx, dx[-1]))
+    dy = np.hstack((dy, dy[-1]))
+    xslope = ((Zt[:, 1:] - Zt[:, :-1])/dx)[:-1, :]
+    yslope = ((Zt[1:, :] - Zt[:-1, :]).T/dy).T[:, :-1]
+    xslope = xslope[iy, :][:, ix]
+    yslope = yslope[iy, :][:, ix]
+    # Remove the extension
+    Z = Zt[:-1, :-1][iy, :][:, ix]
+    ax2.imshow(xslope, extent=(x.min(), x.max(), y.min(), y.max()), cmap="inferno")
     # Add the increments
-    return Zt + xslope*dx + (yslope.T*dy).T
+    Z = Z + (x - xt[ix])*xslope + ((y - yt[iy])*yslope.T).T
+    ax3.imshow((xt[ix]-x)*xslope, extent=(x.min(), x.max(), y.min(), y.max()), cmap="inferno")
+    plt.show()
+    exit()
 
 
 def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
@@ -104,8 +114,6 @@ def insert_dam(x, y, z):
     y = y[::-1]
     dam_y1 = dam_upstream(x, y)
     dam_y2 = dam_downstream(x, y) 
-    plt.imshow((dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt))
-    plt.show()
     z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
     return z
 

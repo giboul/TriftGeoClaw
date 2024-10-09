@@ -39,8 +39,10 @@ EXCLUDE_SOURCES = \
 
 
 MODULES = \
+  ./helpers.f90 \
 
 SOURCES = \
+  ./setprob.f90 \
   ./bc2amr.f90 \
   $(CLAW)/riemann/src/rpn2_geoclaw.f \
   $(CLAW)/riemann/src/rpt2_geoclaw.f \

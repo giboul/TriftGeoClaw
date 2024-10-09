@@ -1,4 +1,4 @@
-resolution = 5
+resolution = 10
 
 lake_alt = 1767
 dam_alt = lake_alt + 10

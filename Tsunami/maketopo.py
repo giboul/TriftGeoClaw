@@ -49,15 +49,15 @@ def write_topo():
 
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     asc_header = "\n".join((
-        f"{nx} ncols",
-        f"{ny} nrows",
+        f"{x.size} ncols",
+        f"{y.size} nrows",
         f"{x.min()} xllcenter",
         f"{y.min()} yllcenter",
         f"{params.resolution} cellsize",
         f"{999999} nodata_value"
     ))
     np.savetxt("bathy_with_dam.asc", Z.flatten(), header=asc_header, comments="")
-    print(f"\tINFO: File size is {Path("bathy_with_dam.asc").stat().st_size:.2g} bytes.")
+    print(f"\tINFO: File size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
 
     rmtree(tempdir)
 

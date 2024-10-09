@@ -94,6 +94,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
     implicit none
 
+    real(kind=8) :: damping
     common /params/ damping
 
 ! Input/Output
@@ -129,6 +130,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 !-------------------------------------------------------
 ! Left boundary:
 !-------------------------------------------------------
+    print *, "call to bc2amr"
     if (xlo_patch < xlower - hxmarg) then
 ! number of grid cells from this patch lying outside physical domain:
         nxl = int((xlower + hxmarg - xlo_patch)/hx)

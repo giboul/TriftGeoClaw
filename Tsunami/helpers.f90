@@ -12,7 +12,6 @@ contains
         integer :: unit, io, i, n
         integer :: num_cells, num_times
         logical :: res
-        real(kind=8) :: x, y, h, hu, hv
     
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]

@@ -66,4 +66,28 @@ contains
             close(unit)
         end do
     end subroutine allocate_space
+
+    function read_times()
+        integer :: io, n, i
+        integer :: unit
+        real(kind=8), allocatable :: read_times(:)
+
+        unit = 2
+        open(unit, file="../../AVAC/_cut_output/timing.txt")
+            n = 0
+            do 
+                read(unit,*,iostat=io)
+                if (io /= 0) then
+                    exit
+                end if
+                n = n + 1
+            end do
+            allocate(read_times(n))
+        rewind(unit)
+            do i = 1, n
+                read(unit,*) read_times(i)
+            end do
+        close(unit)
+
+    end function read_times
 end module helpers

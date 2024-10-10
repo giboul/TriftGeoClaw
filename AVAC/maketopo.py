@@ -7,11 +7,82 @@ import numpy as np
 from matplotlib import pyplot as plt
 from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
-from osgeo.gdal import UseExceptions, Open, Translate, Warp
+from tifffile import TiffFile
+from scipy.interpolate import RegularGridInterpolator as RGI
+# from osgeo.gdal import UseExceptions, Open, Translate, Warp
 # from clawpack.geoclaw.marching_front import select_by_flooding
-
+params = AddSetrun
 
 def write_topo():
+
+    # Temporary directory
+    ifile = Path("..") / "swissALTI3D_merged.tif"
+    tempdir = Path("_temp")
+    tempdir.mkdir(exist_ok=True)
+
+    print(f"\tINFO: Opening {ifile}... ")
+    # With just tifffile
+    with TiffFile(ifile) as tif:
+        Ztif = tif.asarray()
+        nx = tif.pages[0].tags["ImageWidth"].value
+        ny = tif.pages[0].tags["ImageLength"].value
+        x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
+        xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
+        ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
+    xtif = xmin + (np.arange(nx) + 0.5)*x_res
+    ytif = ymax - (np.arange(ny) + 0.5)*y_res
+    # Add some room to avoid interpolation error
+    xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
+
+    print(f"\tCropping to {xmin, ymin, xmax, ymax = }")
+    xmask = (xmin <= xtif) & (xtif <= xmax)
+    ymask = (ymin <= ytif) & (ytif <= ymax)
+    xtif = xtif[xmask]
+    ytif = ytif[ymask][::-1]
+    Ztif = Ztif[ymask, :][:, xmask]
+
+    print(f"\tDownscaling to resolution = {params.resolution}")
+    x = np.arange(xmin, xmax+params.resolution, step=params.resolution)
+    y = np.arange(ymin, ymax+params.resolution, step=params.resolution)
+    X, Y = np.meshgrid(x, y)
+    Z = RGI((ytif, xtif), Ztif, fill_value=None, bounds_error=False)
+    Z = Z(np.vstack((Y.flatten(), X.flatten())).T).reshape(y.size, x.size)
+
+    print(f"\tINFO: Saving bathy_with_dam.asc... ")
+    asc_header = "\n".join((
+        f"{x.size} ncols",
+        f"{y.size} nrows",
+        f"{x.min()} xllcenter",
+        f"{y.min()} yllcenter",
+        f"{params.resolution} cellsize",
+        f"{999999} nodata_value"
+    ))
+    np.savetxt("bathy_with_dam.asc", Z.flatten(), header=asc_header, comments="")
+    print(f"\tINFO: File size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
+
+    rmtree(tempdir)
+
+    parser = ArgumentParser()
+    parser.add_argument("-p", "--plot", action="store_true")
+    args = parser.parse_args()
+    if args.plot or True:
+        extent = (xmin, xmax, ymin, ymax) 
+        h = params.lake_alt - Z
+        h[h <= 0] = float("nan")
+        plt.imshow(Z, extent=extent, cmap="inferno", vmin=params.lake_alt)
+        plt.imshow(h, cmap="Blues", extent=extent)
+        plt.show()
+
+
+def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
+    _xmin = xmin - margin*(xmax - xmin)
+    _ymin = ymin - margin*(ymax - ymin)
+    _xmax = xmax + margin*(xmax - xmin)
+    _ymax = ymax + margin*(ymax - ymin)
+    return _xmin, _xmax, _ymin, _ymax
+
+
+def write_topo_old():
     UseExceptions()
     
     # Temporary directory
@@ -19,18 +90,13 @@ def write_topo():
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    xmin = AddSetrun.xmin - (AddSetrun.xmax - AddSetrun.xmin)/2
-    ymin = AddSetrun.ymin - (AddSetrun.ymax - AddSetrun.ymin)/2
-    xmax = AddSetrun.xmax + (AddSetrun.xmax - AddSetrun.xmin)/2
-    ymax = AddSetrun.ymax + (AddSetrun.ymax - AddSetrun.ymin)/2
-
     print(f"\tINFO: Opening {ifile}... ")
     data = Open(str(ifile))
 
     print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
     data = Warp(str(tempdir / 'bathy.tif'), data,
-                xRes=AddSetrun.resolution,
-                yRes=AddSetrun.resolution,
+                xRes=params.resolution,
+                yRes=params.resolution,
                 outputBounds=(xmin, ymin, xmax, ymax))
  
     print(f"\tINFO: Converting {tempdir / 'bathy.tif'} to bathy.xyz... ")
@@ -40,7 +106,7 @@ def write_topo():
     x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
     dam_y1 = dam_upstream(x, y)
     dam_y2 = dam_downstream(x, y) 
-    z[(dam_y1 <= y) & (y <= dam_y2) & (z < AddSetrun.dam_level)] = AddSetrun.dam_level
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_level)] = params.dam_level
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     ny = np.unique(y).size
     nx = y.size // ny
@@ -49,18 +115,18 @@ def write_topo():
         f"{ny} nrows",
         f"{x.min()} xllcenter",
         f"{y.min()} yllcenter",
-        f"{AddSetrun.resolution} cellsize",
+        f"{params.resolution} cellsize",
         f"{999999} nodata_value"
     ))
     np.savetxt("bathy_with_dam.asc", z, header=asc_header)
     print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
 
     print(f"\tINFO: Writing lake countour...")
-    seed_x, seed_y = AddSetrun.flood_seed
+    seed_x, seed_y = params.flood_seed
     seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
     seed = seed//nx, seed%nx
     print(f"\t\tFlooding around {seed_x} {seed_y}...")
-    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, AddSetrun.lake_level, 10/AddSetrun.resolution)
+    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, params.lake_level, 10/params.resolution)
     print(f"\t\tFinding flood bounding box...")
     yc, xc = find_contours(flooded, 0.5)[0].T
     xc = xmin + xc/nx * (xmax - xmin)
@@ -90,36 +156,6 @@ def write_topo():
         plt.scatter(seed_x, seed_y, label="flood seed", c='k')
         plt.legend()
         plt.show()
-
-
-def fill_lake(topo, seed, max_level=0, dilation_radius=0):
-    flooded = flood(topo < max_level, seed)
-    isotropic_dilation(flooded, dilation_radius, flooded)
-    topo[flooded] = max_level
-    return flooded
-
-
-def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
-    yd = y0 - 0.3*(x-x0) - 50000/(x-x1+offset) - 300 + offset
-    yd[(x < x0) | (x > x1)] = float("inf")
-    return yd
-
-def dam_downstream(x, y, thk=30):
-    d = dam_upstream(x, y)
-    u = dam_upstream(x+thk, y, offset=30)
-    return np.maximum(u, d)
-
-def flood_mask(zimage, seed_point, max_level=0):
-    plt.imshow(zimage)
-    plt.gcf().show()
-    below_water_level = zimage < max_level
-    flooded = flood(below_water_level, seed_point)
-    plt.scatter(*seed_point[::-1], c='r')
-    plt.figure()
-    im = plt.imshow(flooded)
-    plt.colorbar(im)
-    plt.show()
-    return flooded
 
 
 if __name__ == "__main__":

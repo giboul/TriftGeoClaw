@@ -62,11 +62,11 @@ def setrun(claw_pkg='geoclaw'):
     import AddZoom
     
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = AddSetrun.xmin
-    clawdata.upper[0] = AddSetrun.xmax
+    clawdata.lower[0] = AddSetrun.bounds["xmin"]
+    clawdata.upper[0] = AddSetrun.bounds["xmax"]
 
-    clawdata.lower[1] = AddSetrun.ymin
-    clawdata.upper[1] = AddSetrun.ymax
+    clawdata.lower[1] = AddSetrun.bounds["ymin"]
+    clawdata.upper[1] = AddSetrun.bounds["ymax"]
 	 
 	 
 

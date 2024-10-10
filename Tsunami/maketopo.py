@@ -10,7 +10,7 @@ from scipy.interpolate import RegularGridInterpolator as RGI
 
 
 def write_topo():
-    
+
     # Temporary directory
     ifile = Path("..") / "swissALTI3D_merged.tif"
     tempdir = Path("_temp")

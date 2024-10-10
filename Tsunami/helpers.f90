@@ -9,6 +9,7 @@ contains
         character(len=6), dimension(4) :: sides
         character(len=32) :: ftemp
         character(len=40) :: fname
+        real(kind=8) :: x, y, h, hu, hv
         integer :: unit, io, i, n
         integer :: num_cells, num_times
         logical :: res
@@ -48,8 +49,21 @@ contains
         end do
         print "(A,I5)", "num_cells = ", num_cells
     
-        allocate(data(num_times, num_cells, 6))
-        print "(A,I10)", size(data)
-    
+        allocate(data(num_times, num_cells, 5))
+        print "(A,I10)", "size(data) = ", size(data)
+   
+        do i = 1, num_times
+            write(fname,"(A,I0.4, A4)") trim(ftemp),i,".txt"
+            open(unit, file=fname, status="old")
+            do n = 1, num_cells
+                read(unit,*, iostat=io) x, y, h, hu, hv
+                data(i, n, 1) = x
+                data(i, n, 2) = y
+                data(i, n, 3) = h
+                data(i, n, 4) = hu
+                data(i, n, 5) = hv
+            end do
+            close(unit)
+        end do
     end subroutine allocate_space
 end module helpers

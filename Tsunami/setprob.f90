@@ -12,6 +12,7 @@ subroutine setprob
     call allocate_space(q_right, 2)
     call allocate_space(q_bottom, 3)
     call allocate_space(q_top, 4)
+    print *, q_right(1, 1, :)
     print *, "setprob end"
 
 end subroutine setprob

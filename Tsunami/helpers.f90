@@ -19,7 +19,7 @@ contains
                 closest = i
             end if
         end do
-        print *, "closest", value, MINVAL(array), MAXVAL(array)
+        ! print *, "closest", value, MINVAL(array), MAXVAL(array)
     end function closest
 
     subroutine allocate_space(data, mthbc)

@@ -211,9 +211,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = ibeg, nrow ! Avalanche
-                    val(1, i, j) = h0
-                    val(2, i, j) = -hu0
-                    val(3, i, j) = hv0
+                    ! val(1, i, j) = h0
+                    ! val(2, i, j) = -hu0
+                    ! val(3, i, j) = hv0
+                    i_xy = closest(yc, q_right(i_times,:,2))
+                    val(1, i, j) = q_right(i_times,i_xy,3)
+                    val(2, i, j) = q_right(i_times,i_xy,4)
+                    val(3, i, j) = q_right(i_times,i_xy,5)
                 end do
                 do i = ibeg, nrow ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, ibeg - 1, j)
@@ -268,9 +272,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = 1, nyb ! Avalanche
-                    val(1, i, j) = h0
-                    val(2, i, j) = hv0
-                    val(3, i, j) = hu0
+                    ! val(1, i, j) = h0
+                    ! val(2, i, j) = hv0
+                    ! val(3, i, j) = hu0
+                    i_xy = closest(xc, q_bottom(i_times,:,1))
+                    val(1, i, j) = q_bottom(i_times,i_xy,3)
+                    val(2, i, j) = q_bottom(i_times,i_xy,4)
+                    val(3, i, j) = q_bottom(i_times,i_xy,5)
                 end do
                 do j = 1, nyb ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, i, nyb + 1)
@@ -326,9 +334,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = jbeg, ncol ! Avalanche
-                    val(1, i, j) = h0
-                    val(2, i, j) = hv0
-                    val(3, i, j) = -hu0
+                    ! val(1, i, j) = h0
+                    ! val(2, i, j) = hv0
+                    ! val(3, i, j) = -hu0
+                    i_xy = closest(xc, q_bottom(i_times,:,1))
+                    val(1, i, j) = q_bottom(i_times,i_xy,3)
+                    val(2, i, j) = q_bottom(i_times,i_xy,4)
+                    val(3, i, j) = q_bottom(i_times,i_xy,5)
                 end do
                 do j = jbeg, ncol ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, i, jbeg - 1)

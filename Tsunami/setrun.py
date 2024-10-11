@@ -182,9 +182,9 @@ def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
     clawdata.bc_lower[0] = 'user'
-    clawdata.bc_upper[0] = 'wall'
-    clawdata.bc_lower[1] = 'wall'
-    clawdata.bc_upper[1] = 'wall'
+    clawdata.bc_upper[0] = 'user'
+    clawdata.bc_lower[1] = 'user'
+    clawdata.bc_upper[1] = 'user'
 
     # --------------
     # Checkpointing:

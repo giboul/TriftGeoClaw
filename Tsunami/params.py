@@ -14,7 +14,7 @@ bounds = dict(
 
 out_format = "binary"
 
-nx = 10
+nx = 100
 ny = int(1.62*nx)
 
 amr_ratios = dict(

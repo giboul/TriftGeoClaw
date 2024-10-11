@@ -1,19 +1,25 @@
 subroutine setprob
-    use helpers, only: allocate_space, read_times
+    use helpers
     implicit none
     save
     ! common /params/ damping, q_left, q_top, q_right, q_bottom
 
     real(kind=8) :: damping = 500.d0 / 1e3
-    real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
-    real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
-    real(kind=8), allocatable :: times(:)
+    ! real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
+    ! real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
+    ! real(kind=8), allocatable :: times(:)
 
     call allocate_space(q_left, 1)
+    print *, q_left(0,:,1)
+    print *, "-----------------"
+    print *, q_left(0,:,2)
+    print *, "X bounds"
+    print *, MINVAL(q_left(0,:,1))
+    print *, MAXVAL(q_left(0,:,1))
     call allocate_space(q_right, 2)
     call allocate_space(q_bottom, 3)
     call allocate_space(q_top, 4)
-    times = read_times()
+    call read_times(times)
     ! print *, q_right(1, 1, :)
     ! print *, times
 

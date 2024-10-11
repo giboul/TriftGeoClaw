@@ -84,8 +84,8 @@ def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 10
-        clawdata.tfinal = 40
+        clawdata.num_output_times = 20
+        clawdata.tfinal = 100
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -182,9 +182,9 @@ def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
     clawdata.bc_lower[0] = 'user'
-    clawdata.bc_upper[0] = 'user'
-    clawdata.bc_lower[1] = 'user'
-    clawdata.bc_upper[1] = 'user'
+    clawdata.bc_upper[0] = 'wall'
+    clawdata.bc_lower[1] = 'wall'
+    clawdata.bc_upper[1] = 'wall'
 
     # --------------
     # Checkpointing:

@@ -1,7 +1,27 @@
 module helpers
     implicit none
     save
+
+    real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
+    real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
+    real(kind=8), allocatable :: times(:)
+
 contains
+
+    integer function closest(value, array)
+        integer :: i
+        real(kind=8), intent(in) :: value
+        real(kind=8), dimension(:), intent(in) :: array
+
+        closest = 1
+        do i = 1, size(array)
+            if (abs(value-array(i)) < abs(value-array(closest))) then
+                closest = i
+            end if
+        end do
+        print *, "closest", value, MINVAL(array), MAXVAL(array)
+    end function closest
+
     subroutine allocate_space(data, mthbc)
         real(kind=8), allocatable, intent(inout) :: data(:,:,:)
         integer, intent(in) :: mthbc
@@ -17,10 +37,10 @@ contains
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
     
-        num_times = 0
+        num_times = 1
         ftemp = "../../AVAC/_cut_output/" // trim(sides(mthbc)) // "_"
         do
-            write(fname,"(A,I0.4, A4)") trim(ftemp),num_times+1,".txt"
+            write(fname,"(A,I0.4, A4)") trim(ftemp),num_times,".txt"
             inquire(file=trim(fname),exist=res)
             if (.not. res) then
                 exit
@@ -28,13 +48,13 @@ contains
             num_times = num_times + 1
         end do
         close(unit)
-        ! print "(A1,A,A1)", "<", trim(fname), ">"
+        print "(A1,A,A1)", "<", trim(fname), ">"
     
         num_cells = 0
         ftemp = "../../AVAC/_cut_output/" // trim(sides(mthbc)) // "_"
         do i = 1, num_times
             n = 0
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i,".txt"
+            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
             print *, fname
             open(unit, file=fname, status="old")
                 do
@@ -53,7 +73,7 @@ contains
         print "(A,I10)", "size(data) = ", size(data)
    
         do i = 1, num_times
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i,".txt"
+            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
             open(unit, file=fname, status="old")
             do n = 1, num_cells
                 read(unit,*, iostat=io) x, y, h, hu, hv
@@ -62,15 +82,21 @@ contains
                 data(i, n, 3) = h
                 data(i, n, 4) = hu
                 data(i, n, 5) = hv
+                print *, data(i, n, 1:2)
             end do
+            print *, "----------------"
+            print *, MINVAL(data(i, :, 1)), MAXVAL(data(i, :, 1))
+            print *, MINVAL(data(i, :, 2)), MAXVAL(data(i, :, 2))
+            print *, size(data, 1), size(data, 2), size(data, 3)
+            print *, "----------------"
             close(unit)
         end do
     end subroutine allocate_space
 
-    function read_times()
+    subroutine read_times(times)
         integer :: io, n, i
         integer :: unit
-        real(kind=8), allocatable :: read_times(:)
+        real(kind=8), allocatable :: times(:)
 
         unit = 2
         open(unit, file="../../AVAC/_cut_output/timing.txt")
@@ -82,12 +108,13 @@ contains
                 end if
                 n = n + 1
             end do
-            allocate(read_times(n))
+            allocate(times(n+1))
         rewind(unit)
             do i = 1, n
-                read(unit,*) read_times(i)
+                read(unit,*) times(i)
             end do
         close(unit)
 
-    end function read_times
+    end subroutine read_times
+
 end module helpers

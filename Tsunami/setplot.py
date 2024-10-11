@@ -62,10 +62,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Water
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
-    # plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = geoplot.tsunami_colormap
-    plotitem.pcolor_cmax = lake_alt + 10
-    plotitem.pcolor_cmin = 2*lake_alt - plotitem.pcolor_cmax
+    plotitem.plot_var = geoplot.surface_or_depth
+    plotitem.pcolor_cmap = cm.Blues
+    plotitem.pcolor_cmax = 0*lake_alt + 2
+    plotitem.pcolor_cmin = 0*(lake_alt - 10)
     plotitem.add_colorbar = True
     plotitem.amr_celledges_show = [0,0,0]
     plotitem.patchedges_show = 1

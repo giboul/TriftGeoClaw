@@ -92,6 +92,9 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
+    use helpers, only: q_left, q_right, q_top, q_bottom, closest,times
+
+
     implicit none
 
     real(kind=8) :: damping
@@ -105,20 +108,29 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), intent(in out) :: val(meqn, nrow, ncol)
     real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
 
+    ! real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
+    ! real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
+
 ! Local storage
-    integer :: i, j, ibeg, jbeg, nxl, nxr, nyb, nyt
-    real(kind=8) :: hxmarg, hymarg, yc, y_0, y_1
-    real(kind=8) :: xc
+    integer :: i, j, i_xy, i_times, ibeg, jbeg, nxl, nxr, nyb, nyt
+    real(kind=8) :: hxmarg, hymarg, xc, yc
     real(kind=8) :: h0, hu0, hv0
+
+    i_times = closest(time, times)
 
     hxmarg = hx*.01d0
     hymarg = hy*.01d0
-    y_0 = 1171250.0d0
-    y_1 = 1171500.0d0
     h0 = 1.d0
     hu0 = 50.d0*damping
     hv0 = 0.d0
-
+    ! print *, "bounds", MINVAL(q_left(:,:,1)), MAXVAL(q_left(:,:,1))
+    ! print *, "bounds", MINVAL(q_left(:,:,2)), MAXVAL(q_left(:,:,2))
+    ! print *, "bounds", MINVAL(q_right(:,:,1)), MAXVAL(q_right(:,:,1))
+    ! print *, "bounds", MINVAL(q_right(:,:,2)), MAXVAL(q_right(:,:,2))
+    ! print *, "bounds", MINVAL(q_top(:,:,1)), MAXVAL(q_top(:,:,1))
+    ! print *, "bounds", MINVAL(q_top(:,:,2)), MAXVAL(q_top(:,:,2))
+    ! print *, "bounds", MINVAL(q_bottom(:,:,1)), MAXVAL(q_bottom(:,:,1))
+    ! print *, "bounds", MINVAL(q_bottom(:,:,2)), MAXVAL(q_bottom(:,:,2))
 ! Use periodic boundary condition specialized code only, if only one
 ! boundary is periodic we still proceed below
     if (xperdom .and. (yperdom .or. spheredom)) then
@@ -140,18 +152,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
-                if (time <= 30 .and. y_0 <= yc .and. yc <= y_1) then
-                    do i = 1, nxl ! Avalanche
-                        val(1, i, j) = h0
-                        val(2, i, j) = hu0
-                        val(3, i, j) = hv0
-                    end do
-                else
-                    do i = 1, nxl ! Zero-order extrapolation
-                        val(:, i, j) = val(:, nxl + 1, j)
-                    end do
-                end if
-                do i = 1, nxl ! Zero-order extrapolation
+                do i = 1, nxl ! Avalanche
+                    i_xy = closest(yc, q_left(i_times,:,2))
+                    val(1, i, j) = q_left(i_times,i_xy,3)
+                    val(2, i, j) = q_left(i_times,i_xy,4)
+                    val(3, i, j) = q_left(i_times,i_xy,5)
+                end do
+                do i = 1, nxl ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, nxl + 1, j)
                 end do
             end do
@@ -203,17 +210,11 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
-                if (.true.) then
-                    do i = ibeg, nrow ! Avalanche
-                        val(1, i, j) = h0
-                        val(2, i, j) = -hu0
-                        val(3, i, j) = hv0
-                    end do
-                else
-                    do i = ibeg, nrow ! Zero-order extrapolation
-                        val(:, i, j) = val(:, ibeg - 1, j)
-                    end do
-                end if
+                do i = ibeg, nrow ! Avalanche
+                    val(1, i, j) = h0
+                    val(2, i, j) = -hu0
+                    val(3, i, j) = hv0
+                end do
                 do i = ibeg, nrow ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, ibeg - 1, j)
                 end do
@@ -266,17 +267,11 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
-                if (.true.) then
-                    do j = 1, nyb ! Avalanche
-                        val(1, i, j) = h0
-                        val(2, i, j) = hv0
-                        val(3, i, j) = hu0
-                    end do
-                else
-                    do j = 1, nyb ! Zero-order extrapolation
-                        val(:, i, j) = val(:, i, nyb + 1)
-                    end do
-                end if
+                do j = 1, nyb ! Avalanche
+                    val(1, i, j) = h0
+                    val(2, i, j) = hv0
+                    val(3, i, j) = hu0
+                end do
                 do j = 1, nyb ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, i, nyb + 1)
                 end do
@@ -330,20 +325,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
-                if (.true.) then
-                    do j = jbeg, ncol ! Avalanche
-                        ! print *, "h0, hu0, hv0"
-                        ! print "(f9.0, f9.0, f9.0)", h0, hu0, hv0
-                        val(1, i, j) = h0
-                        val(2, i, j) = hv0
-                        val(3, i, j) = -hu0
-                    end do
-                else
-                    do j = 1, nyb ! Zero-order extrapolation
-                        val(:, i, j) = val(:, i, jbeg - 1)
-                    end do
-                end if
-                do j = jbeg, ncol ! Zero-order extrapolation
+                do j = jbeg, ncol ! Avalanche
+                    val(1, i, j) = h0
+                    val(2, i, j) = hv0
+                    val(3, i, j) = -hu0
+                end do
+                do j = jbeg, ncol ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, i, jbeg - 1)
                 end do
             end do

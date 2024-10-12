@@ -4,10 +4,10 @@ lake_alt = 1767
 flood_seed = 2670300, 1171500
 
 bounds = dict(
-    xmin = 2668500.,
-    xmax  = 2671000.,
-    ymin = 1170100.,
-    ymax  = 1172100.,
+    xmin = 2667500.,
+    xmax  = 2672500.,
+    ymin = 1169500.,
+    ymax  = 1173100.,
 )
 
 resolution = 10

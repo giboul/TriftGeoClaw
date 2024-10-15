@@ -1,9 +1,7 @@
 subroutine setprob
-    use helpers
+    use helpers, only: q_avac, times, init_inflows, read_times
     implicit none
     save
-
-    real(kind=8) :: damping = 500.d0 / 1e3
 
     call init_inflows(q_avac)
     call read_times(times)

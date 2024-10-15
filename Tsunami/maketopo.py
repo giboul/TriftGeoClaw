@@ -124,22 +124,22 @@ def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
 
 
 def insert_dam(x, y, z):
+    dam_y1 = dam_upstream(x)
+    dam_y2 = dam_downstream(x) 
     y = y[::-1]
-    dam_y1 = dam_upstream(x, y)
-    dam_y2 = dam_downstream(x, y) 
     z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
     return z
 
 
-def dam_upstream(x, y, offset=0, y0=1171960, x0=2669850, x1=2670561):
+def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561):
     yd = y0 - 0.3*(x+offset*0-x0) - 50000/(x+offset*0-x1) - 300 + offset
     yd[(x < x0) | (x > x1)] = float("inf")
     return yd
 
 
-def dam_downstream(x, y, thk=30):
-    d = dam_upstream(x, y)
-    u = dam_upstream(x+thk, y, offset=30)
+def dam_downstream(x, thk=30):
+    d = dam_upstream(x)
+    u = dam_upstream(x+thk, offset=30)
     return np.maximum(u, d)
 
 

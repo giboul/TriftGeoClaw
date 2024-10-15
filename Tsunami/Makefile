@@ -58,6 +58,9 @@ topo:
 	$(CLAW_PYTHON) maketopo.py
 	$(CLAW_PYTHON) makeqinit.py
 
+flows:
+	$(CLAW_PYTHON) extract_damflow.py
+
 plotloop:
 	$(CLAW_PYTHON) ../plotloop.py
 

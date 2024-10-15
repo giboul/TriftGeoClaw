@@ -92,13 +92,9 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_avac, closest,times
-
+    use helpers, only: q_avac, closest, times, damping
 
     implicit none
-
-    real(kind=8) :: damping
-    common /params/ damping
 
 ! Input/Output
     integer, intent(in) :: nrow, ncol, meqn, naux, level
@@ -111,23 +107,11 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 ! Local storage
     integer :: i, j, i_xy, i_times, ibeg, jbeg, nxl, nxr, nyb, nyt
     real(kind=8) :: hxmarg, hymarg, xc, yc
-    real(kind=8) :: h0, hu0, hv0
 
     i_times = closest(time, times)
 
     hxmarg = hx*.01d0
     hymarg = hy*.01d0
-    h0 = 1.d0
-    hu0 = 50.d0*damping
-    hv0 = 0.d0
-    ! print *, "bounds", MINVAL(q_left(:,:,1)), MAXVAL(q_left(:,:,1))
-    ! print *, "bounds", MINVAL(q_left(:,:,2)), MAXVAL(q_left(:,:,2))
-    ! print *, "bounds", MINVAL(q_right(:,:,1)), MAXVAL(q_right(:,:,1))
-    ! print *, "bounds", MINVAL(q_right(:,:,2)), MAXVAL(q_right(:,:,2))
-    ! print *, "bounds", MINVAL(q_top(:,:,1)), MAXVAL(q_top(:,:,1))
-    ! print *, "bounds", MINVAL(q_top(:,:,2)), MAXVAL(q_top(:,:,2))
-    ! print *, "bounds", MINVAL(q_bottom(:,:,1)), MAXVAL(q_bottom(:,:,1))
-    ! print *, "bounds", MINVAL(q_bottom(:,:,2)), MAXVAL(q_bottom(:,:,2))
 ! Use periodic boundary condition specialized code only, if only one
 ! boundary is periodic we still proceed below
     if (xperdom .and. (yperdom .or. spheredom)) then
@@ -139,7 +123,6 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 !-------------------------------------------------------
 ! Left boundary:
 !-------------------------------------------------------
-    ! print *, "call to bc2amr"
     if (xlo_patch < xlower - hxmarg) then
 ! number of grid cells from this patch lying outside physical domain:
         nxl = int((xlower + hxmarg - xlo_patch)/hx)
@@ -151,7 +134,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = 1, nxl ! Avalanche
                     i_xy = closest(yc, q_avac(1,i_times,:,2))
-                    val(1, i, j) = q_avac(1,i_times,i_xy,3)
+                    val(1, i, j) = q_avac(1,i_times,i_xy,3) * damping
                     val(2, i, j) = q_avac(1,i_times,i_xy,4)
                     val(3, i, j) = q_avac(1,i_times,i_xy,5)
                 end do
@@ -208,11 +191,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = ibeg, nrow ! Avalanche
-                    ! val(1, i, j) = h0
-                    ! val(2, i, j) = -hu0
-                    ! val(3, i, j) = hv0
                     i_xy = closest(yc, q_avac(2,i_times,:,2))
-                    val(1, i, j) = q_avac(2,i_times,i_xy,3)
+                    val(1, i, j) = q_avac(2,i_times,i_xy,3) * damping
                     val(2, i, j) = q_avac(2,i_times,i_xy,4)
                     val(3, i, j) = q_avac(2,i_times,i_xy,5)
                 end do
@@ -269,11 +249,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = 1, nyb ! Avalanche
-                    ! val(1, i, j) = h0
-                    ! val(2, i, j) = hv0
-                    ! val(3, i, j) = hu0
                     i_xy = closest(xc, q_avac(3,i_times,:,1))
-                    val(1, i, j) = q_avac(3,i_times,i_xy,3)
+                    val(1, i, j) = q_avac(3,i_times,i_xy,3) * damping
                     val(2, i, j) = q_avac(3,i_times,i_xy,4)
                     val(3, i, j) = q_avac(3,i_times,i_xy,5)
                 end do
@@ -331,11 +308,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = jbeg, ncol ! Avalanche
-                    ! val(1, i, j) = h0
-                    ! val(2, i, j) = hv0
-                    ! val(3, i, j) = -hu0
                     i_xy = closest(xc, q_avac(4,i_times,:,1))
-                    val(1, i, j) = q_avac(4,i_times,i_xy,3)
+                    val(1, i, j) = q_avac(4,i_times,i_xy,3) * damping
                     val(2, i, j) = q_avac(4,i_times,i_xy,4)
                     val(3, i, j) = q_avac(4,i_times,i_xy,5)
                 end do

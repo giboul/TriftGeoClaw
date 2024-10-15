@@ -4,6 +4,7 @@ module helpers
 
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
+    real(kind=8) :: damping = 500.d0 / 1e3
 
 contains
 
@@ -18,7 +19,6 @@ contains
                 closest = i
             end if
         end do
-        ! print *, "closest", value, MINVAL(array), MAXVAL(array)
     end function closest
 
     subroutine init_inflows(data)
@@ -53,7 +53,7 @@ contains
             do i = 1, num_times
                 n = 0
                 write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-                print *, fname
+                print "(A,A)", "Reading ", fname
                 open(unit, file=fname, status="old")
                     do
                         read(unit,*,iostat=io)
@@ -66,10 +66,13 @@ contains
                 num_cells = max(num_cells, n)
             end do
         end do
-        print "(A,I5)", "num_cells = ", num_cells
     
         allocate(data(4, num_times, num_cells, 5))
-        print "(A,I10)", "size(data) = ", size(data)
+        print "(A,I10)", "size(data)    = ", size(data)
+        print "(A,I10)", "size(data, 1) = ", size(data, 1)
+        print "(A,I10)", "size(data, 2) = ", size(data, 2)
+        print "(A,I10)", "size(data, 3) = ", size(data, 3)
+        print "(A,I10)", "size(data, 4) = ", size(data, 4)
    
         do mthbc = 1, 4
             ftemp = "../../AVAC/_cut_output/"//trim(sides(mthbc))//"_"
@@ -83,16 +86,7 @@ contains
                     data(mthbc, i, n, 3) = h
                     data(mthbc, i, n, 4) = hu
                     data(mthbc, i, n, 5) = hv
-                    print *, data(mthbc, i, n, 1:2)
                 end do
-                print *, "----------------"
-                print *, MINVAL(data(mthbc, i, :, 1)), &
-                    MAXVAL(data(mthbc, i, :, 1))
-                print *, MINVAL(data(mthbc, i, :, 2)), &
-                    MAXVAL(data(mthbc, i, :, 2))
-                print *,size(data,1),size(data,2),size(data,3)&
-                    ,size(data,4)
-                print *, "----------------"
                 close(unit)
             end do
         end do

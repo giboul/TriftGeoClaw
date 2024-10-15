@@ -92,7 +92,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_left, q_right, q_top, q_bottom, closest,times
+    use helpers, only: q_avac, closest,times
 
 
     implicit none
@@ -107,9 +107,6 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), intent(in) :: ylo_patch, yhi_patch
     real(kind=8), intent(in out) :: val(meqn, nrow, ncol)
     real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
-
-    ! real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
-    ! real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
 
 ! Local storage
     integer :: i, j, i_xy, i_times, ibeg, jbeg, nxl, nxr, nyb, nyt
@@ -153,10 +150,10 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = 1, nxl ! Avalanche
-                    i_xy = closest(yc, q_left(i_times,:,2))
-                    val(1, i, j) = q_left(i_times,i_xy,3)
-                    val(2, i, j) = q_left(i_times,i_xy,4)
-                    val(3, i, j) = q_left(i_times,i_xy,5)
+                    i_xy = closest(yc, q_avac(1,i_times,:,2))
+                    val(1, i, j) = q_avac(1,i_times,i_xy,3)
+                    val(2, i, j) = q_avac(1,i_times,i_xy,4)
+                    val(3, i, j) = q_avac(1,i_times,i_xy,5)
                 end do
                 do i = 1, nxl ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, nxl + 1, j)
@@ -214,10 +211,10 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
                     ! val(1, i, j) = h0
                     ! val(2, i, j) = -hu0
                     ! val(3, i, j) = hv0
-                    i_xy = closest(yc, q_right(i_times,:,2))
-                    val(1, i, j) = q_right(i_times,i_xy,3)
-                    val(2, i, j) = q_right(i_times,i_xy,4)
-                    val(3, i, j) = q_right(i_times,i_xy,5)
+                    i_xy = closest(yc, q_avac(2,i_times,:,2))
+                    val(1, i, j) = q_avac(2,i_times,i_xy,3)
+                    val(2, i, j) = q_avac(2,i_times,i_xy,4)
+                    val(3, i, j) = q_avac(2,i_times,i_xy,5)
                 end do
                 do i = ibeg, nrow ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, ibeg - 1, j)
@@ -275,10 +272,10 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
                     ! val(1, i, j) = h0
                     ! val(2, i, j) = hv0
                     ! val(3, i, j) = hu0
-                    i_xy = closest(xc, q_bottom(i_times,:,1))
-                    val(1, i, j) = q_bottom(i_times,i_xy,3)
-                    val(2, i, j) = q_bottom(i_times,i_xy,4)
-                    val(3, i, j) = q_bottom(i_times,i_xy,5)
+                    i_xy = closest(xc, q_avac(3,i_times,:,1))
+                    val(1, i, j) = q_avac(3,i_times,i_xy,3)
+                    val(2, i, j) = q_avac(3,i_times,i_xy,4)
+                    val(3, i, j) = q_avac(3,i_times,i_xy,5)
                 end do
                 do j = 1, nyb ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, i, nyb + 1)
@@ -337,10 +334,10 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
                     ! val(1, i, j) = h0
                     ! val(2, i, j) = hv0
                     ! val(3, i, j) = -hu0
-                    i_xy = closest(xc, q_bottom(i_times,:,1))
-                    val(1, i, j) = q_bottom(i_times,i_xy,3)
-                    val(2, i, j) = q_bottom(i_times,i_xy,4)
-                    val(3, i, j) = q_bottom(i_times,i_xy,5)
+                    i_xy = closest(xc, q_avac(4,i_times,:,1))
+                    val(1, i, j) = q_avac(4,i_times,i_xy,3)
+                    val(2, i, j) = q_avac(4,i_times,i_xy,4)
+                    val(3, i, j) = q_avac(4,i_times,i_xy,5)
                 end do
                 do j = jbeg, ncol ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, i, jbeg - 1)

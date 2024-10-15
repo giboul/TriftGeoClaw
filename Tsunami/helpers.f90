@@ -2,8 +2,7 @@ module helpers
     implicit none
     save
 
-    real(kind=8), allocatable :: q_left(:,:,:), q_right(:,:,:)
-    real(kind=8), allocatable :: q_top(:,:,:), q_bottom(:,:,:)
+    real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
 
 contains
@@ -22,15 +21,13 @@ contains
         ! print *, "closest", value, MINVAL(array), MAXVAL(array)
     end function closest
 
-    subroutine allocate_space(data, mthbc)
-        real(kind=8), allocatable, intent(inout) :: data(:,:,:)
-        integer, intent(in) :: mthbc
-    
+    subroutine init_inflows(data)
+        real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
         character(len=6), dimension(4) :: sides
         character(len=32) :: ftemp
         character(len=40) :: fname
         real(kind=8) :: x, y, h, hu, hv
-        integer :: unit, io, i, n
+        integer :: unit, io, i, n, mthbc
         integer :: num_cells, num_times
         logical :: res
     
@@ -38,7 +35,7 @@ contains
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
     
         num_times = 1
-        ftemp = "../../AVAC/_cut_output/" // trim(sides(mthbc)) // "_"
+        ftemp = "../../AVAC/_cut_output/" // trim(sides(1)) // "_"
         do
             write(fname,"(A,I0.4, A4)") trim(ftemp),num_times,".txt"
             inquire(file=trim(fname),exist=res)
@@ -51,47 +48,55 @@ contains
         print "(A1,A,A1)", "<", trim(fname), ">"
     
         num_cells = 0
-        ftemp = "../../AVAC/_cut_output/" // trim(sides(mthbc)) // "_"
-        do i = 1, num_times
-            n = 0
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-            print *, fname
-            open(unit, file=fname, status="old")
-                do
-                    read(unit,*,iostat=io)
-                    if (io /= 0) then
-                        exit
-                    end if
-                    n = n + 1
-                end do
-            close(unit)
-            num_cells = max(num_cells, n)
+        do mthbc = 1, 4
+            ftemp = "../../AVAC/_cut_output/"//trim(sides(mthbc))//"_"
+            do i = 1, num_times
+                n = 0
+                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
+                print *, fname
+                open(unit, file=fname, status="old")
+                    do
+                        read(unit,*,iostat=io)
+                        if (io /= 0) then
+                            exit
+                        end if
+                        n = n + 1
+                    end do
+                close(unit)
+                num_cells = max(num_cells, n)
+            end do
         end do
         print "(A,I5)", "num_cells = ", num_cells
     
-        allocate(data(num_times, num_cells, 5))
+        allocate(data(4, num_times, num_cells, 5))
         print "(A,I10)", "size(data) = ", size(data)
    
-        do i = 1, num_times
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-            open(unit, file=fname, status="old")
-            do n = 1, num_cells
-                read(unit,*, iostat=io) x, y, h, hu, hv
-                data(i, n, 1) = x
-                data(i, n, 2) = y
-                data(i, n, 3) = h
-                data(i, n, 4) = hu
-                data(i, n, 5) = hv
-                print *, data(i, n, 1:2)
+        do mthbc = 1, 4
+            ftemp = "../../AVAC/_cut_output/"//trim(sides(mthbc))//"_"
+            do i = 1, num_times
+                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
+                open(unit, file=fname, status="old")
+                do n = 1, num_cells
+                    read(unit,*, iostat=io) x, y, h, hu, hv
+                    data(mthbc, i, n, 1) = x
+                    data(mthbc, i, n, 2) = y
+                    data(mthbc, i, n, 3) = h
+                    data(mthbc, i, n, 4) = hu
+                    data(mthbc, i, n, 5) = hv
+                    print *, data(mthbc, i, n, 1:2)
+                end do
+                print *, "----------------"
+                print *, MINVAL(data(mthbc, i, :, 1)), &
+                    MAXVAL(data(mthbc, i, :, 1))
+                print *, MINVAL(data(mthbc, i, :, 2)), &
+                    MAXVAL(data(mthbc, i, :, 2))
+                print *,size(data,1),size(data,2),size(data,3)&
+                    ,size(data,4)
+                print *, "----------------"
+                close(unit)
             end do
-            print *, "----------------"
-            print *, MINVAL(data(i, :, 1)), MAXVAL(data(i, :, 1))
-            print *, MINVAL(data(i, :, 2)), MAXVAL(data(i, :, 2))
-            print *, size(data, 1), size(data, 2), size(data, 3)
-            print *, "----------------"
-            close(unit)
         end do
-    end subroutine allocate_space
+    end subroutine init_inflows
 
     subroutine read_times(times)
         integer :: io, n, i

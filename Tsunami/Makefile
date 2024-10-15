@@ -61,25 +61,3 @@ topo:
 flows:
 	$(CLAW_PYTHON) extract_damflow.py
 
-plotloop:
-	$(CLAW_PYTHON) ../plotloop.py
-
-movie:
-	$(CLAW_PYTHON) ../movie.py
-	xdg-open movie.gif
-
-.movie:
-	$(MAKE) .plots
-	$(CLAW_PYTHON) ../movie.py
-	xdg-open movie.gif
-
-all: 
-	$(MAKE) clobber
-	$(MAKE) clean
-	$(MAKE) new
-	$(MAKE) data
-	$(MAKE) topo
-	$(MAKE) output
-	$(MAKE) .plots
-	$(MAKE) .htmls
-	$(MAKE) movie

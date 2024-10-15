@@ -47,7 +47,7 @@ def plot():
         ax.set_xlabel("Distance [m]")
         ax.set_ylabel("Elevation [MASL]")
         ax.set_xlim(dist[0], dist[-1])
-        ax.set_ylim(zlow, eta.max())
+        ax.set_ylim(params.dam_alt-2, params.dam_alt+10)
 
     def update(i):
         (h, hu, hv, eta), t = extract(i)
@@ -62,3 +62,4 @@ def plot():
 
 if __name__ == "__main__":
     plot()
+

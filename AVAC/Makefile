@@ -65,16 +65,3 @@ topo:
 flows:
 	$(CLAW_PYTHON) extract_inflows.py
 
-iplot:
-	$(CLAW_PYTHON) ../iplot.py
-
-movie:
-	$(CLAW_PYTHON) ../movie.py
-
-all: 
-	$(MAKE) topo
-	$(MAKE) data
-	$(MAKE) output
-	$(MAKE) plots
-	$(MAKE) movie
-

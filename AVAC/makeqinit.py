@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import AddSetrun
 import numpy as np
+from matplotlib.path import Path
 from matplotlib import pyplot as plt
 params = AddSetrun
 
@@ -26,11 +27,13 @@ def write_qinit():
     X, Y = np.meshgrid(x, y)
     z = np.loadtxt(ifile, skiprows=6).reshape(ny, nx)
 
-    qinit = np.zeros_like(z)
-    qinit[(X-2.668e6)**2 + (Y-1.1695e6)**2 <= 5e2**2] = 10
-    qinit[(X-2.671e6)**2 + (Y-1.1730e6)**2 <= 5e2**2] = 3
-    qinit[(X-2.671e6)**2 + (Y-1.1695e6)**2 <= 5e2**2] = 3
-    qinit[(X-2.672e6)**2 + (Y-1.1710e6)**2 <= 5e2**2] = 3
+
+    qinit = np.zeros_like(X, dtype=np.float16)
+    insert_avalanches(X, Y, qinit)
+    # qinit[(X-2.668e6)**2 + (Y-1.1695e6)**2 <= 5e2**2] = 10
+    # qinit[(X-2.671e6)**2 + (Y-1.1730e6)**2 <= 5e2**2] = 3
+    # qinit[(X-2.671e6)**2 + (Y-1.1695e6)**2 <= 5e2**2] = 3
+    # qinit[(X-2.672e6)**2 + (Y-1.1710e6)**2 <= 5e2**2] = 3
     np.savetxt("qinit.xyz", np.vstack((X.flatten(), Y.flatten(), qinit.flatten())).T)
     qinit[qinit <= 0] = float("nan")
 
@@ -39,6 +42,19 @@ def write_qinit():
     plt.scatter((list(params.bounds.values())[:2]),
                 (list(params.bounds.values())[2:]))
     plt.show()
+
+
+def insert_avalanches(X, Y, Z, indices="all"):
+    ix, x_all, y_all = np.loadtxt("avalanches.csv").T
+    if indices == "all":
+        indices = ix
+    for i in indices:
+        x = x_all[i==ix]
+        y = y_all[i==ix]
+        path = Path(np.vstack((x, y)).T)
+        inside = path.contains_points(np.vstack((X.flatten(), Y.flatten())).T)
+        inside = inside.reshape(X.shape)
+        Z[inside] = 3
 
 
 if __name__ == "__main__":

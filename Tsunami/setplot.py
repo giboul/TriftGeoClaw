@@ -77,8 +77,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmin = 1615
     plotitem.pcolor_cmax = 2300
     plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [0,0,0]
-    plotitem.patchedges_show = 1
+    # plotitem.amr_celledges_show = [0,0,0]
+    # plotitem.patchedges_show = 1
 
     # add contour lines of bathy if desired:
     plotitem = plotaxes.new_plotitem(plot_type='2d_contour')

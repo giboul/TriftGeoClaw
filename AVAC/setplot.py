@@ -6,13 +6,14 @@ This module is imported by the plotting routines and then the
 function setplot is called to set the plot parameters.
 """
 from matplotlib import pyplot as plt
+from matplotlib import cm
 from pathlib import Path
 from os import system
 import numpy as np
 
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
-from params import out_format
+from AddSetrun import out_format, lake_alt
 
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -61,22 +62,22 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
     plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = geoplot.tsunami_colormap
+    plotitem.pcolor_cmap = cm.Blues  # geoplot.tsunami_colormap
     plotitem.pcolor_cmin = 0.
     plotitem.pcolor_cmax = 0.01
     plotitem.add_colorbar = True
-    plotitem.amr_celledges_show = [1,1,0]
-    plotitem.patchedges_show = 1
+    # plotitem.amr_celledges_show = [1,1,0]
+    # plotitem.patchedges_show = 1
 
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = geoplot.land_colors
-    plotitem.pcolor_cmin = 0.0
-    plotitem.pcolor_cmax = 100.0
+    plotitem.pcolor_cmap = cm.inferno  # geoplot.land_colors
+    plotitem.pcolor_cmin = lake_alt - 5e2
+    plotitem.pcolor_cmax = lake_alt + 1.5e3
     plotitem.add_colorbar = False
-    plotitem.amr_celledges_show = [1,1,0]
-    plotitem.patchedges_show = 1
+    # plotitem.amr_celledges_show = []
+    # plotitem.patchedges_show = 1
 
     # add contour lines of bathy if desired:
     plotitem = plotaxes.new_plotitem(plot_type='2d_contour')

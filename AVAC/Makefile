@@ -60,6 +60,10 @@ include $(CLAWMAKE)
 .PHONY: topo all
 topo:
 	$(CLAW_PYTHON) maketopo.py
+	$(CLAW_PYTHON) makeqinit.py
+
+flows:
+	$(CLAW_PYTHON) extract_inflows.py
 
 iplot:
 	$(CLAW_PYTHON) ../iplot.py

@@ -29,6 +29,8 @@ def write_topo():
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
+    plt.imshow(Ztif)
+    plt.show()
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
     # Add some room to avoid interpolation error
@@ -74,7 +76,7 @@ def write_topo():
         plt.show()
 
 
-def expand_bounds(xmin, xmax, ymin, ymax, margin=0.5):
+def expand_bounds(xmin, xmax, ymin, ymax, margin=0.25):
     _xmin = xmin - margin*(xmax - xmin)
     _ymin = ymin - margin*(ymax - ymin)
     _xmax = xmax + margin*(xmax - xmin)

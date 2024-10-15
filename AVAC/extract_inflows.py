@@ -20,7 +20,7 @@ x = np.hstack((
 y = np.hstack((
     np.full(n, ymin),
     np.linspace(ymin, ymax, n),
-    np.full(n, ymax)-100,
+    np.full(n, ymax),
     np.linspace(ymax, ymin, n)
 ))
 boundaries = ("bottom", "right", "top", "left")

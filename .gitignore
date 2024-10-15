@@ -12,5 +12,6 @@ timing.*
 *.png
 **/.*
 xgeoclaw
-
+*.geojson
+*.csv
 _*

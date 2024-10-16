@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 from clawpack.visclaw import gridtools
@@ -10,7 +11,11 @@ from maketopo import dam_downstream, dam_upstream
 
 xmin, xmax, ymin, ymax = params.bounds.values()
 
-files = list(Path("_output").glob("fort.q*"))
+parser = ArgumentParser()
+parser.add_argument("avid", nargs="?", default="")
+args = parser.parse_args()
+outdir = Path(f"_output{args.avid}")
+files = list(outdir.glob("fort.q*"))
 n = 100
 x = np.linspace(xmax, xmin, n, endpoint=True)
 y = (dam_downstream(x) + dam_upstream(x))/2
@@ -20,7 +25,7 @@ dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path="_output", file_format=params.out_format)
+    frame_sol = solution.Solution(i, path=outdir, file_format=params.out_format)
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -50,6 +55,7 @@ def plot():
         ax.set_ylim(params.dam_alt-2, params.dam_alt+10)
 
     def update(i):
+        (h, hu, hv, eta), t = extract(i)
         (h, hu, hv, eta), t = extract(i)
         z = eta-h
         eta_steps.set_data(eta, dist, z)

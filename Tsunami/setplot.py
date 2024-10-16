@@ -63,7 +63,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
     # plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = cm.Blues
+    plotitem.pcolor_cmap = cm.ocean
     plotitem.pcolor_cmax = lake_alt + 2
     plotitem.pcolor_cmin = lake_alt - 2
     plotitem.add_colorbar = True
@@ -73,9 +73,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = cm.inferno
-    plotitem.pcolor_cmin = 1615
-    plotitem.pcolor_cmax = 2300
+    plotitem.pcolor_cmap = cm.Purples
+    plotitem.pcolor_cmin = lake_alt - 200
+    plotitem.pcolor_cmax = lake_alt + 200
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 1

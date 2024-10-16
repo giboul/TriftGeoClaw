@@ -58,10 +58,16 @@ include $(CLAWMAKE)
 
 # Construct the topography data
 .PHONY: topo all
+avid=""
+qinit:
+	$(CLAW_PYTHON) makeqinit.py $(avid)
 topo:
 	$(CLAW_PYTHON) maketopo.py
-	$(CLAW_PYTHON) makeqinit.py
-
+	make qinit "avid=$(avid)"
+run:
+	make qinit "avid=$(avid)"
+	make output "OUTDIR=_output$(avid)"
+	make flows "avid=$(avid)"
 flows:
-	$(CLAW_PYTHON) extract_inflows.py
+	$(CLAW_PYTHON) extract_inflows.py $(avid)
 

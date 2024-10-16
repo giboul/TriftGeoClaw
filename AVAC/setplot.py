@@ -72,9 +72,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = cm.inferno  # geoplot.land_colors
-    plotitem.pcolor_cmin = lake_alt - 5e2
-    plotitem.pcolor_cmax = lake_alt + 1.5e3
+    plotitem.pcolor_cmap = cm.Purples  # geoplot.land_colors
+    plotitem.pcolor_cmin = lake_alt - 800
+    plotitem.pcolor_cmax = lake_alt + 1000
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = []
     # plotitem.patchedges_show = 1

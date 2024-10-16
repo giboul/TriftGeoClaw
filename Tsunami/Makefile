@@ -58,6 +58,18 @@ topo:
 	$(CLAW_PYTHON) maketopo.py
 	$(CLAW_PYTHON) makeqinit.py
 
+avid=""
+
+data:
+	-rm -f .data
+	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(avid)
+	touch .data
+
+# OUTDIR="$(OUTDIR)$(avid)"
+
+run:
+	make output OUTDIR=_output$(avid)
+
 flows:
-	$(CLAW_PYTHON) extract_damflow.py
+	$(CLAW_PYTHON) extract_damflow.py $(avid)
 

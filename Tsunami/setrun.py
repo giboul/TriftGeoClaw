@@ -10,7 +10,7 @@ import numpy as np
 from clawpack.clawutil.data import ClawRunData
 import params
 
-def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
+def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -18,13 +18,11 @@ def setrun(claw_pkg='geoclaw', bouss=False) -> ClawRunData:
     ------
         ClawRunData
     """
-    with open("bc_avac.data", "w") as file:
+    if avid != 'None':
+        avid = int(avid)
+    with open("avac.data", "w") as file:
         file.write(
-            f"{1.17125e6} := y_0\n"
-            f"{1.17150e6} := y_1\n"
-            f"{1.} := h0\n"
-            f"{20.} := hu0\n"
-            f"{0.} := hv0\n"
+            f"{avid} := avid\n"
         )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -371,6 +369,7 @@ def main():
         pass
     parser = argparse.ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    parser.add_argument('avid', default='None', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()
 

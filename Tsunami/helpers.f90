@@ -15,17 +15,35 @@ contains
 
         closest = 1
         do i = 1, size(array)
-            if (abs(value-array(i)) < abs(value-array(closest))) then
+            if (abs(value-array(i))<abs(value-array(closest))) then
                 closest = i
             end if
         end do
     end function closest
 
+    real(kind=8) function interp(newx, x, y)
+        real(kind=8), intent(in) :: x(:), y(:), newx
+        real(kind=8) :: xp, yp
+        integer :: ix
+
+        ix = closest(newx, x) ! closest_back
+        if (ix == 0) then
+            interp = y(1)
+        else if (ix == size(x)) then
+            interp = y(size(y))
+        else
+            xp = x(ix)
+            yp = y(ix)
+            interp = yp + (newx-xp)/(x(ix+1)-xp) * (y(ix+1)-yp)
+        end if
+    end function interp
+
     subroutine init_inflows(data)
         real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
         character(len=6), dimension(4) :: sides
-        character(len=32) :: ftemp
-        character(len=40) :: fname
+        character(len=255) :: fdir, ftemp
+        character(len=255) :: fname
+        character(len=4) :: avid
         real(kind=8) :: x, y, h, hu, hv
         integer :: unit, io, i, n, mthbc
         integer :: num_cells, num_times
@@ -33,9 +51,17 @@ contains
     
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
-    
+ 
+        open(unit, file="../avac.data", status='old')
+            read(unit,*) avid
+        close(unit)
+        if (avid == "None") then
+            avid = "    "
+        end if
         num_times = 1
-        ftemp = "../../AVAC/_cut_output/" // trim(sides(1)) // "_"
+        print *, "Avalanche id #", trim(avid)
+        fdir = "../../AVAC/_cut_output"//trim(avid)//"/"
+        ftemp = trim(fdir)//trim(sides(1))//"_"
         do
             write(fname,"(A,I0.4, A4)") trim(ftemp),num_times,".txt"
             inquire(file=trim(fname),exist=res)
@@ -49,11 +75,12 @@ contains
     
         num_cells = 0
         do mthbc = 1, 4
-            ftemp = "../../AVAC/_cut_output/"//trim(sides(mthbc))//"_"
+            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
+            print *, trim(fname)
             do i = 1, num_times
                 n = 0
                 write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-                print "(A,A)", "Reading ", fname
+                print "(A,A)", "Reading ", trim(fname)
                 open(unit, file=fname, status="old")
                     do
                         read(unit,*,iostat=io)
@@ -75,7 +102,7 @@ contains
         print "(A,I10)", "size(data, 4) = ", size(data, 4)
    
         do mthbc = 1, 4
-            ftemp = "../../AVAC/_cut_output/"//trim(sides(mthbc))//"_"
+            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
             do i = 1, num_times
                 write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
                 open(unit, file=fname, status="old")

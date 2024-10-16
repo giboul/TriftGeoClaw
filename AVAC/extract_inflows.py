@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from pathlib import Path
 from shutil import rmtree
 from AddSetrun import out_format, resolution
@@ -8,8 +9,17 @@ from clawpack.pyclaw import solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-rmtree("_cut_output", ignore_errors=True)
-files = list(Path("_output").glob("fort.q*"))
+
+parser = ArgumentParser()
+parser.add_argument("avid", nargs="?", default="")
+parser.add_argument("-p", "--plot", action="store_true")
+args = parser.parse_args()
+
+
+outcutdir = Path(f"_cut_output{args.avid}")
+outdir = Path(f"_output{args.avid}")
+
+files = list(outdir.glob("fort.q*"))
 n = 100
 x = np.hstack((
     np.linspace(xmin, xmax, n, endpoint=True),
@@ -32,7 +42,7 @@ dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path="_output", file_format=out_format)
+    frame_sol = solution.Solution(i, path=outdir, file_format=out_format)
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -43,8 +53,9 @@ def extract(i):
     return q, frame_sol.t
 
 def write():
+    rmtree(outcutdir, ignore_errors=True)
     nf = len(files)
-    Path("_cut_output").mkdir(exist_ok=True)
+    Path(outcutdir).mkdir(exist_ok=True)
     times = []
     for ti in range(nf):
         print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
@@ -54,9 +65,9 @@ def write():
         for bi, boundary in enumerate(boundaries):
             s = slice(bi*n, (bi+1)*n)
             data = np.vstack((x[s], y[s], h[s], hu[s], hv[s])).T
-            path = Path("_cut_output") / f"{boundary}_{ti:0>{4}}.txt"
+            path = outcutdir / f"{boundary}_{ti:0>{4}}.txt"
             np.savetxt(path, data, comments="")
-    np.savetxt(Path("_cut_output") / "timing.txt", times)
+    np.savetxt(outcutdir / "timing.txt", times)
     print()
 
 
@@ -93,5 +104,7 @@ def plot():
 
 
 if __name__ == "__main__":
-    write()
-    plot()
+    if args.plot:
+        plot()
+    else:
+        write()

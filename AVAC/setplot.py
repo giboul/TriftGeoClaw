@@ -65,7 +65,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmap = cm.Blues  # geoplot.tsunami_colormap
     plotitem.pcolor_cmin = 0.
     plotitem.pcolor_cmax = 0.01
-    plotitem.add_colorbar = True
+    # plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,0]
     # plotitem.patchedges_show = 1
 

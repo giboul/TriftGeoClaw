@@ -56,6 +56,7 @@ include $(CLAWMAKE)
 .PHONY: topo all
 topo:
 	$(CLAW_PYTHON) maketopo.py
+qinit:
 	$(CLAW_PYTHON) makeqinit.py
 
 avid=""

@@ -18,8 +18,10 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     ------
         ClawRunData
     """
-    if avid != 'None':
+    if avid:
         avid = int(avid)
+    else:
+        avid = None
     with open("avac.data", "w") as file:
         file.write(
             f"{avid} := avid\n"

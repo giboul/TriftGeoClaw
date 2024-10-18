@@ -1,9 +1,10 @@
+from pathlib import Path
 import json
 import numpy as np
 from matplotlib import pyplot as plt
 
 
-with open("avalanches.geojson", "r") as file:
+with open(Path("..") / "avalanches.geojson", "r") as file:
     data = json.load(file)
 
 coords = []

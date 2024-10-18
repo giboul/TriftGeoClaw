@@ -13,7 +13,7 @@ from scipy.interpolate import RegularGridInterpolator as RGI
 # from clawpack.geoclaw.marching_front import select_by_flooding
 params = AddSetrun
 
-def write_topo():
+def write_topo(plot=False):
 
     # Temporary directory
     ifile = Path("..") / "swissALTI3D_merged.tif"
@@ -29,8 +29,10 @@ def write_topo():
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
-    plt.imshow(Ztif)
-    plt.show()
+    if plot:
+        plt.title("Original topography")
+        plt.imshow(Ztif)
+        plt.show()
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
     # Add some room to avoid interpolation error
@@ -64,15 +66,13 @@ def write_topo():
 
     rmtree(tempdir)
 
-    parser = ArgumentParser()
-    parser.add_argument("-p", "--plot", action="store_true")
-    args = parser.parse_args()
-    if args.plot or True:
+    if plot:
         extent = (xmin, xmax, ymin, ymax) 
-        h = params.lake_alt - Z
-        h[h <= 0] = float("nan")
-        plt.imshow(Z, extent=extent, cmap="inferno", vmin=params.lake_alt)
-        plt.imshow(h, cmap="Blues", extent=extent)
+        # h = params.lake_alt - Z
+        # h[h <= 0] = float("nan")
+        plt.title("Processed topography")
+        plt.imshow(Z, extent=extent)
+        # plt.imshow(h, cmap="Blues", extent=extent)
         plt.show()
 
 
@@ -149,7 +149,7 @@ def write_topo_old():
     args = parser.parse_args()
     if args.plot or True:
         extent =(xmin, xmax, ymin, ymax) 
-        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
+        plt.imshow(z.reshape(ny, nx), extent=extent)
         xcmin, xcmax = xc.min(), xc.max()
         ycmin, ycmax = yc.min(), yc.max()
         plt.plot((xcmin, xcmax, xcmax, xcmin, xcmin),
@@ -161,5 +161,8 @@ def write_topo_old():
 
 
 if __name__ == "__main__":
-    write_topo()
+    parser = ArgumentParser()
+    parser.add_argument("-p", "--plot", action="store_true")
+    args = parser.parse_args()
+    write_topo(plot=args.plot)
 

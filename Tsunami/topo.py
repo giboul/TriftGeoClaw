@@ -68,7 +68,7 @@ def write_topo():
         extent = (xmin, xmax, ymin, ymax) 
         h = params.lake_alt - Z
         h[h <= 0] = float("nan")
-        plt.imshow(Z, extent=extent, cmap="inferno", vmin=params.lake_alt)
+        plt.imshow(Z, extent=extent, vmin=params.lake_alt)
         plt.imshow(h, cmap="Blues", extent=extent)
         plt.show()
 
@@ -107,10 +107,10 @@ def write_topo():
 
 #     # Add the increments
 #     ax1.legend()
-#     ax3.imshow(Z, extent=extent, cmap="inferno")
-#     ax4.imshow(Z + (x - xt[ix])*xslope, extent=extent, cmap="inferno")
-#     ax5.imshow(Z + ((y - yt[iy])*yslope.T).T, extent=extent, cmap="inferno")
-#     ax6.imshow(Z + (x-xt[ix])*xslope + ((y-yt[iy])*yslope.T).T, extent=extent, cmap="inferno")
+#     ax3.imshow(Z, extent=extent)
+#     ax4.imshow(Z + (x - xt[ix])*xslope, extent=extent)
+#     ax5.imshow(Z + ((y - yt[iy])*yslope.T).T, extent=extent)
+#     ax6.imshow(Z + (x-xt[ix])*xslope + ((y-yt[iy])*yslope.T).T, extent=extent)
 #     plt.show()
 #     exit()
 

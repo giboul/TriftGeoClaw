@@ -42,9 +42,9 @@ def pick_seed(z_im, x, y, res=0):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
-    ax.imshow(z_im, extent=extent, cmap="inferno")
+    ax.imshow(z_im, extent=extent)
     imd = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Reds")
-    imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues_r")
+    imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues")
     title = "Max altitude: %s   Dilation radius: %i"
 
     data = dict(alt="", x=0, y=0, r=0, status="waiting")

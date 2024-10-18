@@ -13,6 +13,7 @@ from matplotlib.animation import FuncAnimation
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
 parser.add_argument("-p", "--plot", action="store_true")
+parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
 
 
@@ -22,10 +23,10 @@ outdir = Path(f"_output{args.avid}")
 files = list(outdir.glob("fort.q*"))
 n = 100
 x = np.hstack((
-    np.linspace(xmin, xmax, n, endpoint=True),
-    np.full(n, xmax),
-    np.linspace(xmax, xmin, n, endpoint=True),
-    np.full(n, xmin),
+    np.linspace(xmin, xmax, n, endpoint=True),  # South
+    np.full(n, xmax),  # East
+    np.linspace(xmax, xmin, n, endpoint=True),  # North
+    np.full(n, xmin),  # West
 ))
 y = np.hstack((
     np.full(n, ymin),
@@ -71,7 +72,7 @@ def write():
     print()
 
 
-def plot():
+def plot(movie):
     with plt.style.context("bmh"):
         fig, ax = plt.subplots(layout="tight")
         q, t = extract(0)
@@ -83,8 +84,11 @@ def plot():
                             label="land", fill=True, color="sienna", lw=1)
         title = "Cut @ t=%.2f"
         ax.set_title(title % t)
-        for d in (dist1, dist2, dist3):
-            plt.axline((d, z.min()), slope=float("inf"), ls="-.", c="k")
+        text_z = 0.9*eta.max()+0.1*zlow
+        for d, direct in zip((dist1, dist2, dist3), ("South", "East", "North", "West")):
+            print(d, text_z, direct)
+            plt.text(d, text_z, direct+" ", horizontalalignment='right')
+            plt.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
         # ax.set_aspect("equal")
         ax.legend(loc="upper right")
         ax.set_xlabel("Distance [m]")
@@ -100,11 +104,14 @@ def plot():
         ax.set_title(title % t)
 
     anim = FuncAnimation(fig, update, len(files), interval=500)
-    plt.show()
+    if movie:
+        anim.save("cut_movie.gif")
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
-    if args.plot:
-        plot()
+    if args.plot or args.movie:
+        plot(args.movie)
     else:
         write()

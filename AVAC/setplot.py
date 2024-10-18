@@ -6,7 +6,6 @@ This module is imported by the plotting routines and then the
 function setplot is called to set the plot parameters.
 """
 from matplotlib import pyplot as plt
-from matplotlib import cm
 from pathlib import Path
 from os import system
 import numpy as np
@@ -62,7 +61,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
     plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = cm.Blues  # geoplot.tsunami_colormap
+    plotitem.pcolor_cmap = plt.cm.Blues_r # geoplot.tsunami_colormap
     plotitem.pcolor_cmin = 0.
     plotitem.pcolor_cmax = 0.01
     # plotitem.add_colorbar = True
@@ -72,9 +71,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = cm.Purples  # geoplot.land_colors
-    plotitem.pcolor_cmin = lake_alt - 800
-    plotitem.pcolor_cmax = lake_alt + 1000
+    plotitem.pcolor_cmap = plt.cm.viridis  # geoplot.land_colors
+    plotitem.pcolor_cmin = lake_alt - 500
+    plotitem.pcolor_cmax = lake_alt + 1300
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = []
     # plotitem.patchedges_show = 1

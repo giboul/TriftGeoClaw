@@ -62,9 +62,9 @@ avid=""
 avalanches:
 	$(CLAW_PYTHON) geojson2csv.py
 qinit:
-	$(CLAW_PYTHON) makeqinit.py $(avid)
+	$(CLAW_PYTHON) qinit.py $(avid)
 topo:
-	$(CLAW_PYTHON) maketopo.py
+	$(CLAW_PYTHON) topo.py
 	make qinit "avid=$(avid)"
 run:
 	make qinit "avid=$(avid)"

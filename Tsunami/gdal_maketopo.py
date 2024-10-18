@@ -60,7 +60,7 @@ def write_topo():
         extent = (xmin, xmax, ymin, ymax) 
         h = params.lake_alt - z
         h[h <= 0] = float("nan")
-        plt.imshow(z.reshape(ny, nx), extent=extent, cmap="inferno")
+        plt.imshow(z.reshape(ny, nx), extent=extent)
         plt.imshow(h.reshape(ny, nx), cmap="Blues", extent=extent)
         plt.show()
 

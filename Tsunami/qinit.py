@@ -50,8 +50,8 @@ def pick_seed(z_im, x, y, res=0):
     print(imb.get_cmap())
     ax.legend(
         [Line2D([0], [0], color=imb.get_cmap()(0.5), lw=4),
-         Line2D([0], [0], color=imf.get_cmap()(1.), lw=4),
-         Line2D([0], [0], color=imd.get_cmap()(0.), lw=4)],
+         Line2D([0], [0], color=imf.get_cmap()(0.), lw=4),
+         Line2D([0], [0], color=imd.get_cmap()(1.), lw=4)],
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 

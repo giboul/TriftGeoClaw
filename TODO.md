@@ -5,30 +5,10 @@
 - [ ] Interpoler les flux entrants et les amortir par $\rho_\text{neige}/\rho_\text{eau}$ pour créer la bonne vague d'impulsion.
 - [x] Ajouter des graphes de l’intumescence au barrage (~~ligne de jauges~~ script python).
 - [x] Simuler toutes les avalanches proposées.
+- [ ] Il faudrait que les avalanches soient introduites plus près du la rétention, la grande distance parcourue entre le bord et le lac est parfois un problème.
 - [ ] Comparer les résultats à ceux des expériences VAW+LHE (test des conditions de bord).
 - [ ] Faciliter l'utilisation avec un fichier `config.yaml` (chemin vers le ficier topo, paramètres redondants, préférences...)
 - [ ] Faire un diagramme expliquant le fonctionnement de GeoClaw.
-
-# Avancement du projet
-Je mettrai ici à jour mon avancement à chaque étape.
-
-## Vague introduite par une vitesse initiale
-Il faudrait que les avalanches soient introduites plus près du la rétention, la grande distance parcourue à l'état de l'eau est parfois un problème.
-
-<img src="TSUL/stairs.gif"/>
-<img src="TSUL/movie.gif"/>
-
-## Première avalanche
-<img src="AVAC/movie.gif"/>
-
-# Problèmes
-- GitHub/AVAC: `qinit_module.f90` est bien corrigé mais il n'est pas listé dan le Makefile. Il faudrait écrire:
-```Makefile
-MODULES = \
-  ./module_voellmy.f90 \
-  ./qinit_module.f90 \
-```
-- AVAC/GRASS: L'archive `toraval.fr/r.avac.tar.gz` n'existe plus, tout est dans le git mais le manuel renvoie vers le site de toraval.
 
 # À explorer 
 - code Kyle Mandli : two layer shallow water (water and avalanche?) `rpn2_layered` (clawpack/dev)

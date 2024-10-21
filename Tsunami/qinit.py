@@ -1,6 +1,7 @@
 from params import lake_alt, flood_seed
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
 from skimage.morphology import flood, isotropic_dilation
 
 
@@ -42,10 +43,17 @@ def pick_seed(z_im, x, y, res=0):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
-    ax.imshow(z_im, extent=extent)
+    imb = ax.imshow(z_im, extent=extent)
     imd = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Reds")
     imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues")
     title = "Max altitude: %s   Dilation radius: %i"
+    print(imb.get_cmap())
+    ax.legend(
+        [Line2D([0], [0], color=imb.get_cmap()(0.5), lw=4),
+         Line2D([0], [0], color=imf.get_cmap()(1.), lw=4),
+         Line2D([0], [0], color=imd.get_cmap()(1.), lw=4)],
+        ("Bathymetry", "Flooded region", "Dilated flood")
+    )
 
     data = dict(alt="", x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)

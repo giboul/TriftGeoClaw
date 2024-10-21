@@ -6,16 +6,20 @@ from clawpack.pyclaw import solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import params
-from maketopo import dam_downstream, dam_upstream
+from topo import dam_downstream, dam_upstream
 
 
 xmin, xmax, ymin, ymax = params.bounds.values()
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
+parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
+print(f"{args.avid = }")
 outdir = Path(f"_output{args.avid}")
+print(f"{outdir = }")
 files = list(outdir.glob("fort.q*"))
+print(f"{len(files) = }")
 n = 100
 x = np.linspace(xmax, xmin, n, endpoint=True)
 y = (dam_downstream(x) + dam_upstream(x))/2
@@ -52,7 +56,7 @@ def plot():
         ax.set_xlabel("Distance [m]")
         ax.set_ylabel("Elevation [MASL]")
         ax.set_xlim(dist[0], dist[-1])
-        ax.set_ylim(params.dam_alt-2, params.dam_alt+10)
+        ax.set_ylim(params.dam_alt-10, params.dam_alt+10)
 
     def update(i):
         (h, hu, hv, eta), t = extract(i)
@@ -63,7 +67,10 @@ def plot():
         ax.set_title(title % t)
 
     anim = FuncAnimation(fig, update, len(files), interval=500)
-    plt.show()
+    if args.movie:
+        anim.save("cutmovie.gif")
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":

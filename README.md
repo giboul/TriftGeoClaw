@@ -13,12 +13,12 @@ This part is copied from Christophe Ancey's (cancey) work on avalanches, see his
 A `tiff` file is expected. It will be cropped, downsampled and maybe rotated in the future to find the best bounding box of the lake. The expected final format is either `.xyz` or `.asc`. This can be done with tools like `gdal`, the `tifffile` package is used here because it comes with `scikit-image`. See [`topo.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/topo.py).
 
 ## `qinit.xyz`
-From an `geojson` of polygons, the avalanches are defined by `id` to be run together or separately. This tratment is done in [`qinit.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/qinit.py).
+From an `geojson` of polygons, the avalanches are defined by `id` to be run together or separately. This treatment is done in [`qinit.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/qinit.py).
 
-<img src="AVAC/qinit.pdf"/>
+<img src="AVAC/qinit.png"/>
 
 ## Running the avalanche
-Each avalanche can be run individually with the command `make run avid=<avalanche id>` and the output will go to a folder named `_output<avid>`. `make output` or `make run` without specifying `avid` will run all avalanches.
+Each avalanche can be run individually with the command `make run avid=<avalanche id>` and the output will go to a folder named `_output<avid>`. `make output` or `make run` without specifying `avid` will run all avalanches on a signle simulation.
 
 <img src="AVAC/movie5.gif"/>
 <img src="AVAC/movie.gif"/>
@@ -33,7 +33,39 @@ The `clawpack.visclaw.gridtools.grid_output_2d` comes in handy here, it allows t
 
 Here, David George's [Geoclaw](https://www.clawpack.org/geoclaw) covers everything.
 
-# State of the repo
-This work is in progress... The next steps are detailed in the [TODO.md](https://github.com/giboul/TriftGeoClaw/blob/main/TODO.md) file.
+## `topo.asc`
+
+The same process as the avalanche's `topo.asc` is applied, only with bounds capturing the lake limits.
+
+## `qinit.xyz`
+
+The `skimage.morphology.flood` is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive `matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input:
+
+<img src="Tsunami/qinit.png"/>
+
+The dilation is because of an (likely) interpolation error during simulation causing waves from the edge of steep borders. For an illustration, see the [DamErrorExample](https://github.com/giboul/TriftGeoClaw/blob/main/DamErrorExample/README.md).
+
+```python
+def fill_lake(topo, seed, max_level=0):
+    mask = topo < max_level 
+    initial_value = mask[*seed]
+    mask[*seed] = True
+    flooded = flood(mask, seed)
+    flooded[*seed] = initial_value
+    topo[flooded] = max_level
+    return flooded
+```
+
+## Introducing a flow
+
+The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`
+
+<img src="Tsunami/movie.gif"/>
+
+## Reading the dam overflows
+
+For a given output, the fluxes at the dam can be read using `clawpack.visclaw.gridtools.grid_output_2d` again. The profile of the wave can also be observed along le lake. Below is a profile of the lake from south to north when all avalanches are run.
+
+<img src="Tsunami/stairs.gif"/>
 
 

@@ -29,7 +29,7 @@ The `clawpack.visclaw.gridtools.grid_output_2d` comes in handy here, it allows t
 <img src="AVAC/cut_movie.gif"/>
 
 
-# 2. Wave modelling: [Tsunami](https://github.com/giboul/TriftGeoclaw/blob/main/Tsunami/README.md)
+# 2. Lake tsunami modelling: [TSUL](https://github.com/giboul/TriftGeoclaw/blob/main/TSUL/README.md)
 
 Here, David George's [Geoclaw](https://www.clawpack.org/geoclaw) covers everything.
 
@@ -41,7 +41,7 @@ The same process as the avalanche's `topo.asc` is applied, only with bounds capt
 
 The `skimage.morphology.flood` is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive `matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input:
 
-<img src="Tsunami/qinit.png"/>
+<img src="TSUL/qinit.png"/>
 
 The dilation is because of an (likely) interpolation error during simulation causing waves from the edge of steep borders. For an illustration, see the [DamErrorExample](https://github.com/giboul/TriftGeoClaw/blob/main/DamErrorExample/README.md).
 
@@ -60,12 +60,16 @@ def fill_lake(topo, seed, max_level=0):
 
 The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`
 
-<img src="Tsunami/movie.gif"/>
+<img src="TSUL/movie.gif"/>
 
 ## Reading the dam overflows
 
-For a given output, the fluxes at the dam can be read using `clawpack.visclaw.gridtools.grid_output_2d` again. The profile of the wave can also be observed along le lake. Below is a profile of the lake from south to north when all avalanches are run.
+For a given output, the fluxes at the dam can be read using `clawpack.visclaw.gridtools.grid_output_2d` again.
 
-<img src="Tsunami/stairs.gif"/>
+<img src="TSUL/cutmovie.gif"/>
+
+The profile of the wave can also be observed along le lake. Below is a profile of the lake from South to North when all avalanches are run.
+
+<img src="TSUL/stairs.gif"/>
 
 

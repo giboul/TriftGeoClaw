@@ -15,8 +15,8 @@ Je mettrai ici à jour mon avancement à chaque étape.
 ## Vague introduite par une vitesse initiale
 Il faudrait que les avalanches soient introduites plus près du la rétention, la grande distance parcourue à l'état de l'eau est parfois un problème.
 
-<img src="Tsunami/stairs.gif"/>
-<img src="Tsunami/movie.gif"/>
+<img src="TSUL/stairs.gif"/>
+<img src="TSUL/movie.gif"/>
 
 ## Première avalanche
 <img src="AVAC/movie.gif"/>

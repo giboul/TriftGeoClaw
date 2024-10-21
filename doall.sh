@@ -11,7 +11,7 @@ do
 done
 
 cd -
-cd Tsunami
+cd TSUL
 make new
 make topo
 make qinit

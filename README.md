@@ -46,6 +46,8 @@ The `skimage.morphology.flood` is used to fill the dam's bassin up to some altit
 The dilation is because of an (likely) interpolation error during simulation causing waves from the edge of steep borders. For an illustration, see the [DamErrorExample](https://github.com/giboul/TriftGeoClaw/blob/main/DamErrorExample/README.md).
 
 ```python
+from skimage.morphology import flood
+
 def fill_lake(topo, seed, max_level=0):
     mask = topo < max_level 
     initial_value = mask[*seed]

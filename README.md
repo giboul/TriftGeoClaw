@@ -56,6 +56,9 @@ def fill_lake(topo, seed, max_level=0):
     flooded[*seed] = initial_value
     topo[flooded] = max_level
     return flooded
+
+flooded = fill_lake(z, (seed_iy, seed_ix), lake_alt)
+dilated = isotropic_dilation(flooded, radius)
 ```
 
 ## Introducing a flow

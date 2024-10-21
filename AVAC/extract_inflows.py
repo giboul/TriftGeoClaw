@@ -39,6 +39,7 @@ boundaries = ("bottom", "right", "top", "left")
 dist1 = x.max()-x.min()
 dist2 = dist1 + y.max()-y.min()
 dist3 = dist2 + dist1
+dist4 = dist3 + dist2 - dist1
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
@@ -85,12 +86,14 @@ def plot(movie):
         title = "Cut @ t=%.2f"
         ax.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow
-        for d, direct in zip((dist1, dist2, dist3), ("South", "East", "North", "West")):
+        prev_dist = 0
+        for d, direct in zip((dist1, dist2, dist3, dist4), ("South", "East", "North", "West")):
             print(d, text_z, direct)
-            plt.text(d, text_z, direct+" ", horizontalalignment='right')
+            plt.text((prev_dist+d)/2, text_z, direct, horizontalalignment='center')
             plt.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
+            prev_dist = d
         # ax.set_aspect("equal")
-        ax.legend(loc="upper right")
+        ax.legend(loc="lower right")
         ax.set_xlabel("Distance [m]")
         ax.set_ylabel("Elevation [MASL]")
         ax.set_xlim(dist[0], dist[-1])

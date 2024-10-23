@@ -1,6 +1,7 @@
 *.data
 fort.*
 cut.*
+*.xy
 *.xyz
 *.asc
 *.mp4

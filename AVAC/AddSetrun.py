@@ -1,13 +1,13 @@
 #======= Topo =======
 lake_alt = 1767
-# dam_level = lake_level + 10
-flood_seed = 2670300, 1171500
+dam_alt = lake_alt + 10
+flood_seed = 2670350, 1171500
 
 bounds = dict(
-    xmin = 2667500.,
-    xmax  = 2672500.,
+    xmin = 2666500.,
+    xmax = 2673700.,
     ymin = 1169500.,
-    ymax  = 1173100.,
+    ymax = 1174200.,
 )
 
 resolution = 10

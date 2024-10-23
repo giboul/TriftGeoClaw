@@ -22,18 +22,7 @@ outdir = Path(f"_output{args.avid}")
 
 files = list(outdir.glob("fort.q*"))
 n = 100
-x = np.hstack((
-    np.linspace(xmin, xmax, n, endpoint=True),  # South
-    np.full(n, xmax),  # East
-    np.linspace(xmax, xmin, n, endpoint=True),  # North
-    np.full(n, xmin),  # West
-))
-y = np.hstack((
-    np.full(n, ymin),
-    np.linspace(ymin, ymax, n),
-    np.full(n, ymax),
-    np.linspace(ymax, ymin, n)
-))
+x, y = np.loadtxt("contour.xy").T
 boundaries = ("bottom", "right", "top", "left")
 
 dist1 = x.max()-x.min()
@@ -88,9 +77,8 @@ def plot(movie):
         text_z = 0.9*eta.max()+0.1*zlow
         prev_dist = 0
         for d, direct in zip((dist1, dist2, dist3, dist4), ("South", "East", "North", "West")):
-            print(d, text_z, direct)
-            plt.text((prev_dist+d)/2, text_z, direct, horizontalalignment='center')
-            plt.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
+            ax.text((prev_dist+d)/2, text_z, direct, horizontalalignment='center')
+            ax.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
             prev_dist = d
         # ax.set_aspect("equal")
         ax.legend(loc="lower right")

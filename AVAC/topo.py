@@ -8,9 +8,6 @@ from matplotlib import pyplot as plt
 from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
 from tifffile import TiffFile
-from scipy.interpolate import RegularGridInterpolator as RGI
-# from osgeo.gdal import UseExceptions, Open, Translate, Warp
-# from clawpack.geoclaw.marching_front import select_by_flooding
 params = AddSetrun
 
 def write_topo(plot=False):
@@ -50,7 +47,7 @@ def write_topo(plot=False):
     x = np.arange(xmin, xmax+params.resolution, step=params.resolution)
     y = np.arange(ymin, ymax+params.resolution, step=params.resolution)
     Z = grid_interp(xtif, ytif, Ztif, x, y)
-
+    Z = insert_dam(*np.meshgrid(x, y), Z)
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
@@ -65,21 +62,41 @@ def write_topo(plot=False):
 
     rmtree(tempdir)
 
+    y = y[::-1]
+    seed = (np.abs(x-params.flood_seed[0]).argmin(),
+            np.abs(y-params.flood_seed[1]).argmin())
+    flooded = flood(Z <= params.lake_alt, seed[::-1])
+    xc, yc = find_contours(flooded.T, 0.5)[0].T
+    xc, yc = find_contours(flooded.T, 0.5)[0].T
+    xc = xmin + xc/x.size * (xmax - xmin)
+    yc = ymin + yc/y.size * (ymax - ymin)
+    yc = ymin + (ymax-yc)  # Reverse y
+    contour_coords = np.vstack((xc, yc)).T
+    np.savetxt("contour.xy", contour_coords)
+    dilated = isotropic_dilation(flooded, 20/params.resolution)
+    xc, yc = find_contours(dilated.T, 0.5)[0].T
+    xc, yc = find_contours(dilated.T, 0.5)[0].T
+    xc = xmin + xc/x.size * (xmax - xmin)
+    yc = ymin + yc/y.size * (ymax - ymin)
+    yc = ymin + (ymax-yc)  # Reverse y
+    dilated_contour_coords = np.vstack((xc, yc)).T
+    np.savetxt("contour_dilated.xy", dilated_contour_coords)
+
     if plot:
         extent = (xmin, xmax, ymin, ymax) 
-        # h = params.lake_alt - Z
-        # h[h <= 0] = float("nan")
         ax2.set_title("Processed topography")
         ax2.imshow(Z, extent=extent)
-        # plt.imshow(h, cmap="Blues", extent=extent)
+        ax2.plot(*contour_coords.T, '-')
+        ax2.plot(*dilated_contour_coords.T, '-')
+        plt.scatter(x[seed[0]], y[seed[1]], c="g")
         plt.show()
 
 
-def expand_bounds(xmin, xmax, ymin, ymax, margin=0.25):
-    _xmin = xmin - margin*(xmax - xmin)
-    _ymin = ymin - margin*(ymax - ymin)
-    _xmax = xmax + margin*(xmax - xmin)
-    _ymax = ymax + margin*(ymax - ymin)
+def expand_bounds(xmin, xmax, ymin, ymax, margin=5*params.resolution):
+    _xmin = xmin - margin
+    _ymin = ymin - margin
+    _xmax = xmax + margin
+    _ymax = ymax + margin
     return _xmin, _xmax, _ymin, _ymax
 
 
@@ -180,6 +197,25 @@ def write_topo_old():
         plt.scatter(seed_x, seed_y, label="flood seed", c='k')
         plt.legend()
         plt.show()
+
+
+def insert_dam(x, y, z):
+    dam_y1 = dam_upstream(x)
+    dam_y2 = dam_downstream(x)
+    y = y[::-1]
+    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
+    return z
+
+
+def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561):
+    yd = y0 - 0.3*(x+offset*0-x0) - 50000/(x+offset*0-x1) - 300 + offset
+    yd[(x < x0) | (x > x1)] = float("inf")
+    return yd
+
+def dam_downstream(x, thk=30):
+    d = dam_upstream(x)
+    u = dam_upstream(x+thk, offset=30)
+    return np.maximum(u, d)
 
 
 if __name__ == "__main__":

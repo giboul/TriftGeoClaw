@@ -1,7 +1,6 @@
 # pip install --src=$HOME --no-build-isolation -e git+https://github.com/clawpack/clawpack.git@v5.11.0#egg=clawpack
 numpy==1.26.4
 matplotlib==3.9.2
-scipy==1.14.1
 scikit-image==0.24.0
 meson-python==0.16.0
 pyqt6==6.7.1

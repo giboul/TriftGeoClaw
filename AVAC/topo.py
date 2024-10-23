@@ -29,12 +29,13 @@ def write_topo(plot=False):
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
-    if plot:
-        plt.title("Original topography")
-        plt.imshow(Ztif)
-        plt.show()
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
+    if plot:
+        extent = (xmin, xtif.max(), ytif.min(), ymax) 
+        fig, (ax1, ax2) = plt.subplots(ncols=2)
+        ax1.set_title("Original topography")
+        ax1.imshow(Ztif, extent=extent)
     # Add some room to avoid interpolation error
     xmin, xmax, ymin, ymax = expand_bounds(**params.bounds)
 
@@ -48,9 +49,6 @@ def write_topo(plot=False):
     print(f"\tDownscaling to resolution = {params.resolution}")
     x = np.arange(xmin, xmax+params.resolution, step=params.resolution)
     y = np.arange(ymin, ymax+params.resolution, step=params.resolution)
-    # X, Y = np.meshgrid(x, y)
-    # Z = RGI((ytif, xtif), Ztif, fill_value=None, bounds_error=False)
-    # Z = Z(np.vstack((Y.flatten(), X.flatten())).T).reshape(y.size, x.size)
     Z = grid_interp(xtif, ytif, Ztif, x, y)
 
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
@@ -71,8 +69,8 @@ def write_topo(plot=False):
         extent = (xmin, xmax, ymin, ymax) 
         # h = params.lake_alt - Z
         # h[h <= 0] = float("nan")
-        plt.title("Processed topography")
-        plt.imshow(Z, extent=extent)
+        ax2.set_title("Processed topography")
+        ax2.imshow(Z, extent=extent)
         # plt.imshow(h, cmap="Blues", extent=extent)
         plt.show()
 
@@ -88,12 +86,13 @@ def expand_bounds(xmin, xmax, ymin, ymax, margin=0.25):
 def grid_interp(xt, yt, Zt, x, y):
     x = np.clip(x, xt.min(), xt.max())
     y = np.clip(y, yt.min(), yt.max())
-    ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-1)
-    iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-1)
-    Z11 = Zt[iy, :][:, ix]
-    Z21 = Zt[iy, :][:, ix+1]
-    Z12 = Zt[iy+1, :][:, ix]
-    Z22 = Zt[iy+1, :][:, ix+1]
+    ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-2)
+    iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-2)
+    iyz = yt.size-2-iy
+    Z11 = Zt[iyz, :][:, ix]
+    Z21 = Zt[iyz, :][:, ix+1]
+    Z12 = Zt[iyz+1, :][:, ix]
+    Z22 = Zt[iyz+1, :][:, ix+1]
     x1 = xt[ix]
     x2 = xt[ix+1]
     y1 = yt[iy]
@@ -104,7 +103,7 @@ def grid_interp(xt, yt, Zt, x, y):
         + (x-x1)*((y2-y)*Z21.T).T
         + (x-x1)*((y-y1)*Z22.T).T
     ).T/(y2-y1)).T/(x2-x1)
-    return Z
+    return Z[::-1, :]
 
 
 def write_topo_old():

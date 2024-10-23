@@ -48,9 +48,10 @@ def write_topo(plot=False):
     print(f"\tDownscaling to resolution = {params.resolution}")
     x = np.arange(xmin, xmax+params.resolution, step=params.resolution)
     y = np.arange(ymin, ymax+params.resolution, step=params.resolution)
-    X, Y = np.meshgrid(x, y)
-    Z = RGI((ytif, xtif), Ztif, fill_value=None, bounds_error=False)
-    Z = Z(np.vstack((Y.flatten(), X.flatten())).T).reshape(y.size, x.size)
+    # X, Y = np.meshgrid(x, y)
+    # Z = RGI((ytif, xtif), Ztif, fill_value=None, bounds_error=False)
+    # Z = Z(np.vstack((Y.flatten(), X.flatten())).T).reshape(y.size, x.size)
+    Z = grid_interp(xtif, ytif, Ztif, x, y)
 
     print(f"\tINFO: Saving bathy_with_dam.asc... ")
     asc_header = "\n".join((
@@ -82,6 +83,28 @@ def expand_bounds(xmin, xmax, ymin, ymax, margin=0.25):
     _xmax = xmax + margin*(xmax - xmin)
     _ymax = ymax + margin*(ymax - ymin)
     return _xmin, _xmax, _ymin, _ymax
+
+
+def grid_interp(xt, yt, Zt, x, y):
+    x = np.clip(x, xt.min(), xt.max())
+    y = np.clip(y, yt.min(), yt.max())
+    ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-1)
+    iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-1)
+    Z11 = Zt[iy, :][:, ix]
+    Z21 = Zt[iy, :][:, ix+1]
+    Z12 = Zt[iy+1, :][:, ix]
+    Z22 = Zt[iy+1, :][:, ix+1]
+    x1 = xt[ix]
+    x2 = xt[ix+1]
+    y1 = yt[iy]
+    y2 = yt[iy+1]
+    Z = ((
+        + (x2-x)*((y2-y)*Z11.T).T
+        + (x2-x)*((y-y1)*Z12.T).T
+        + (x-x1)*((y2-y)*Z21.T).T
+        + (x-x1)*((y-y1)*Z22.T).T
+    ).T/(y2-y1)).T/(x2-x1)
+    return Z
 
 
 def write_topo_old():

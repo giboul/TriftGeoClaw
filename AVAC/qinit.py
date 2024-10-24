@@ -46,6 +46,7 @@ def write_qinit(avid, plot=False):
     plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
     plt.scatter((list(params.bounds.values())[:2]),
                 (list(params.bounds.values())[2:]))
+    plt.legend()
     plt.show()
 
 
@@ -59,8 +60,8 @@ def make_qinit(X, Y, indices="", plot=False):
         indices = np.unique(ix)
     else:
         indices = [int(indices)]
-    for i in indices:
-        print(f"Setting avalanche {i}/{indices.size-1})", end="\r")
+    for _i, i in enumerate(indices):
+        print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
         if i not in ix:
             raise ValueError(f"Avalanche #{i} is out o bounds {ix.min(), ix.max()}")
         x = x_all[i==ix]
@@ -71,7 +72,7 @@ def make_qinit(X, Y, indices="", plot=False):
         inside = isotropic_dilation(inside, 2)
         Z[inside] = 3
         if plot:
-            plt.plot(x, y)
+            plt.plot(x, y, label=i)
     print()
     return Z
 

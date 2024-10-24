@@ -67,14 +67,12 @@ def write_topo(plot=False):
             np.abs(y-params.flood_seed[1]).argmin())
     flooded = flood(Z <= params.lake_alt, seed[::-1])
     xc, yc = find_contours(flooded.T, 0.5)[0].T
-    xc, yc = find_contours(flooded.T, 0.5)[0].T
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
     yc = ymin + (ymax-yc)  # Reverse y
     contour_coords = np.vstack((xc, yc)).T
     np.savetxt("contour.xy", contour_coords)
-    dilated = isotropic_dilation(flooded, 20/params.resolution)
-    xc, yc = find_contours(dilated.T, 0.5)[0].T
+    dilated = isotropic_dilation(flooded, 50/params.resolution)
     xc, yc = find_contours(dilated.T, 0.5)[0].T
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
@@ -122,90 +120,12 @@ def grid_interp(xt, yt, Zt, x, y):
     ).T/(y2-y1)).T/(x2-x1)
     return Z[::-1, :]
 
-
-def write_topo_old():
-    UseExceptions()
-    
-    # Temporary directory
-    ifile = Path("..") / "swissALTI3D_merged.tif"
-    tempdir = Path("_temp")
-    tempdir.mkdir(exist_ok=True)
-
-    print(f"\tINFO: Opening {ifile}... ")
-    data = Open(str(ifile))
-
-    print(f"\tINFO: Downsampling and cropping {ifile} to {tempdir / 'bathy.tiff'}")
-    data = Warp(str(tempdir / 'bathy.tif'), data,
-                xRes=params.resolution,
-                yRes=params.resolution,
-                outputBounds=(xmin, ymin, xmax, ymax))
- 
-    print(f"\tINFO: Converting {tempdir / 'bathy.tif'} to bathy.xyz... ")
-    Translate(str(tempdir / "bathy.xyz"), data, format="xyz")
-
-    print(f"\tINFO: Drawing dam... ")
-    x, y, z = np.loadtxt(tempdir / "bathy.xyz").T
-    dam_y1 = dam_upstream(x, y)
-    dam_y2 = dam_downstream(x, y) 
-    z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_level)] = params.dam_level
-    print(f"\tINFO: Saving bathy_with_dam.asc... ")
-    ny = np.unique(y).size
-    nx = y.size // ny
-    asc_header = "\n".join((
-        f"{nx} ncols",
-        f"{ny} nrows",
-        f"{x.min()} xllcenter",
-        f"{y.min()} yllcenter",
-        f"{params.resolution} cellsize",
-        f"{999999} nodata_value"
-    ))
-    np.savetxt("bathy_with_dam.asc", z, header=asc_header)
-    print(f"\t\tFile size is {Path('bathy_with_dam.asc').stat().st_size:.2g} bytes.")
-
-    print(f"\tINFO: Writing lake countour...")
-    seed_x, seed_y = params.flood_seed
-    seed = ((x-seed_x)**2 + (y-seed_y)**2).argmin()
-    seed = seed//nx, seed%nx
-    print(f"\t\tFlooding around {seed_x} {seed_y}...")
-    flooded = fill_lake(z.reshape(ny, nx).copy(), seed, params.lake_level, 10/params.resolution)
-    print(f"\t\tFinding flood bounding box...")
-    yc, xc = find_contours(flooded, 0.5)[0].T
-    xc = xmin + xc/nx * (xmax - xmin)
-    yc = ymin + yc/ny * (ymax - ymin)
-    yc = ymin + (ymax-yc)
-    with open("lake_bounds.py", "w") as file:
-        file.write("\n".join((
-            f"xmin = {xc.min()}",
-            f"xmax = {xc.max()}",
-            f"ymin = {yc.min()}",
-            f"ymax = {yc.max()}"
-        )))
-
-    rmtree(tempdir)
-
-    parser = ArgumentParser()
-    parser.add_argument("-p", "--plot", action="store_true")
-    args = parser.parse_args()
-    if args.plot or True:
-        extent =(xmin, xmax, ymin, ymax) 
-        plt.imshow(z.reshape(ny, nx), extent=extent)
-        xcmin, xcmax = xc.min(), xc.max()
-        ycmin, ycmax = yc.min(), yc.max()
-        plt.plot((xcmin, xcmax, xcmax, xcmin, xcmin),
-                 (ycmin, ycmin, ycmax, ycmax, ycmin))
-        plt.plot(xc, yc, label="lake contour", c="g")
-        plt.scatter(seed_x, seed_y, label="flood seed", c='k')
-        plt.legend()
-        plt.show()
-
-
 def insert_dam(x, y, z):
     dam_y1 = dam_upstream(x)
     dam_y2 = dam_downstream(x)
     y = y[::-1]
     z[(dam_y1 <= y) & (y <= dam_y2) & (z < params.dam_alt)] = params.dam_alt
     return z
-
 
 def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561):
     yd = y0 - 0.3*(x+offset*0-x0) - 50000/(x+offset*0-x1) - 300 + offset

@@ -5,10 +5,10 @@ dam_alt = lake_alt + 10
 flood_seed = (2.67026e6, 1.171490e6)
 
 bounds = dict(
-    xmin = 2669850.,
-    xmax = 2670900.,
-    ymin = 1170300.,
-    ymax = 1171960.,
+    xmin = 2669750.,
+    xmax = 2671000.,
+    ymin = 1170200.,
+    ymax = 1172160.,
 )
 
 

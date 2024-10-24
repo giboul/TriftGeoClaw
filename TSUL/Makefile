@@ -43,7 +43,6 @@ MODULES = \
 
 SOURCES = \
   ./setprob.f90 \
-  ./bc2amr.f90 \
   ./src2.f90 \
   $(CLAW)/riemann/src/rpn2_geoclaw.f \
   $(CLAW)/riemann/src/rpt2_geoclaw.f \
@@ -70,8 +69,10 @@ data:
 # OUTDIR="$(OUTDIR)$(avid)"
 
 run:
+	make data avid=$(avid)
 	make output OUTDIR=_output$(avid)
+	make iplot OUTDIR=_output$(avid)
 
 flows:
-	$(CLAW_PYTHON) extract_damflow.py $(avid)
+	$(CLAW_PYTHON) flows.py $(avid)
 

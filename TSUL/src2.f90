@@ -15,6 +15,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
+    use helpers, only : q_avac, closest, times, damping
+
     implicit none
     
     ! Input parameters
@@ -27,7 +29,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     ! Locals
     integer :: i, j, nman
-    real(kind=8) :: h, hu, hv, gamma, dgamma, y, fdt, a(2,2), coeff
+    integer :: ti, k
+    real(kind=8) :: h, hu, hv, gamma, dgamma, x, y, fdt, a(2,2), coeff
     real(kind=8) :: xm, xc, xp, ym, yc, yp, dx_meters, dy_meters
     real(kind=8) :: u, v, hu0, hv0
     real(kind=8) :: tau, wind_speed, theta, phi, psi, P_gradient(2), S(2)
@@ -39,6 +42,24 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! Parameter controls when to zero out the momentum at a depth in the
     ! friction source term
     real(kind=8), parameter :: depth_tolerance = 1.0d-30
+
+    ! ----------------------------------------------------------------
+    ! AVAC inflows
+    ti = closest(t, times)
+    do j = 1, my
+        yc = ylower + (j - 0.5d0) * dy
+        do i = 1, mx
+            xc = xlower + (i - 0.5d0) * dx
+            k = closest(0.d0,(q_avac(ti,:,1)-xc)**2+(q_avac(ti,:,2)-yc)**2)
+            if (abs(xc-q_avac(ti,k,1))<dx/2) then
+                if (abs(yc-q_avac(ti,k,2))<dy/2) then
+                    q(1, i, j) = q(1, i, j) + damping*q_avac(ti,k,3)
+                    q(2, i, j) = q_avac(ti,k,4)
+                    q(3, i, j) = q_avac(ti,k,5)
+                end if
+            end if
+        end do
+    end do
 
     ! ----------------------------------------------------------------
     ! Spherical geometry source term(s)

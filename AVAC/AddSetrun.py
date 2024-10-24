@@ -13,8 +13,8 @@ bounds = dict(
 resolution = 10
 
 #======= Computation =======
-nx = 40
-ny = 40
+nx = 100
+ny = 100
 
 nsim = 9
 tmax = 90

@@ -49,7 +49,6 @@ contains
         end if
     end function interp
 
-
     subroutine init_inflows(data, avid, num_times)
         real(kind=8), allocatable, intent(inout) :: data(:,:,:)
         character(len=4), intent(in) :: avid

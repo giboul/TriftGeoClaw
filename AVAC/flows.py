@@ -24,7 +24,6 @@ outdir = Path(f"_output{args.avid}")
 files = list(outdir.glob("fort.q*"))
 n = 100
 x, y = np.loadtxt("contour_dilated.xy").T
-
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
@@ -70,6 +69,11 @@ def plot(movie):
         ax.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow
         prev_dist = 0
+        for d, direct in zip((dist1, dist2, dist3, dist4), ("South", "East", "North", "West")):
+            print(d, text_z, direct)
+            plt.text((prev_dist+d)/2, text_z, direct, horizontalalignment='center')
+            plt.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
+            prev_dist = d
         # ax.set_aspect("equal")
         ax.legend(loc="lower right")
         ax.set_xlabel("Distance [m]")

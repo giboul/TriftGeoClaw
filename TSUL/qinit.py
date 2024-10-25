@@ -1,11 +1,16 @@
-from params import lake_alt, flood_seed
+from yaml import safe_load
+from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from skimage.morphology import flood, isotropic_dilation
 
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["topo"]
+    config = config["TSUL"]
 
-def write_qinit(filename = "bathy_with_dam.asc"):
+def write_qinit(filename = config["topo"]):
 
     def before_space(str: str):
         return str[:str.index(" ")]
@@ -25,9 +30,9 @@ def write_qinit(filename = "bathy_with_dam.asc"):
     # Fill topo
     z_lake = z.reshape(ny, nx)
     seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res)
-    flooded = fill_lake(z_lake, (seed_iy, seed_ix), lake_alt)
+    flooded = fill_lake(z_lake, (seed_iy, seed_ix), topoconfig["lake_alt"])
     dilated = isotropic_dilation(flooded, radius)
-    z_lake[dilated] = lake_alt
+    z_lake[dilated] = topoconfig["lake_alt"]
 
     # To .xyz format
     z_lake = z_lake.flatten()
@@ -47,7 +52,6 @@ def pick_seed(z_im, x, y, res=0):
     imd = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Reds")
     imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues")
     title = "Max altitude: %s   Dilation radius: %i"
-    print(imb.get_cmap())
     ax.legend(
         [Line2D([0], [0], color=imb.get_cmap()(0.5), lw=4),
          Line2D([0], [0], color=imf.get_cmap()(0.), lw=4),

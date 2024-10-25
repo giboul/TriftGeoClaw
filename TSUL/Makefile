@@ -71,7 +71,6 @@ data:
 run:
 	make data avid=$(avid)
 	make output OUTDIR=_output$(avid)
-	make iplot OUTDIR=_output$(avid)
 
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)

@@ -1,15 +1,18 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from yaml import safe_load
 import numpy as np
 from clawpack.visclaw import gridtools
 from clawpack.pyclaw import solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-import params
-from topo import dam_downstream, dam_upstream
 
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["topo"]
+    config = config["TSUL"]
 
-xmin, xmax, ymin, ymax = params.bounds.values()
+bounds = config.get("bounds") or topoconfig["bounds"]
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
@@ -20,16 +23,12 @@ outdir = Path(f"_output{args.avid}")
 print(f"{outdir = }")
 files = list(outdir.glob("fort.q*"))
 print(f"{len(files) = }")
-n = 100
-x = np.linspace(xmax, xmin, n, endpoint=True)
-y = (dam_downstream(x) + dam_upstream(x))/2
-x = x[y <= ymax]
-y = y[y <= ymax]
+x, y = np.loadtxt(Path("..") / "dam.xy").T
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path=outdir, file_format=params.out_format)
+    frame_sol = solution.Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -45,7 +44,7 @@ def plot():
         q, t = extract(0)
         h, hu, hv, eta = q
         z = eta - h
-        zlow = 1.1*z.min()-0.1*z.max()
+        zlow = topoconfig["dam_alt"]-10
         eta_steps = ax.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
         z_steps = ax.stairs(z, dist, baseline=zlow,
                             label="land", fill=True, color="sienna", lw=1)
@@ -56,7 +55,7 @@ def plot():
         ax.set_xlabel("Distance [m]")
         ax.set_ylabel("Elevation [MASL]")
         ax.set_xlim(dist[0], dist[-1])
-        ax.set_ylim(params.dam_alt-10, params.dam_alt+10)
+        ax.set_ylim(topoconfig["dam_alt"]-10, topoconfig["dam_alt"]+20)
 
     def update(i):
         (h, hu, hv, eta), t = extract(i)

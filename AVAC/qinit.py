@@ -1,12 +1,18 @@
 #!/usr/bin/env python
-import json
+from pathlib import Path
 from argparse import ArgumentParser
-import AddSetrun
+import json
+from yaml import safe_load
 import numpy as np
 from matplotlib.path import Path as mPath
 from matplotlib import pyplot as plt
 from skimage.morphology import isotropic_dilation
-params = AddSetrun
+
+
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["topo"]
+    config = config["AVAC"]
 
 def write_qinit(avid, plot=False):
 
@@ -44,8 +50,8 @@ def write_qinit(avid, plot=False):
     ext = xmin, x.max(), ymin, y.max()
     plt.imshow(z, extent=ext)
     plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
-    plt.scatter((list(params.bounds.values())[:2]),
-                (list(params.bounds.values())[2:]))
+    bounds = config.get("bounds") or topoconfig["bounds"]
+    plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
     plt.legend()
     plt.show()
 

@@ -6,9 +6,15 @@ The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 """
 import argparse
+from yaml import safe_load
+from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
-import params
+
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["topo"]
+    config = config["TSUL"]
 
 def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     """
@@ -44,14 +50,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = params.bounds["xmin"]
-    clawdata.upper[0] = params.bounds["xmax"]
-    clawdata.lower[1] = params.bounds["ymin"]
-    clawdata.upper[1] = params.bounds["ymax"]
+    bounds = config.get("bounds") or topoconfig["bounds"]
+    clawdata.lower[0] = bounds["xmin"]
+    clawdata.upper[0] = bounds["xmax"]
+    clawdata.lower[1] = bounds["ymin"]
+    clawdata.upper[1] = bounds["ymax"]
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = params.nx
-    clawdata.num_cells[1] = params.ny
+    clawdata.num_cells[0] = config["nx"]
+    clawdata.num_cells[1] = config["ny"]
 
     # ---------------
     # Size of system:
@@ -98,7 +105,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = params.out_format   # 'ascii' or 'binary' 
+    clawdata.output_format = config["out_format"]   # 'ascii' or 'binary' 
     clawdata.output_q_components = 'none'   # need all
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -210,9 +217,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     amrdata.max1d = 300
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = params.amr_ratios["x"]
-    amrdata.refinement_ratios_y = params.amr_ratios["y"]
-    amrdata.refinement_ratios_t = params.amr_ratios["t"]
+    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
+    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
+    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
 
     # max number of refinement levels:
     max_levels = 1 + max(map(len, (
@@ -322,7 +329,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles.append([2, "bathy_with_dam.asc"])
+    topo_data.topofiles = [[k, Path("..")/p] for k, p in config["topo"]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -343,8 +350,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = []
-    rundata.qinit_data.qinitfiles.append(['qinit.xyz'])
+    rundata.qinit_data.qinitfiles = config["qinit"]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)

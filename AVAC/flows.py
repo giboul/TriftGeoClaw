@@ -1,14 +1,15 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from yaml import safe_load
 from shutil import rmtree
-from AddSetrun import out_format, resolution
-from lake_bounds import xmin, xmax, ymin, ymax
 import numpy as np
 from clawpack.visclaw import gridtools
 from clawpack.pyclaw import solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)["AVAC"]
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
@@ -28,7 +29,7 @@ dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path=outdir, file_format=out_format)
+    frame_sol = solution.Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,

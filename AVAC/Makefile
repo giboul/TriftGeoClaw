@@ -62,7 +62,7 @@ avid=""
 qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
 topo:
-	$(CLAW_PYTHON) topo.py
+	$(CLAW_PYTHON) ../topo.py
 	make qinit "avid=$(avid)"
 run:
 	make qinit "avid=$(avid)"

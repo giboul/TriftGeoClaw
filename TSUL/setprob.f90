@@ -1,10 +1,11 @@
 subroutine setprob
-    use helpers, only: q_avac, times, init_inflows, read_times
+    use helpers
     implicit none
     save
 
-    call init_inflows(q_avac)
-    call read_times(times)
+    call read_avid(avid)
+    call read_times(times, avid)
+    call init_inflows(q_avac, avid, size(times))
 
 end subroutine setprob
 

@@ -59,8 +59,8 @@ def make_qinit(X, Y, indices="", plot=False):
         indices = np.unique(ix)
     else:
         indices = [int(indices)]
-    for i in indices:
-        print(f"Setting avalanche {i}/{indices.size-1})", end="\r")
+    for _i, i in enumerate(indices):
+        print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
         if i not in ix:
             raise ValueError(f"Avalanche #{i} is out o bounds {ix.min(), ix.max()}")
         x = x_all[i==ix]

@@ -1,7 +1,6 @@
 cd AVAC
 make new
 make topo
-make avalanches
 make data
 for ((avid = 0 ; avid < 24 ; avid++ ));
 do 
@@ -16,7 +15,7 @@ make new
 make topo
 make qinit
 make data
-read -p "Do you wish to install this program? " yn
+
 echo "Current working Directory: $(pwd)"
 for ((avid = 0 ; avid < 24 ; avid++ ));
 do

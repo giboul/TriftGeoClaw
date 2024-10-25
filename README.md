@@ -69,7 +69,7 @@ The saved files from the AVAC results are read by the `setprob.f90` through the 
 
 ## Reading the dam overflows
 
-For a given output, the fluxes at the dam can be read using `clawpack.visclaw.gridtools.grid_output_2d` again. See [TSUL/flows.py](https://github.com/giboul/TriftGeoClaw/blob/main/TSUL/extract_damflow.py).
+For a given output, the fluxes at the dam can be read using `clawpack.visclaw.gridtools.grid_output_2d` again. See [TSUL/flows.py](https://github.com/giboul/TriftGeoClaw/blob/main/TSUL/flows.py).
 
 <img src="TSUL/cutmovie.gif"/>
 

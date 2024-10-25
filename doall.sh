@@ -1,7 +1,6 @@
 cd AVAC
 make new
 make topo
-make avalanches
 make data
 for ((avid = 0 ; avid < 24 ; avid++ ));
 do 

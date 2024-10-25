@@ -5,8 +5,19 @@ module helpers
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping = 500.d0 / 1e3
+    character(len=4) :: avid
 
 contains
+
+    subroutine read_avid(avid)
+        character(len=4), intent(out) :: avid
+        open(2, file="../avac.data", status='old')
+            read(2,*) avid
+        close(2)
+        if (avid == "None") then
+            avid = ""
+        end if
+    end subroutine read_avid
 
     integer function closest(value, array)
         integer :: i
@@ -38,7 +49,7 @@ contains
         end if
     end function interp
 
-    subroutine init_inflows(data)
+    subroutine init_inflows(data, avid)
         real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
         character(len=6), dimension(4) :: sides
         character(len=255) :: fdir, ftemp
@@ -119,13 +130,17 @@ contains
         end do
     end subroutine init_inflows
 
-    subroutine read_times(times)
+    subroutine read_times(times, avid)
+        character(len=4), intent(in) :: avid
+        character(len=255) :: fname
         integer :: io, n, i
         integer :: unit
         real(kind=8), allocatable :: times(:)
 
         unit = 2
-        open(unit, file="../../AVAC/_cut_output/timing.txt")
+        fname = "../../AVAC/_cut_output"//trim(avid)//"/timing.txt"
+        print "(A,A)", "Reading ", trim(fname)
+        open(unit, file=fname)
             n = 0
             do 
                 read(unit,*,iostat=io)
@@ -134,13 +149,12 @@ contains
                 end if
                 n = n + 1
             end do
-            allocate(times(n+1))
+            allocate(times(n))
         rewind(unit)
             do i = 1, n
                 read(unit,*) times(i)
             end do
         close(unit)
-
     end subroutine read_times
 
 end module helpers

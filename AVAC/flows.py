@@ -1,14 +1,15 @@
 from argparse import ArgumentParser
 from pathlib import Path
+from yaml import safe_load
 from shutil import rmtree
-from AddSetrun import out_format, resolution
-from lake_bounds import xmin, xmax, ymin, ymax
 import numpy as np
 from clawpack.visclaw import gridtools
 from clawpack.pyclaw import solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)["AVAC"]
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
@@ -22,29 +23,12 @@ outdir = Path(f"_output{args.avid}")
 
 files = list(outdir.glob("fort.q*"))
 n = 100
-x = np.hstack((
-    np.linspace(xmin, xmax, n, endpoint=True),  # South
-    np.full(n, xmax),  # East
-    np.linspace(xmax, xmin, n, endpoint=True),  # North
-    np.full(n, xmin),  # West
-))
-y = np.hstack((
-    np.full(n, ymin),
-    np.linspace(ymin, ymax, n),
-    np.full(n, ymax),
-    np.linspace(ymax, ymin, n)
-))
-boundaries = ("bottom", "right", "top", "left")
-
-dist1 = x.max()-x.min()
-dist2 = dist1 + y.max()-y.min()
-dist3 = dist2 + dist1
-dist4 = dist3 + dist2 - dist1
+x, y = np.loadtxt("contour_dilated.xy").T
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path=outdir, file_format=out_format)
+    frame_sol = solution.Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -60,15 +44,13 @@ def write():
     Path(outcutdir).mkdir(exist_ok=True)
     times = []
     for ti in range(nf):
-        print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
+        print(f"Saving cut to '{outcutdir}' {ti+1:>{4}}/{nf}...", end="\r")
         q, t = extract(ti)
         times.append(t)
         h, hu, hv, eta = q
-        for bi, boundary in enumerate(boundaries):
-            s = slice(bi*n, (bi+1)*n)
-            data = np.vstack((x[s], y[s], h[s], hu[s], hv[s])).T
-            path = outcutdir / f"{boundary}_{ti:0>{4}}.txt"
-            np.savetxt(path, data, comments="")
+        data = np.vstack((x, y, h, hu, hv)).T
+        path = outcutdir / f"cut{ti:0>{4}}.txt"
+        np.savetxt(path, data, comments="")
     np.savetxt(outcutdir / "timing.txt", times)
     print()
 

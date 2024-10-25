@@ -5,7 +5,7 @@ subroutine setprob
 
     call read_avid(avid)
     call read_times(times, avid)
-    call init_inflows(q_avac, avid)
+    call init_inflows(q_avac, avid, size(times))
 
 end subroutine setprob
 

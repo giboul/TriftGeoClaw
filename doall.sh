@@ -1,6 +1,6 @@
+python topo.py
 cd AVAC
 make new
-make topo
 make data
 for ((avid = 0 ; avid < 24 ; avid++ ));
 do 
@@ -12,7 +12,6 @@ done
 cd -
 cd TSUL
 make new
-make topo
 make qinit
 make data
 

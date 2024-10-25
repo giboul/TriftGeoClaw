@@ -63,7 +63,7 @@ dilated = isotropic_dilation(flooded, radius)
 
 ## Introducing a flow
 
-The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`
+The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `src2.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`
 
 <img src="TSUL/movie.gif"/>
 

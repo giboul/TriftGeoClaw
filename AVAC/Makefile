@@ -59,12 +59,10 @@ include $(CLAWMAKE)
 # Construct the topography data
 .PHONY: topo all
 avid=""
-avalanches:
-	$(CLAW_PYTHON) geojson2csv.py
 qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
 topo:
-	$(CLAW_PYTHON) topo.py
+	$(CLAW_PYTHON) ../topo.py
 	make qinit "avid=$(avid)"
 run:
 	make qinit "avid=$(avid)"

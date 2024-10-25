@@ -55,7 +55,7 @@ include $(CLAWMAKE)
 # Construct the topography data
 .PHONY: topo all
 topo:
-	$(CLAW_PYTHON) topo.py
+	$(CLAW_PYTHON) ../topo.py
 qinit:
 	$(CLAW_PYTHON) qinit.py
 

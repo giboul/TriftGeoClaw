@@ -10,18 +10,18 @@ from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
-with open("config.yaml") as file:
+with open(Path(__file__).parent / "config.yaml") as file:
     config = safe_load(file)
     topoconfig = config["topo"]
 
 def write_topo(plot=False):
 
     # Temporary directory
-    ifile = Path(topoconfig["rawfile"])
+    ifile = Path(__file__).parent / topoconfig["rawfile"]
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    print(f"\tINFO: Opening {topoconfig['rawfile']}... ")
+    print(f"\tINFO: Opening {ifile}... ")
     with TiffFile(ifile) as tif:
         Ztif = tif.asarray()
         nx = tif.pages[0].tags["ImageWidth"].value

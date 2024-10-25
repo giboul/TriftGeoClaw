@@ -7,14 +7,16 @@ function setplot is called to set the plot parameters.
 """
 from matplotlib import pyplot as plt
 from pathlib import Path
-from os import system
+from yaml import safe_load
 import numpy as np
 
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-from params import lake_alt, out_format
-
+with open(Path("..") / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["topo"]
+    config = config["TSUL"]
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 
@@ -27,7 +29,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = out_format  # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = config["out_format"]  # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -63,8 +65,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.plot_var = geoplot.surface
     # plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = plt.cm.Blues
-    plotitem.pcolor_cmax = lake_alt+2
-    plotitem.pcolor_cmin = lake_alt-2
+    plotitem.pcolor_cmax = topoconfig["lake_alt"]+2
+    plotitem.pcolor_cmin = topoconfig["lake_alt"]-2
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 0
@@ -73,8 +75,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
     plotitem.pcolor_cmap = plt.cm.viridis
-    plotitem.pcolor_cmin = lake_alt - 120
-    plotitem.pcolor_cmax = lake_alt + 380
+    plotitem.pcolor_cmin = topoconfig["lake_alt"] - 120
+    plotitem.pcolor_cmax = topoconfig["lake_alt"] + 380
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 1
@@ -128,7 +130,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     def make_timing_plots(plotdata):
 
         timing_plotdir = Path(plotdata.plotdir) / '_timing_figures'
-        system(f'mkdir -p {timing_plotdir}')
+        # system(f'mkdir -p {timing_plotdir}')
+        Path(timing_plotdir).mkdir(exist_ok=True)
         # adjust units for plots based on problem:
         units = dict(comptime="seconds", simtime="hours", cell="millions")
         plot_timing_stats.make_plots(outdir=plotdata.outdir, 

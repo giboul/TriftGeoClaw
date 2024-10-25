@@ -23,7 +23,7 @@ outdir = Path(f"_output{args.avid}")
 
 files = list(outdir.glob("fort.q*"))
 n = 100
-x, y = np.loadtxt("contour_dilated.xy").T
+x, y = np.loadtxt(Path("..") / "contour_dilated.xy").T
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 

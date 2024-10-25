@@ -10,7 +10,7 @@ with open(Path("..") / "config.yaml") as file:
     topoconfig = config["topo"]
     config = config["TSUL"]
 
-def write_qinit(filename = config["topo"]):
+def write_qinit(filename = Path("..") / topoconfig["file"]):
 
     def before_space(str: str):
         return str[:str.index(" ")]

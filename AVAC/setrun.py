@@ -6,13 +6,12 @@ The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 
 """
-from yaml import load, safe_load, load_all, FullLoader
+from yaml import safe_load
 from pathlib import Path
 
 
 with open(Path("..") / "config.yaml") as file:
-    # config = safe_load(file)
-    config = load(file, FullLoader)
+    config = safe_load(file)
     topoconfig = config["topo"]
     config = config["AVAC"]
 

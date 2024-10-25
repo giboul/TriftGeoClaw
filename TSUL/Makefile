@@ -72,5 +72,5 @@ run:
 	make output OUTDIR=_output$(avid)
 
 flows:
-	$(CLAW_PYTHON) extract_damflow.py $(avid)
+	$(CLAW_PYTHON) flows.py $(avid)
 

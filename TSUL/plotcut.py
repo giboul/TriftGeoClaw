@@ -7,13 +7,14 @@ from clawpack.visclaw import colormaps, frametools, geoplot, gridtools
 from clawpack.pyclaw import solution
 from yaml import safe_load
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["TSUL"]
 
-outdir = "_output"
-files = list(Path(outdir).glob('fort.q*'))
+outdir = projdir / "TSUL" / "_output"
+files = list(outdir.glob('fort.q*'))
 
 y = np.linspace(config["bounds"]["ymin"], config["bounds"]["ymax"])
 x = np.linspace(2670500, 2670100)

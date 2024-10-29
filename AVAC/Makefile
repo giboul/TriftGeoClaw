@@ -18,6 +18,9 @@ OUTDIR = _output               # Directory for output
 SETPLOT_FILE = setplot.py      # File containing function to set plots
 PLOTDIR = _plots               # Directory for plots
 
+FFLAGS ?= -O2 -fopenmp
+OMP_NUM_THREADS ?= 16
+
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # ---------------------------------
@@ -56,18 +59,15 @@ SOURCES = \
 # Include Makefile containing standard definitions and make options:
 include $(CLAWMAKE)
 
-# Construct the topography data
 .PHONY: topo all
 avid=""
+topo:
+	$(CLAW_PYTHON) ../TOPM/topo.py
 qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
-topo:
-	$(CLAW_PYTHON) ../topo.py
-	make qinit "avid=$(avid)"
 run:
 	make qinit "avid=$(avid)"
 	make output "OUTDIR=_output$(avid)"
-	make flows "avid=$(avid)"
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)
 

@@ -1,15 +1,19 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from yaml import safe_load
 from shutil import rmtree
+from yaml import safe_load
 import numpy as np
 from clawpack.visclaw import gridtools
-from clawpack.pyclaw import solution
+from clawpack.pyclaw.solution import Solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-with open(Path("..") / "config.yaml") as file:
-    config = safe_load(file)["AVAC"]
+
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["TOPM"]
+    config = config["TSUL"]
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
@@ -18,40 +22,66 @@ parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
 
 
-outcutdir = Path(f"_cut_output{args.avid}")
-outdir = Path(f"_output{args.avid}")
+outdir = projdir / "AVAC" / f"_output{args.avid}"
+inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
 
 files = list(outdir.glob("fort.q*"))
+xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
 n = 100
-x, y = np.loadtxt(Path("..") / "contour_dilated.xy").T
+x = np.hstack((
+    np.linspace(xmin, xmax, n, endpoint=True),  # South
+    np.full(n, xmax),  # East
+    np.linspace(xmax, xmin, n, endpoint=True),  # North
+    np.full(n, xmin),  # West
+))
+y = np.hstack((
+    np.full(n, ymin),
+    np.linspace(ymin, ymax, n),
+    np.full(n, ymax),
+    np.linspace(ymax, ymin, n)
+))
+# plt.plot(x, y, '-o')
+# plt.gca().set_aspect("equal")
+# plt.show()
+boundaries = ("bottom", "right", "top", "left")
+
+dist1 = x.max()-x.min()
+dist2 = dist1 + y.max()-y.min()
+dist3 = dist2 + dist1
+dist4 = dist3 + dist2 - dist1
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    frame_sol = solution.Solution(i, path=outdir, file_format=config["out_format"])
+    # print(f"{outdir = }")
+    frame_sol = Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
         x, y,
         levels = "all",
-        return_ma=True
+        # return_ma=True
     )
+    # print(f"{q.shape = }")
+    # print(f"{q[2] = }")
     return q, frame_sol.t
 
 def write():
-    rmtree(outcutdir, ignore_errors=True)
+    rmtree(inflowdir, ignore_errors=True)
     nf = len(files)
-    Path(outcutdir).mkdir(exist_ok=True)
+    Path(inflowdir).mkdir(exist_ok=True)
     times = []
     for ti in range(nf):
-        print(f"Saving cut to '{outcutdir}' {ti+1:>{4}}/{nf}...", end="\r")
+        print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
         q, t = extract(ti)
         times.append(t)
         h, hu, hv, eta = q
-        data = np.vstack((x, y, h, hu, hv)).T
-        path = outcutdir / f"cut{ti:0>{4}}.txt"
-        np.savetxt(path, data, comments="")
-    np.savetxt(outcutdir / "timing.txt", times)
+        for bi, boundary in enumerate(boundaries):
+            s = slice(bi*n, (bi+1)*n)
+            data = np.vstack((x[s], y[s], h[s], hu[s], hv[s])).T
+            path = inflowdir / f"{boundary}_{ti:0>{4}}.txt"
+            np.savetxt(path, data, comments="")
+    np.savetxt(inflowdir / "timing.txt", times)
     print()
 
 
@@ -70,7 +100,6 @@ def plot(movie):
         text_z = 0.9*eta.max()+0.1*zlow
         prev_dist = 0
         for d, direct in zip((dist1, dist2, dist3, dist4), ("South", "East", "North", "West")):
-            print(d, text_z, direct)
             plt.text((prev_dist+d)/2, text_z, direct, horizontalalignment='center')
             plt.axline((d, zlow), slope=float("inf"), ls="-.", c="k")
             prev_dist = d

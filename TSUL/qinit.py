@@ -5,12 +5,13 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from skimage.morphology import flood, isotropic_dilation
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["TSUL"]
 
-def write_qinit(filename = Path("..") / topoconfig["file"]):
+def write_qinit(filename = projdir / topoconfig["bathymetry"]):
 
     def before_space(str: str):
         return str[:str.index(" ")]
@@ -35,10 +36,14 @@ def write_qinit(filename = Path("..") / topoconfig["file"]):
     z_lake[dilated] = topoconfig["lake_alt"]
 
     # To .xyz format
-    z_lake = z_lake.flatten()
     x, y = np.meshgrid(x, y)
+    np.savetxt("lake_extent.txt", (
+        x[dilated].min(), x[dilated].max(),
+        y[dilated].min(), y[dilated].max()
+    ))
     x = x.flatten()
     y = y.flatten()
+    z_lake = z_lake.flatten()
 
     # Write qinit
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)

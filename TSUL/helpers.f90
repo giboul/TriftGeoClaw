@@ -2,10 +2,11 @@ module helpers
     implicit none
     save
 
-    real(kind=8), allocatable :: q_avac(:,:,:)
+    real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping = 500.d0 / 1e3
     character(len=4) :: avid
+    character(len=3) :: inflow_mode
 
 contains
 
@@ -18,6 +19,16 @@ contains
             avid = ""
         end if
     end subroutine read_avid
+
+    subroutine read_inflow_mode(mode)
+        character(len=3), intent(out) :: mode
+        open(2, file="../inflow.data", status='old')
+            read(2,*) mode
+        close(2)
+        if (mode == "None") then
+            mode = "bc"
+        end if
+    end subroutine read_inflow_mode
 
     integer function closest(value, array)
         integer :: i
@@ -49,8 +60,8 @@ contains
         end if
     end function interp
 
-    subroutine init_inflows(data, avid, num_times)
-        real(kind=8), allocatable, intent(inout) :: data(:,:,:)
+    subroutine init_src(data, avid, num_times)
+        real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
         character(len=4), intent(in) :: avid
         integer, intent(in) :: num_times
         character(len=255) :: ftemp
@@ -60,7 +71,7 @@ contains
         integer :: num_cells
         logical :: res
     
-        ftemp = "../../AVAC/_cut_output"//trim(avid)//"/cut"
+        ftemp = "../_inflows"//trim(avid)//"/cut"
         num_cells = 0
         do i = 1, num_times
             n = 0
@@ -78,26 +89,97 @@ contains
             num_cells = max(num_cells, n)
         end do
     
-        allocate(data(num_times, num_cells, 5))
+        allocate(data(1, num_times, num_cells, 5))
         print "(A,I10)", "size(data)    = ", size(data)
         print "(A,I10)", "size(data, 1) = ", size(data, 1)
         print "(A,I10)", "size(data, 2) = ", size(data, 2)
         print "(A,I10)", "size(data, 3) = ", size(data, 3)
+        print "(A,I10)", "size(data, 3) = ", size(data, 4)
    
         do i = 1, num_times
             write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
             open(unit, file=fname, status="old")
             do n = 1, num_cells
                 read(unit,*, iostat=io) x, y, h, hu, hv
-                data(i, n, 1) = x
-                data(i, n, 2) = y
-                data(i, n, 3) = h
-                data(i, n, 4) = hu
-                data(i, n, 5) = hv
+                data(1, i, n, 1) = x
+                data(1, i, n, 2) = y
+                data(1, i, n, 3) = h
+                data(1, i, n, 4) = hu
+                data(1, i, n, 5) = hv
             end do
             close(unit)
         end do
-    end subroutine init_inflows
+    end subroutine init_src
+
+    subroutine init_bc(data, avid, num_times)
+        real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
+        integer, intent(in) :: num_times
+        character(len=6), dimension(4) :: sides
+        character(len=255) :: fdir, ftemp
+        character(len=255) :: fname
+        character(len=4) :: avid
+        real(kind=8) :: x, y, h, hu, hv
+        integer :: unit, io, i, n, mthbc
+        integer :: num_cells
+        logical :: res
+    
+        unit = 2
+        sides = [character(len=6) :: "left", "right", "bottom", "top"]
+ 
+        open(unit, file="../avac.data", status='old')
+            read(unit,*) avid
+        close(unit)
+        if (avid == "None") then
+            avid = "    "
+        end if
+        print *, "Avalanche id #", trim(avid)
+
+        fdir = "../_inflows"//trim(avid)//"/"
+        ftemp = trim(fdir)//trim(sides(1))//"_"
+        num_cells = 0
+        do mthbc = 1, 4
+            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
+            do i = 1, num_times
+                n = 0
+                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
+                print "(A,A)", "Reading ", trim(fname)
+                open(unit, file=fname, status="old")
+                    do
+                        read(unit,*,iostat=io)
+                        if (io /= 0) then
+                            exit
+                        end if
+                        n = n + 1
+                    end do
+                close(unit)
+                num_cells = max(num_cells, n)
+            end do
+        end do
+    
+        allocate(data(4, num_times, num_cells, 5))
+        print "(A,I10)", "size(data)    = ", size(data)
+        print "(A,I10)", "size(data, 1) = ", size(data, 1)
+        print "(A,I10)", "size(data, 2) = ", size(data, 2)
+        print "(A,I10)", "size(data, 3) = ", size(data, 3)
+        print "(A,I10)", "size(data, 3) = ", size(data, 4)
+   
+        do mthbc = 1, 4
+            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
+            do i = 1, num_times
+                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
+                open(unit, file=fname, status="old")
+                do n = 1, num_cells
+                    read(unit,*, iostat=io) x, y, h, hu, hv
+                    data(mthbc, i, n, 1) = x
+                    data(mthbc, i, n, 2) = y
+                    data(mthbc, i, n, 3) = h
+                    data(mthbc, i, n, 4) = hu
+                    data(mthbc, i, n, 5) = hv
+                end do
+                close(unit)
+            end do
+        end do
+    end subroutine init_bc
 
     subroutine read_times(times, avid)
         character(len=4), intent(in) :: avid
@@ -107,7 +189,7 @@ contains
         real(kind=8), allocatable :: times(:)
 
         unit = 2
-        fname = "../../AVAC/_cut_output"//trim(avid)//"/timing.txt"
+        fname = "../_inflows"//trim(avid)//"/timing.txt"
         print "(A,A)", "Reading ", trim(fname)
         open(unit, file=fname)
             n = 0

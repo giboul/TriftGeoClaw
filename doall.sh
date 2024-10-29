@@ -6,7 +6,6 @@ for ((avid = 0 ; avid < 24 ; avid++ ));
 do 
     make qinit "avid=$avid"
     make output "OUTDIR=_output$avid"
-    make flows "avid=$avid"
 done
 
 cd -
@@ -18,6 +17,7 @@ make data
 echo "Current working Directory: $(pwd)"
 for ((avid = 0 ; avid < 24 ; avid++ ));
 do
+    make flows "avid=$avid"
     make data "avid=$avid"
     make run "avid=$avid"
 done

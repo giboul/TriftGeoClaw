@@ -11,12 +11,13 @@ from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["TSUL"]
 
-def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
+def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -24,13 +25,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     ------
         ClawRunData
     """
-    if avid:
+    if avid and avid != 'None':
         avid = int(avid)
     else:
         avid = None
     with open("avac.data", "w") as file:
         file.write(
             f"{avid} := avid\n"
+        )
+    inflow_mode = config.get('inflow') or inflow
+    with open("inflow.data", "w") as file:
+        file.write(
+            f"{inflow_mode} := inflow\n"
         )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -116,7 +122,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 2
+    clawdata.verbosity = 0
 
     # --------------
     # Time stepping:
@@ -188,10 +194,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    clawdata.bc_lower[0] = 'wall'
-    clawdata.bc_upper[0] = 'wall'
-    clawdata.bc_lower[1] = 'wall'
-    clawdata.bc_upper[1] = 'wall'
+    if inflow_mode == "src":
+        clawdata.bc_lower[0] = 'wall'
+        clawdata.bc_upper[0] = 'wall'
+        clawdata.bc_lower[1] = 'wall'
+        clawdata.bc_upper[1] = 'wall'
+    elif inflow_mode == "bc":
+        clawdata.bc_lower[0] = 'user'
+        clawdata.bc_upper[0] = 'user'
+        clawdata.bc_lower[1] = 'user'
+        clawdata.bc_upper[1] = 'user'
+    else:
+        raise ValueError(f"inflow mode '{inflow_mode}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -214,7 +228,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = 300
+    amrdata.max1d = config["cells_max"]
 
     # List of refinement ratios at each level (length at least mxnest-1)
     amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
@@ -315,7 +329,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     geo_data.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geo_data.dry_tolerance = 1.e-5
+    geo_data.dry_tolerance = 1.e-10
     geo_data.friction_forcing = True
     geo_data.manning_coefficient =.025
     geo_data.friction_depth = 1e9
@@ -329,7 +343,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[k, Path("..")/p] for k, p in config["topo"]]
+    topo_data.topofiles = [[2, projdir/config["topo"]]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -350,7 +364,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = config["qinit"]
+    rundata.qinit_data.qinitfiles = [[projdir/config["qinit"]]]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)

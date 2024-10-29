@@ -13,9 +13,10 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["TSUL"]
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -131,7 +132,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
         timing_plotdir = Path(plotdata.plotdir) / '_timing_figures'
         # system(f'mkdir -p {timing_plotdir}')
-        Path(timing_plotdir).mkdir(exist_ok=True)
+        timing_plotdir.mkdir(exist_ok=True)
         # adjust units for plots based on problem:
         units = dict(comptime="seconds", simtime="hours", cell="millions")
         plot_timing_stats.make_plots(outdir=plotdata.outdir, 

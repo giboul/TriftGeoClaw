@@ -14,9 +14,10 @@ import numpy as np
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["AVAC"]
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
@@ -47,15 +48,14 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes('pcolor')
-    plotaxes.title = 'Surface'
+    # plotaxes.title = 'Surface'
     plotaxes.scaled = True
 
     def fixup(current_data):
 
         # addgauges(current_data)
         t = current_data.t
-        # plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
-        plt.title("")
+        plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
 

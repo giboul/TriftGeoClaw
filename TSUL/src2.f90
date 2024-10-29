@@ -15,7 +15,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, times, damping
+    use helpers, only : q_avac, closest, times, damping, inflow_mode
 
     implicit none
     
@@ -45,21 +45,24 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     ! ----------------------------------------------------------------
     ! AVAC inflows
-    ti = closest(t, times)
-    do j = 1, my
-        yc = ylower + (j - 0.5d0) * dy
-        do i = 1, mx
-            xc = xlower + (i - 0.5d0) * dx
-            k = closest(0.d0,(q_avac(ti,:,1)-xc)**2+(q_avac(ti,:,2)-yc)**2)
-            if (abs(xc-q_avac(ti,k,1))<dx/2) then
-                if (abs(yc-q_avac(ti,k,2))<dy/2) then
-                    q(1, i, j) = q(1, i, j) + damping*q_avac(ti,k,3)
-                    q(2, i, j) = q_avac(ti,k,4)
-                    q(3, i, j) = q_avac(ti,k,5)
+    if (trim(inflow_mode) == "src") then
+        ti = closest(t, times)
+        do j = 1, my
+            yc = ylower + (j - 0.5d0) * dy
+            do i = 1, mx
+                xc = xlower + (i - 0.5d0) * dx
+                k = closest(0.d0, & 
+                    (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2)
+                if (abs(xc-q_avac(1,ti,k,1))<dx/2) then
+                    if (abs(yc-q_avac(1,ti,k,2))<dy/2) then
+                        q(1,i,j) = q(1,i,j) + damping*q_avac(1,ti,k,3)
+                        q(2,i,j) = q_avac(1,ti,k,4)
+                        q(3,i,j) = q_avac(1,ti,k,5)
+                    end if
                 end if
-            end if
+            end do
         end do
-    end do
+    end if
 
     ! ----------------------------------------------------------------
     ! Spherical geometry source term(s)

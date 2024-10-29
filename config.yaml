@@ -1,6 +1,7 @@
-topo:
-  rawfile: swissALTI3D_merged.tif
-  file: &topofile bathymetry_with_dam.asc
+TOPM:
+  topography: swissALTI3D_merged.tif
+  bathymetry: &topofile TOPM/bathymetry_with_dam.asc
+  avalanches: avalanches.geojson
   lake_alt: 1767
   dam_alt: 1780
   resolution: 5
@@ -14,45 +15,52 @@ topo:
   flood_seed: [2.67026e+6, 1.171490e+6]
 
 AVAC:
-  nx: 100
-  ny: 100
+  avalanches: TOPM/avalanches.csv
+  nx: 30
+  ny: 20
   nsim: 10
   tmax: 90
   dt0: 1.
   cfl: 0.5
   max_iter: 500
-  DryWetLimit: 0.0001
+  dry_tolerance: 0.0001
   out_format: binary
 
   amr_ratios:
-    x: [4, 4, 8]
-    y: [4, 4, 8]
-    t: [4, 4, 8]
+    x: [2, 4, 8]
+    y: [2, 4, 8]
+    t: [2, 4, 8]
     max_level: 3
+  cells_max: 60
 
-  topo:
-    - [2, *topofile]
-  qinit:
-    - [qinit.xyz]
+  topo: *topofile
+  qinit: AVAC/qinit.xyz
 
 TSUL:
-  nx: 20
-  ny: 32
+  nx: 30
+  ny: 20
 
   bounds:
-    xmin: 2669750.
-    xmax: 2671000.
-    ymin: 1170200.
-    ymax: 1172160.
+    xmin: 2666500.
+    xmax: 2673700.
+    ymin: 1169500.
+    ymax: 1174200.
+    # bounds:
+    #   xmin: 2669750.
+    #   xmax: 2671000.
+    #   ymin: 1170200.
+    #   ymax: 1172160.
 
   amr_ratios:
-    x: [2, 2]
-    y: [2, 2]
-    t: [2, 2]
+    x: [2, 4, 8]
+    y: [2, 4, 8]
+    t: [2, 4, 8]
     max_level: 3
+  cells_max: 60
 
-  topo:
-    - [2, *topofile]
-  qinit:
-    - [qinit.xyz]
+
+  topo: *topofile
+  qinit: TSUL/qinit.xyz
   out_format: binary
+
+  inflow: "bc"  # "bc" or "src"

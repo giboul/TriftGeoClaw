@@ -2,6 +2,7 @@
 from pathlib import Path
 from argparse import ArgumentParser
 from shutil import rmtree
+from json import load
 from yaml import safe_load
 import numpy as np
 from matplotlib import pyplot as plt
@@ -10,19 +11,20 @@ from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
-with open("config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
 
 def write_topo(plot=False):
 
     # Temporary directory
-    ifile = Path(topoconfig["rawfile"])
+    path = projdir / topoconfig["topography"]
     tempdir = Path("_temp")
     tempdir.mkdir(exist_ok=True)
 
-    print(f"\tINFO: Opening {topoconfig['rawfile']}... ")
-    with TiffFile(ifile) as tif:
+    print(f"\tINFO: Opening {path}... ")
+    with TiffFile(path) as tif:
         Ztif = tif.asarray()
         nx = tif.pages[0].tags["ImageWidth"].value
         ny = tif.pages[0].tags["ImageLength"].value
@@ -50,7 +52,8 @@ def write_topo(plot=False):
     X, Y = np.meshgrid(x, y)
     mask = dam_mask(X, Y, Z)
     Z[mask] = topoconfig['dam_alt']
-    print(f"\tINFO: Saving {topoconfig['file']}... ")
+    path = projdir / topoconfig["bathymetry"]
+    print(f"\tINFO: Saving {path}... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
         f"{y.size} nrows",
@@ -59,8 +62,8 @@ def write_topo(plot=False):
         f"{topoconfig['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt(topoconfig['file'], Z.flatten(), header=asc_header, comments="")
-    print(f"\tINFO: File size is {Path(topoconfig['file']).stat().st_size:.2g} bytes.")
+    np.savetxt(path, Z.flatten(), header=asc_header, comments="")
+    print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
     
     print("\tINFO: writing dam coordinates")
     xd = np.linspace(X[mask].min(), X[mask].max(), 100)
@@ -92,10 +95,15 @@ def write_topo(plot=False):
     dilated_contour_coords = np.vstack((xc, yc)).T
     np.savetxt("contour_dilated.xy", dilated_contour_coords)
 
+    avacs = geojson2csv(projdir / topoconfig["avalanches"])
+
     if plot:
         extent = (xmin, xmax, ymin, ymax) 
         plt.title("Processed topography")
         plt.imshow(Z, extent=extent)
+        for i in np.unique(avacs[0]):
+            av = avacs.T[i==avacs[0]].T
+            plt.fill(*av[1:])
         plt.plot(*contour_coords.T, '-', label="Lake contour")
         plt.plot(*dilated_contour_coords.T, '-', label="Dilated contour")
         plt.scatter(x[seed[0]], y[seed[1]], c="g", label="Fill seed")
@@ -224,6 +232,20 @@ def fill_lake(topo, seed, max_level=0):
     topo[flooded] = max_level
     return flooded
 
+def geojson2csv(path):
+    with open(path, "r") as file:
+        data = load(file)
+
+    coords = []
+    for e in data["features"]:
+        ix = e['properties']['id']
+        points = e['geometry']['coordinates'][0][0]
+        for x, y in points:
+            coords.append([ix-1, x, y])
+
+    avacs = np.array(coords).T
+    np.savetxt("avalanches.csv", avacs)
+    return avacs
 
 if __name__ == "__main__":
     parser = ArgumentParser()

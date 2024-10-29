@@ -10,9 +10,10 @@ from yaml import safe_load
 from pathlib import Path
 
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path().absolute().parent
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    topoconfig = config["TOPM"]
     config = config["AVAC"]
 
 
@@ -150,7 +151,7 @@ def setrun(claw_pkg='geoclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 2
+    clawdata.verbosity = 0
 
 
 
@@ -263,6 +264,7 @@ def setrun(claw_pkg='geoclaw'):
     # AMR parameters:
     # ---------------
     amrdata = rundata.amrdata
+    amrdata.max1d = config["cells_max"]
 
     # max number of refinement levels:
     amrdata.amr_levels_max = config["amr_ratios"]['max_level']
@@ -371,7 +373,7 @@ def setgeo(rundata):
 
     # == Algorithm and Initial Conditions ==
     geo_data.sea_level = 0
-    geo_data.dry_tolerance = config["DryWetLimit"]
+    geo_data.dry_tolerance = config["dry_tolerance"]
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025
     geo_data.friction_depth = 20.0
@@ -386,7 +388,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #    [topotype, minlevel, maxlevel, t1, t2, fname]
     # topo_data.topofiles.append([2, 1, 3, 0., 1.e10, 'topo.asc'])
-    topo_data.topofiles = [[k, Path("..")/p] for k, p in config['topo']]
+    topo_data.topofiles = [[2, projdir/config['topo']]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -395,7 +397,7 @@ def setgeo(rundata):
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
-    rundata.qinit_data.qinitfiles = config['qinit']
+    rundata.qinit_data.qinitfiles = [[projdir/config['qinit']]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
     # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])

@@ -127,19 +127,15 @@ def grid_interp(xt, yt, Zt, x, y):
     ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-2)
     iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-2)
     iyz = yt.size-2-iy
-    Z11 = Zt[iyz, :][:, ix]
-    Z21 = Zt[iyz, :][:, ix+1]
-    Z12 = Zt[iyz+1, :][:, ix]
-    Z22 = Zt[iyz+1, :][:, ix+1]
     x1 = xt[ix]
     x2 = xt[ix+1]
     y1 = yt[iy]
     y2 = yt[iy+1]
     Z = ((
-        + (x2-x)*((y2-y)*Z11.T).T
-        + (x2-x)*((y-y1)*Z12.T).T
-        + (x-x1)*((y2-y)*Z21.T).T
-        + (x-x1)*((y-y1)*Z22.T).T
+        + (x2-x)*((y2-y)*Zt[iyz+1, :][:, ix].T).T
+        + (x2-x)*((y-y1)*Zt[iyz, :][:, ix].T).T
+        + (x-x1)*((y2-y)*Zt[iyz+1, :][:, ix+1].T).T
+        + (x-x1)*((y-y1)*Zt[iyz, :][:, ix+1].T).T
     ).T/(y2-y1)).T/(x2-x1)
     return Z[::-1, :]
 

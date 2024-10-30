@@ -19,11 +19,8 @@ parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
 parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
-print(f"{args.avid = }")
 outdir = projdir / "TSUL" / f"_output{args.avid}"
-print(f"{outdir = }")
 files = list(outdir.glob("fort.q*"))
-print(f"{len(files) = }")
 x, y = np.loadtxt(projdir / "TOPM" / "dam.xy").T
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))

@@ -6,6 +6,7 @@ The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 
 """
+from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
 
@@ -353,12 +354,10 @@ def setgeo(rundata):
     For documentation see ....
     """
 
-    try:
+    if hasattr(rundata, 'geo_data'):
         geo_data = rundata.geo_data
-    except:
-        print("*** Error, this rundata has no geo_data attribute")
-        raise AttributeError("Missing geo_data attribute")
-
+    else:
+        raise AttributeError("*** Error, this rundata has no 'geo_data' attribute")
 
     # == Physics ==
     geo_data.gravity = 9.81
@@ -413,10 +412,19 @@ def setgeo(rundata):
     # ----------------------
 
 
+def main():
+    # Set up run-time parameters and write all data files.
+    parser = ArgumentParser()
+    parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    args = parser.parse_args()
+
+    data = Path(".data")
+    data.unlink(missing_ok=True)
+    rundata = setrun(**args.__dict__)
+    rundata.write()
+    data.touch()
+
 
 if __name__ == '__main__':
-    # Set up run-time parameters and write all data files.
-    import sys
-    rundata = setrun(*sys.argv[1:])
-    rundata.write()
+    main()
 

@@ -5,7 +5,7 @@ Module to set up run time parameters for Clawpack.
 The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 """
-import argparse
+from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
 import numpy as np
@@ -56,11 +56,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    bounds = config.get("bounds") or topoconfig["bounds"]
-    clawdata.lower[0] = bounds["xmin"]
-    clawdata.upper[0] = bounds["xmax"]
-    clawdata.lower[1] = bounds["ymin"]
-    clawdata.upper[1] = bounds["ymax"]
+    xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+    print(xmin, xmax, ymin, ymax)
+    clawdata.lower[0] = xmin
+    clawdata.upper[0] = xmax
+    clawdata.lower[1] = ymin
+    clawdata.upper[1] = ymax
 
     # Number of grid cells: Coarsest grid
     clawdata.num_cells[0] = config["nx"]
@@ -112,7 +113,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
         clawdata.output_t0 = True
 
     clawdata.output_format = config["out_format"]   # 'ascii' or 'binary' 
-    clawdata.output_q_components = 'none'   # need all
+    clawdata.output_q_components = "all"   # h, hu, hv, eta
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
 
@@ -236,12 +237,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
 
     # max number of refinement levels:
-    max_levels = 1 + max(map(len, (
-      amrdata.refinement_ratios_x,
-      amrdata.refinement_ratios_y,
-      amrdata.refinement_ratios_t
-    )))
-    amrdata.amr_levels_max = max_levels
+    amrdata.amr_levels_max = config["amr_ratios"]["max_level"]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -389,15 +385,17 @@ def main():
     # Treating command line arguments
     with open('.data', 'w') as file:
         pass
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('avid', default='None', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()
 
+    data = Path(".data")
+    data.unlink(missing_ok=True)
     rundata = setrun(**args.__dict__)
     rundata.write()
-    # kmltools.make_input_data_kmls(rundata)
+    data.touch()
 
 
 if __name__ == '__main__':

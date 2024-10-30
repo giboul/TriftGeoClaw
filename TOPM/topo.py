@@ -85,7 +85,7 @@ def write_topo(plot=False):
     yc = ymin + yc/y.size * (ymax - ymin)
     yc = ymin + (ymax-yc)  # Reverse y
     contour_coords = np.vstack((xc, yc)).T
-    np.savetxt("contour.xy", contour_coords)
+    np.savetxt(projdir / "TOPM" / "contour.xy", contour_coords)
 
     dilated = isotropic_dilation(flooded, 50/topoconfig['resolution'])
     xc, yc = find_contours(dilated.T, 0.5)[0].T
@@ -93,9 +93,10 @@ def write_topo(plot=False):
     yc = ymin + yc/y.size * (ymax - ymin)
     yc = ymin + (ymax-yc)  # Reverse y
     dilated_contour_coords = np.vstack((xc, yc)).T
-    np.savetxt("contour_dilated.xy", dilated_contour_coords)
+    np.savetxt(projdir / "TOPM" / "contour_dilated.xy", dilated_contour_coords)
 
-    avacs = geojson2csv(projdir / topoconfig["avalanches"])
+    avacs = read_geojson(projdir / topoconfig["avalanches"])
+    np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
 
     if plot:
         extent = (xmin, xmax, ymin, ymax) 
@@ -232,7 +233,7 @@ def fill_lake(topo, seed, max_level=0):
     topo[flooded] = max_level
     return flooded
 
-def geojson2csv(path):
+def read_geojson(path):
     with open(path, "r") as file:
         data = load(file)
 
@@ -244,7 +245,6 @@ def geojson2csv(path):
             coords.append([ix-1, x, y])
 
     avacs = np.array(coords).T
-    np.savetxt("avalanches.csv", avacs)
     return avacs
 
 if __name__ == "__main__":

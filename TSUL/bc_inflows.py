@@ -40,9 +40,6 @@ y = np.hstack((
     np.full(n, ymax),
     np.linspace(ymax, ymin, n)
 ))
-# plt.plot(x, y, '-o')
-# plt.gca().set_aspect("equal")
-# plt.show()
 boundaries = ("bottom", "right", "top", "left")
 
 dist1 = x.max()-x.min()
@@ -53,17 +50,14 @@ dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
 def extract(i):
-    # print(f"{outdir = }")
     frame_sol = Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
         x, y,
         levels = "all",
-        # return_ma=True
+        return_ma=True
     )
-    # print(f"{q.shape = }")
-    # print(f"{q[2] = }")
     return q, frame_sol.t
 
 def write():

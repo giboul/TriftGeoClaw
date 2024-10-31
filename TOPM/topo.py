@@ -74,11 +74,11 @@ def write_topo(plot=False):
     rmtree(tempdir)
 
     y = y[::-1]
-    if 'flood_seed' in topoconfig:
+    if 'flood_seed' in topoconfig and not plot:
         seed = (np.abs(x-topoconfig['flood_seed'][0]).argmin(),
                 np.abs(y-topoconfig['flood_seed'][1]).argmin())
     else:
-        seed, r = pick_seed(Z, x, y, topoconfig['resolution'])
+        seed, topoconfig['lake_alt'], r = pick_seed(Z, x, y, topoconfig['resolution'], topoconfig['lake_alt'])
     flooded = fill_lake(Z, seed[::-1], topoconfig['lake_alt'])
     xc, yc = find_contours(flooded.T, 0.5)[0].T
     xc = xmin + xc/x.size * (xmax - xmin)
@@ -156,7 +156,7 @@ def dam_downstream(x, thk=50):
     u = dam_upstream(x, offset=thk)
     return np.maximum(u, d)
 
-def pick_seed(z_im, x, y, res=0):
+def pick_seed(z_im, x, y, res=0, lake_alt=0):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
@@ -171,7 +171,7 @@ def pick_seed(z_im, x, y, res=0):
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 
-    data = dict(alt="", x=0, y=0, r=0, status="waiting")
+    data = dict(alt=str(lake_alt), x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
 
@@ -218,7 +218,7 @@ def pick_seed(z_im, x, y, res=0):
     fig.canvas.mpl_connect("button_press_event", flood_pick)
     
     plt.show()
-    return (data["x"], data["y"]), data["r"]
+    return (data["x"], data["y"]), float(data["alt"]), data["r"]
 
 def fill_lake(topo, seed, max_level=0):
     mask = topo < max_level

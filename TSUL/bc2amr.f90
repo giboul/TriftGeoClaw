@@ -92,7 +92,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_avac, closest, times, damping
+    use helpers, only: q_avac, times, damping, interp1d4d, interp1d2d
 
     implicit none
 
@@ -105,10 +105,13 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
 
 ! Local storage
-    integer :: i, j, i_xy, i_times, ibeg, jbeg, nxl, nxr, nyb, nyt
+    integer :: i, j, i_xy, it, ibeg, jbeg, nxl, nxr, nyb, nyt
     real(kind=8) :: hxmarg, hymarg, xc, yc
+    real(kind=8), &
+    dimension(size(q_avac,1),size(q_avac,3),size(q_avac,4)) :: q_avact
 
-    i_times = closest(time, times)
+    ! it = closest(time, times)
+    q_avact = interp1d4d(time, times, q_avac)
 
     hxmarg = hx*.01d0
     hymarg = hy*.01d0
@@ -133,10 +136,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = 1, nxl ! Avalanche
-                    i_xy = closest(yc, q_avac(1,i_times,:,2))
-                    val(1, i, j) = q_avac(1,i_times,i_xy,3) * damping
-                    val(2, i, j) = q_avac(1,i_times,i_xy,4)
-                    val(3, i, j) = q_avac(1,i_times,i_xy,5)
+                    val(1:3,i,j) = &
+                        interp1d2d(yc,q_avact(1,:,2),q_avact(1,:,3:5))
+                    ! i_xy = closest_sup(yc, q_avact(1,:,2))
+                    ! val(1, i, j) = q_avact(1,i_xy,3) * damping
+                    ! val(2, i, j) = q_avact(1,i_xy,4)
+                    ! val(3, i, j) = q_avact(1,i_xy,5)
                 end do
                 do i = 1, nxl ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, nxl + 1, j)
@@ -191,10 +196,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = ibeg, nrow ! Avalanche
-                    i_xy = closest(yc, q_avac(2,i_times,:,2))
-                    val(1, i, j) = q_avac(2,i_times,i_xy,3) * damping
-                    val(2, i, j) = q_avac(2,i_times,i_xy,4)
-                    val(3, i, j) = q_avac(2,i_times,i_xy,5)
+                    val(1:3,i,j) = &
+                        interp1d2d(yc,q_avact(2,:,2),q_avact(2,:,3:5))
+                    ! i_xy = closest_sup(yc, q_avac(2,it,:,2))
+                    ! val(1, i, j) = q_avac(2,it,i_xy,3) * damping
+                    ! val(2, i, j) = q_avac(2,it,i_xy,4)
+                    ! val(3, i, j) = q_avac(2,it,i_xy,5)
                 end do
                 do i = ibeg, nrow ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, ibeg - 1, j)
@@ -249,10 +256,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = 1, nyb ! Avalanche
-                    i_xy = closest(xc, q_avac(3,i_times,:,1))
-                    val(1, i, j) = q_avac(3,i_times,i_xy,3) * damping
-                    val(2, i, j) = q_avac(3,i_times,i_xy,4)
-                    val(3, i, j) = q_avac(3,i_times,i_xy,5)
+                    val(1:3,i,j) = &
+                        interp1d2d(xc,q_avact(3,:,1),q_avact(3,:,3:5))
+                    ! i_xy = closest_sup(xc, q_avac(3,it,:,1))
+                    ! val(1, i, j) = q_avac(3,it,i_xy,3) * damping
+                    ! val(2, i, j) = q_avac(3,it,i_xy,4)
+                    ! val(3, i, j) = q_avac(3,it,i_xy,5)
                 end do
                 do j = 1, nyb ! Zero-order extrapolation
                     aux(:, i, j) = aux(:, i, nyb + 1)
@@ -308,10 +317,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = jbeg, ncol ! Avalanche
-                    i_xy = closest(xc, q_avac(4,i_times,:,1))
-                    val(1, i, j) = q_avac(4,i_times,i_xy,3) * damping
-                    val(2, i, j) = q_avac(4,i_times,i_xy,4)
-                    val(3, i, j) = q_avac(4,i_times,i_xy,5)
+                    val(1:3,i,j) = &
+                        interp1d2d(xc,q_avact(4,:,1),q_avact(4,:,3:5))
+                    ! i_xy = closest_sup(xc, q_avac(4,it,:,1))
+                    ! val(1, i, j) = q_avac(4,it,i_xy,3) * damping
+                    ! val(2, i, j) = q_avac(4,it,i_xy,4)
+                    ! val(3, i, j) = q_avac(4,it,i_xy,5)
                 end do
                 do j = jbeg, ncol ! Constant bathymetry extrapolation
                     aux(:, i, j) = aux(:, i, jbeg - 1)

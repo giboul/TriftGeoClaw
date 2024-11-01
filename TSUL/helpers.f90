@@ -1,211 +1,263 @@
-module helpers
+MODULE helpers
     implicit none
     save
 
-    real(kind=8), allocatable :: q_avac(:,:,:,:)
-    real(kind=8), allocatable :: times(:)
-    real(kind=8) :: damping = 500.d0 / 1e3
-    character(len=4) :: avid
-    character(len=3) :: inflow_mode
+    REAL(kind=8), ALLOCATABLE :: q_avac(:,:,:,:)
+    REAL(kind=8), ALLOCATABLE :: times(:)
+    REAL(kind=8) :: damping = 500.d0 / 1e3
+    CHARACTER(len=4) :: avid
+    CHARACTER(len=3) :: inflow_mode
 
-contains
+CONTAINS
 
-    subroutine read_avid(avid)
-        character(len=4), intent(out) :: avid
-        open(2, file="../avac.data", status='old')
-            read(2,*) avid
-        close(2)
-        if (avid == "None") then
+    SUBROUTINE read_avid(avid)
+        CHARACTER(len=4), INTENT(OUT) :: avid
+        OPEN(2, file="../avac.data", status='old')
+            READ(2,*) avid
+        CLOSE(2)
+        IF (avid == "None") then
             avid = ""
-        end if
-    end subroutine read_avid
+        END IF
+    END SUBROUTINE read_avid
 
-    subroutine read_inflow_mode(mode)
-        character(len=3), intent(out) :: mode
-        open(2, file="../inflow.data", status='old')
-            read(2,*) mode
-        close(2)
-        if (mode == "None") then
+    SUBROUTINE read_inflow_mode(mode)
+        CHARACTER(len=3), INTENT(OUT) :: mode
+        OPEN(2, file="../inflow.data", status='old')
+            READ(2,*) mode
+        CLOSE(2)
+        IF (mode == "None") then
             mode = "bc"
-        end if
-    end subroutine read_inflow_mode
+        END IF
+    END SUBROUTINE read_inflow_mode
 
-    integer function closest(value, array)
-        integer :: i
-        real(kind=8), intent(in) :: value
-        real(kind=8), dimension(:), intent(in) :: array
+    INTEGER FUNCTION closest(value, array)
 
-        closest = 1
-        do i = 1, size(array)
-            if (abs(value-array(i))<abs(value-array(closest))) then
-                closest = i
-            end if
-        end do
-    end function closest
+        REAL(kind=8), INTENT(IN) :: value
+        REAL(kind=8), dimension(:), INTENT(IN) :: array
+        INTEGER, dimension(1) :: tarray
 
-    real(kind=8) function interp(newx, x, y)
-        real(kind=8), intent(in) :: x(:), y(:), newx
-        real(kind=8) :: xp, yp
-        integer :: ix
+        tarray = MINLOC(ABS(array-value))
+        closest = tarray(1)
 
-        ix = closest(newx, x) ! closest_back
-        if (ix == 0) then
-            interp = y(1)
-        else if (ix == size(x)) then
-            interp = y(size(y))
-        else
-            xp = x(ix)
-            yp = y(ix)
-            interp = yp + (newx-xp)/(x(ix+1)-xp) * (y(ix+1)-yp)
-        end if
-    end function interp
+    END FUNCTION closest
 
-    subroutine init_src(data, avid, num_times)
-        real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
-        character(len=4), intent(in) :: avid
-        integer, intent(in) :: num_times
-        character(len=255) :: ftemp
-        character(len=255) :: fname
-        real(kind=8) :: x, y, h, hu, hv
-        integer :: unit, io, i, n, mthbc
-        integer :: num_cells
-        logical :: res
-    
-        ftemp = "../_inflows"//trim(avid)//"/cut"
+
+    INTEGER FUNCTION closest_inf(value, array)
+
+        REAL(kind=8), INTENT(IN) :: value
+        REAL(kind=8), dimension(:), INTENT(IN) :: array
+        INTEGER, dimension(1) :: tarray
+
+        tarray = MINLOC(ABS(array-value), mask=array<value)
+        IF (tarray(1) < 1) THEN
+            tarray = MINLOC(array)
+        ELSE IF (tarray(1) > size(array)) THEN
+            tarray = MAXLOC(array)
+        END IF
+        closest_inf = tarray(1)
+
+    END FUNCTION closest_inf
+
+
+    INTEGER FUNCTION closest_sup(value, array)
+
+        REAL(kind=8), INTENT(IN) :: value
+        REAL(kind=8), dimension(:), INTENT(IN) :: array
+        INTEGER, dimension(1) :: tarray
+
+        tarray = MINLOC(ABS(array-value), mask=array>value)
+        IF (tarray(1) < 1) THEN
+            tarray = MINLOC(array)
+        ELSE IF (tarray(1) > size(array)) THEN
+            tarray = MAXLOC(array)
+        END IF
+        closest_sup = tarray(1)
+
+    END FUNCTION closest_sup
+
+
+    FUNCTION interp1d4d(t, ts, q)
+
+        REAL(kind=8), INTENT(IN) :: t, ts(:), q(:,:,:,:)
+        REAL(kind=8), & 
+        dimension(SIZE(q,1),SIZE(q,3),SIZE(q,4)) :: interp1d4d
+        INTEGER :: i, s
+
+        i = closest_inf(t, ts)
+        s = closest_sup(t, ts)
+        interp1d4d = q(:,i,:,:) + &
+                    (q(:,s,:,:) - q(:,i,:,:)) * &
+                    (MAX(ts(i),MIN(ts(s),t)) - ts(i)) / &
+                    (ts(s) - ts(i))
+
+    END FUNCTION interp1d4d
+
+
+    FUNCTION interp1d2d(xnew, x, q)
+
+        REAL(kind=8), INTENT(IN) :: xnew, x(:), q(:,:)
+        REAL(kind=8), dimension(SIZE(q,2)) :: interp1d2d
+        INTEGER :: i, s
+
+        i = closest_inf(xnew, x)
+        s = closest_sup(xnew, x)
+        IF (x(i)==x(s)) THEN
+            interp1d2d = q(i,:)
+        ELSE
+            interp1d2d = q(i,:) + &
+                        (q(s,:) - q(i,:)) * &
+                        (MAX(x(i),MIN(x(s),xnew)) - x(i)) / &
+                        (x(s) - x(i))
+        END IF
+
+    END function
+
+
+    SUBROUTINE init_src(data, avid, num_times)
+
+        REAL(kind=8), ALLOCATABLE, INTENT(INOUT) :: data(:,:,:,:)
+        CHARACTER(len=4), INTENT(IN) :: avid
+        INTEGER, INTENT(IN) :: num_times
+        CHARACTER(len=255) :: ftemp
+        CHARACTER(len=255) :: fname
+        REAL(kind=8) :: x, y, h, hu, hv
+        INTEGER :: unit, io, i, n
+        INTEGER :: num_cells
+
+        ftemp = "../_inflows"//TRIM(avid)//"/cut"
         num_cells = 0
-        do i = 1, num_times
+        DO i = 1, num_times
             n = 0
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-            print "(A,A)", "Reading ", trim(fname)
-            open(unit, file=fname, status="old")
-                do
-                    read(unit,*,iostat=io)
-                    if (io /= 0) then
+            WRITE(fname,"(A,I0.4, A4)") TRIM(ftemp),i-1,".txt"
+            PRINT "(A,A)", "Reading ", TRIM(fname)
+            OPEN(unit, file=fname, status="old")
+                DO
+                    READ(unit,*,iostat=io)
+                    IF (io /= 0) then
                         exit
-                    end if
+                    END IF
                     n = n + 1
-                end do
-            close(unit)
-            num_cells = max(num_cells, n)
-        end do
+                END DO
+            CLOSE(unit)
+            num_cells = MAX(num_cells, n)
+        END DO
     
-        allocate(data(1, num_times, num_cells, 5))
-        print "(A,I10)", "size(data)    = ", size(data)
-        print "(A,I10)", "size(data, 1) = ", size(data, 1)
-        print "(A,I10)", "size(data, 2) = ", size(data, 2)
-        print "(A,I10)", "size(data, 3) = ", size(data, 3)
-        print "(A,I10)", "size(data, 3) = ", size(data, 4)
+        ALLOCATE(data(1, num_times, num_cells, 5))
+        PRINT "(A,I10)", "SIZE(data)    = ", SIZE(data)
+        PRINT "(A,I10)", "SIZE(data, 1) = ", SIZE(data, 1)
+        PRINT "(A,I10)", "SIZE(data, 2) = ", SIZE(data, 2)
+        PRINT "(A,I10)", "SIZE(data, 3) = ", SIZE(data, 3)
+        PRINT "(A,I10)", "SIZE(data, 3) = ", SIZE(data, 4)
    
-        do i = 1, num_times
-            write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-            open(unit, file=fname, status="old")
-            do n = 1, num_cells
-                read(unit,*, iostat=io) x, y, h, hu, hv
+        DO i = 1, num_times
+            WRITE(fname,"(A,I0.4, A4)") TRIM(ftemp),i-1,".txt"
+            OPEN(unit, file=fname, status="old")
+            DO n = 1, num_cells
+                READ(unit,*, iostat=io) x, y, h, hu, hv
                 data(1, i, n, 1) = x
                 data(1, i, n, 2) = y
                 data(1, i, n, 3) = h
                 data(1, i, n, 4) = hu
                 data(1, i, n, 5) = hv
-            end do
-            close(unit)
-        end do
-    end subroutine init_src
+            END DO
+            CLOSE(unit)
+        END DO
+    END SUBROUTINE init_src
 
-    subroutine init_bc(data, avid, num_times)
-        real(kind=8), allocatable, intent(inout) :: data(:,:,:,:)
-        integer, intent(in) :: num_times
-        character(len=6), dimension(4) :: sides
-        character(len=255) :: fdir, ftemp
-        character(len=255) :: fname
-        character(len=4) :: avid
-        real(kind=8) :: x, y, h, hu, hv
-        integer :: unit, io, i, n, mthbc
-        integer :: num_cells
-        logical :: res
+    SUBROUTINE init_bc(data, avid, num_times)
+        REAL(kind=8), ALLOCATABLE, INTENT(INOUT) :: data(:,:,:,:)
+        INTEGER, INTENT(IN) :: num_times
+        CHARACTER(len=6), dimension(4) :: sides
+        CHARACTER(len=255) :: fdir, ftemp
+        CHARACTER(len=255) :: fname
+        CHARACTER(len=4) :: avid
+        REAL(kind=8) :: x, y, h, hu, hv
+        INTEGER :: unit, io, i, n, mthbc
+        INTEGER :: num_cells
     
         unit = 2
-        sides = [character(len=6) :: "left", "right", "bottom", "top"]
+        sides = [CHARACTER(len=6) :: "left", "right", "bottom", "top"]
  
-        open(unit, file="../avac.data", status='old')
-            read(unit,*) avid
-        close(unit)
-        if (avid == "None") then
+        OPEN(unit, file="../avac.data", status='old')
+            READ(unit,*) avid
+        CLOSE(unit)
+        IF (avid == "None") then
             avid = "    "
-        end if
-        print *, "Avalanche id #", trim(avid)
+        END IF
+        PRINT *, "Avalanche id #", TRIM(avid)
 
-        fdir = "../_inflows"//trim(avid)//"/"
-        ftemp = trim(fdir)//trim(sides(1))//"_"
+        fdir = "../_inflows"//TRIM(avid)//"/"
+        ftemp = TRIM(fdir)//TRIM(sides(1))//"_"
         num_cells = 0
-        do mthbc = 1, 4
-            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
-            do i = 1, num_times
+        DO mthbc = 1, 4
+            ftemp = TRIM(fdir)//TRIM(sides(mthbc))//"_"
+            DO i = 1, num_times
                 n = 0
-                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-                print "(A,A)", "Reading ", trim(fname)
-                open(unit, file=fname, status="old")
-                    do
-                        read(unit,*,iostat=io)
-                        if (io /= 0) then
+                WRITE(fname,"(A,I0.4, A4)") TRIM(ftemp),i-1,".txt"
+                PRINT "(A,A)", "Reading ", TRIM(fname)
+                OPEN(unit, file=fname, status="old")
+                    DO
+                        READ(unit,*,iostat=io)
+                        IF (io /= 0) then
                             exit
-                        end if
+                        END IF
                         n = n + 1
-                    end do
-                close(unit)
-                num_cells = max(num_cells, n)
-            end do
-        end do
+                    END DO
+                CLOSE(unit)
+                num_cells = MAX(num_cells, n)
+            END DO
+        END DO
     
-        allocate(data(4, num_times, num_cells, 5))
-        print "(A,I10)", "size(data)    = ", size(data)
-        print "(A,I10)", "size(data, 1) = ", size(data, 1)
-        print "(A,I10)", "size(data, 2) = ", size(data, 2)
-        print "(A,I10)", "size(data, 3) = ", size(data, 3)
-        print "(A,I10)", "size(data, 3) = ", size(data, 4)
+        ALLOCATE(data(4, num_times, num_cells, 5))
+        PRINT "(A,I10)", "SIZE(data)    = ", SIZE(data)
+        PRINT "(A,I10)", "SIZE(data, 1) = ", SIZE(data, 1)
+        PRINT "(A,I10)", "SIZE(data, 2) = ", SIZE(data, 2)
+        PRINT "(A,I10)", "SIZE(data, 3) = ", SIZE(data, 3)
+        PRINT "(A,I10)", "SIZE(data, 3) = ", SIZE(data, 4)
    
-        do mthbc = 1, 4
-            ftemp = trim(fdir)//trim(sides(mthbc))//"_"
-            do i = 1, num_times
-                write(fname,"(A,I0.4, A4)") trim(ftemp),i-1,".txt"
-                open(unit, file=fname, status="old")
-                do n = 1, num_cells
-                    read(unit,*, iostat=io) x, y, h, hu, hv
+        DO mthbc = 1, 4
+            ftemp = TRIM(fdir)//TRIM(sides(mthbc))//"_"
+            DO i = 1, num_times
+                WRITE(fname,"(A,I0.4, A4)") TRIM(ftemp),i-1,".txt"
+                OPEN(unit, file=fname, status="old")
+                DO n = 1, num_cells
+                    READ(unit,*, iostat=io) x, y, h, hu, hv
                     data(mthbc, i, n, 1) = x
                     data(mthbc, i, n, 2) = y
                     data(mthbc, i, n, 3) = h
                     data(mthbc, i, n, 4) = hu
                     data(mthbc, i, n, 5) = hv
-                end do
-                close(unit)
-            end do
-        end do
-    end subroutine init_bc
+                END DO
+                CLOSE(unit)
+            END DO
+        END DO
+    END SUBROUTINE init_bc
 
-    subroutine read_times(times, avid)
-        character(len=4), intent(in) :: avid
-        character(len=255) :: fname
-        integer :: io, n, i
-        integer :: unit
-        real(kind=8), allocatable :: times(:)
+    SUBROUTINE read_times(times, avid)
+        CHARACTER(len=4), INTENT(IN) :: avid
+        CHARACTER(len=255) :: fname
+        INTEGER :: io, n, i
+        INTEGER :: unit
+        REAL(kind=8), ALLOCATABLE :: times(:)
 
         unit = 2
-        fname = "../_inflows"//trim(avid)//"/timing.txt"
-        print "(A,A)", "Reading ", trim(fname)
-        open(unit, file=fname)
+        fname = "../_inflows"//TRIM(avid)//"/timing.txt"
+        PRINT "(A,A)", "Reading ", TRIM(fname)
+        OPEN(unit, file=fname)
             n = 0
-            do 
-                read(unit,*,iostat=io)
-                if (io /= 0) then
+            DO 
+                READ(unit,*,iostat=io)
+                IF (io /= 0) then
                     exit
-                end if
+                END IF
                 n = n + 1
-            end do
-            allocate(times(n))
+            END DO
+            ALLOCATE(times(n))
         rewind(unit)
-            do i = 1, n
-                read(unit,*) times(i)
-            end do
-        close(unit)
-    end subroutine read_times
+            DO i = 1, n
+                READ(unit,*) times(i)
+            END DO
+        CLOSE(unit)
+    END SUBROUTINE read_times
 
-end module helpers
+END module helpers

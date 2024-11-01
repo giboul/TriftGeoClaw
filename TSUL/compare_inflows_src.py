@@ -8,12 +8,11 @@ from clawpack.pyclaw.solution import Solution
 from clawpack.visclaw import gridtools
 from matplotlib.animation import FuncAnimation
 
-projdir = Path(__file__).parents[1]
+projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    TOPM = config["TOPM"]
-    AVAC = config["AVAC"]
-    TSUL = config["AVAC"]
+    topoconfig = config["TOPM"]
+    config = config["AVAC"]
 
 parser = ArgumentParser()
 parser.add_argument("avid", nargs="?", default="")
@@ -31,36 +30,21 @@ outdirAVAC = projdir / "AVAC" / f"_output{avid}"
 outdirTSUL = projdir / "TSUL" / f"_output{avid}"
 nfiles = min(len(list(outdirAVAC.glob("fort.q*"))), len(list(outdirTSUL.glob("fort.q*"))))
 
-timesTSUL = [0]
-for file in outdirTSUL.glob("fort.t*"):
-    with open(file) as file:
-        time = file.readline()
-        time = time[:time.rfind(" ")]
-        timesTSUL.append(float(time))
 
-def extract_AVAC(i):
-    frame_sol = Solution(i, path=outdirAVAC, file_format=AVAC["out_format"])
+def extract(i, outdir, format=config["out_format"]):
+    frame_sol = Solution(i, path=outdir, file_format=format)
     q = gridtools.grid_output_2d(frame_sol, lambda q: q, x, y, levels="all", return_ma=True)
     return q, frame_sol.t
 
-def extract_TSUL(i, t):
-    i = np.clip(np.searchsorted(timesTSUL, t), 0, len(timesTSUL)-1)
-    frame_sol1 = Solution(int(i), path=outdirTSUL, file_format=TSUL["out_format"])
-    q1 = gridtools.grid_output_2d(frame_sol1, lambda q: q, x, y, levels="all", return_ma=True)
-    frame_sol2 = Solution(int(i+1), path=outdirTSUL, file_format=TSUL["out_format"])
-    q2 = gridtools.grid_output_2d(frame_sol2, lambda q: q, x, y, levels="all", return_ma=True)
-    q = q1 + (q2 - q1) * (t-frame_sol1.t)/(frame_sol2.t - frame_sol1.t)
-    return q, t
-
 with plt.style.context("bmh"):
    fig, (ax1, ax2) = plt.subplots(layout="tight", ncols=2, sharex=True, sharey=True)
-   q, t = extract_AVAC(0)
+   q, t = extract(0, outdirAVAC)
    h, hu, hv, eta = q
    z = eta - h
    zlow = 1.1*z.min()-0.1*z.max()
    eta_steps1 = ax1.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
    z_steps1 = ax1.stairs(z, dist, baseline=zlow, label="land", fill=True, color="sienna", lw=1)
-   q, t = extract_TSUL(0, t)
+   q, t = extract(0, outdirTSUL)
    h, hu, hv, eta = q
    z = eta - h
    zlow = 1.1*z.min()-0.1*z.max()
@@ -87,11 +71,11 @@ with plt.style.context("bmh"):
 def update(i):
    try: i=int(i)
    except ValueError: return None
-   (h, hu, hv, eta), t = extract_AVAC(i)
+   (h, hu, hv, eta), t = extract(i, outdirAVAC)
    z = eta-h
    eta_steps1.set_data(eta, dist, z)
    z_steps1.set_data(z, dist, zlow)
-   (h, hu, hv, eta), t = extract_TSUL(i, t)
+   (h, hu, hv, eta), t = extract(i, outdirTSUL)
    z = eta-h
    eta_steps2.set_data(eta, dist, z)
    z_steps2.set_data(z, dist, zlow)

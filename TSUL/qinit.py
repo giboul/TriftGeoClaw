@@ -30,7 +30,7 @@ def write_qinit(filename = projdir / topoconfig["bathymetry"]):
 
     # Fill topo
     z_lake = z.reshape(ny, nx)
-    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res)
+    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, topoconfig["lake_alt"])
     flooded = fill_lake(z_lake, (seed_iy, seed_ix), topoconfig["lake_alt"])
     dilated = isotropic_dilation(flooded, radius)
     z_lake[dilated] = topoconfig["lake_alt"]
@@ -49,7 +49,7 @@ def write_qinit(filename = projdir / topoconfig["bathymetry"]):
     np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
 
 
-def pick_seed(z_im, x, y, res=0):
+def pick_seed(z_im, x, y, res=0, alt=topoconfig["lake_alt"]):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
@@ -64,7 +64,7 @@ def pick_seed(z_im, x, y, res=0):
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 
-    data = dict(alt="", x=0, y=0, r=0, status="waiting")
+    data = dict(alt=str(alt), x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
 

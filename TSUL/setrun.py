@@ -56,8 +56,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
-    print(xmin, xmax, ymin, ymax)
+    if inflow_mode == "bc":
+        xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+    elif inflow_mode == "src":
+        xmin, xmax, ymin, ymax = topoconfig["bounds"].values()
+    else:
+        raise ValueError(f"inflow mode '{inflow_mode}' is not 'bc' or 'src'")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin

@@ -22,10 +22,11 @@ parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
 
 
-outdir = projdir / "AVAC" / f"_output{args.avid}"
+outTSUL = projdir / "AVAC" / f"_output{args.avid}"
+outAVAC = projdir / "AVAC" / f"_output{args.avid}"
 inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
 
-files = list(outdir.glob("fort.q*"))
+files = list(outTSUL.glob("fort.q*"))
 xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
 n = 100
 x = np.hstack((
@@ -49,8 +50,8 @@ dist4 = dist3 + dist2 - dist1
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
-def extract(i):
-    frame_sol = Solution(i, path=outdir, file_format=config["out_format"])
+def extract(i, outdir, format):
+    frame_sol = Solution(i, path=outdir, file_format=format)
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -67,7 +68,7 @@ def write():
     times = []
     for ti in range(nf):
         print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
-        q, t = extract(ti)
+        q, t = extract(ti, outTSUL, config["out_format"])
         times.append(t)
         h, hu, hv, eta = q
         for bi, boundary in enumerate(boundaries):
@@ -82,13 +83,12 @@ def write():
 def plot(movie):
     with plt.style.context("bmh"):
         fig, ax = plt.subplots(layout="tight")
-        q, t = extract(0)
+        q, t = extract(0, outTSUL, config["out_format"])
         h, hu, hv, eta = q
         z = eta - h
         zlow = 1.1*z.min()-0.1*z.max()
         eta_steps = ax.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
-        z_steps = ax.stairs(z, dist, baseline=zlow,
-                            label="land", fill=True, color="sienna", lw=1)
+        z_steps = ax.stairs(z, dist, baseline=zlow, label="land", fill=True, color="sienna", lw=1)
         title = "Cut @ t=%.2f"
         ax.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow
@@ -105,7 +105,7 @@ def plot(movie):
         ax.set_ylim(zlow, eta.max())
     
     def update(i):
-        (h, hu, hv, eta), t = extract(i)
+        (h, hu, hv, eta), t = extract(i, outTSUL, config["out_format"])
         z = eta-h
         eta_steps.set_data(eta, dist, z)
         z_steps.set_data(z, dist, zlow)

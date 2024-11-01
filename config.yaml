@@ -58,4 +58,4 @@ TSUL:
   qinit: TSUL/qinit.xyz
   out_format: binary
 
-  inflow: "src"  # "bc" or "src"
+  inflow: "bc"  # "bc" or "src"

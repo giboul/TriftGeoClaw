@@ -19,7 +19,6 @@ with open(projdir / "config.yaml") as file:
     TOPM = config["TOPM"]
     TSUL = config["TSUL"]
 
-
 def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
@@ -28,12 +27,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     ------
         ClawRunData
     """
-    if avid and avid != 'None':
-        avid = int(avid)
-    else:
-        avid = None
-    inflow = TSUL.get('inflow') or inflow
-
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
     rundata = setgeo(rundata, bouss)
@@ -51,12 +44,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    if inflow_mode == "bc":
+    if TSUL["inflow"] == "bc":
         xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
-    elif inflow_mode == "src":
-        xmin, xmax, ymin, ymax = topoconfig["bounds"].values()
+    elif TSUL["inflow"] == "src":
+        xmin, xmax, ymin, ymax = TOPM["bounds"].values()
     else:
-        raise ValueError(f"inflow mode '{inflow_mode}' is not 'bc' or 'src'")
+        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
@@ -194,18 +187,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    if inflow == "src":
+    if TSUL["inflow"] == "src":
         clawdata.bc_lower[0] = 'wall'
         clawdata.bc_upper[0] = 'wall'
         clawdata.bc_lower[1] = 'wall'
         clawdata.bc_upper[1] = 'wall'
-    elif inflow == "bc":
+    elif TSUL["inflow"] == "bc":
         clawdata.bc_lower[0] = 'user'
         clawdata.bc_upper[0] = 'user'
         clawdata.bc_lower[1] = 'user'
         clawdata.bc_upper[1] = 'user'
     else:
-        raise ValueError(f"inflow mode '{inflow}' is not 'bc' or 'src'")
+        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -295,9 +288,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
     # rundata.gaugedata.gauges.append([32412, xcoords.mean(), ycoords.mean(), clawdata.t0, tf])
 
+    if avid and avid != 'None':
+        avid = int(avid)
+    else:
+        avid = None
+    inflow_mode = TSUL.get('inflow') or inflow
+
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')
-    probdata.add_param('mode', inflow,  'The method for introucing the avalanche')
+    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalcnhe')
     probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
     probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
 

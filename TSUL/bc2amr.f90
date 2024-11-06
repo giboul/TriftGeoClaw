@@ -92,7 +92,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_avac, times, damping, interp1d4d, interp1d2d
+    use helpers, only: q_avac, times, damping, interp1d4d, interp1d2d, &
+        inflow_mode
 
     implicit none
 
@@ -110,8 +111,12 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), &
     dimension(size(q_avac,1),size(q_avac,3),size(q_avac,4)) :: qt
 
+    print *, "BC2AMR"
+
     ! it = closest(time, times)
-    qt = interp1d4d(time, times, q_avac)
+    if (inflow_mode=="bc") then
+        qt = interp1d4d(time, times, q_avac)
+    end if
 
     hxmarg = hx*.01d0
     hymarg = hy*.01d0

@@ -70,9 +70,9 @@ topo:
 qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
 run:
-	make data avid=$(avid)
+	pwd
+	rm -f _output$(avid)/fgout*
 	make qinit avid=$(avid)
 	make output OUTDIR=_output$(avid)
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)
-

@@ -9,6 +9,8 @@ that will be read in by the Fortran code.
 from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
+import numpy as np
+from clawpack.geoclaw.fgout_tools import FGoutGrid
 
 
 projdir = Path(__file__).parents[1]
@@ -52,10 +54,6 @@ def setrun(claw_pkg='geoclaw', avid=""):
     clawdata = rundata.clawdata  # initialized when rundata instantiated
 
 
-    # Set single grid parameters first.
-    # See below for AMR parameters.
-
-
     # ---------------
     # Spatial domain:
     # ---------------
@@ -76,6 +74,10 @@ def setrun(claw_pkg='geoclaw', avid=""):
 
         clawdata.lower[1] = TOPM["bounds"]["ymin"]
         clawdata.upper[1] = TOPM["bounds"]["ymax"]
+
+
+    # Set single grid parameters first.
+    # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
     clawdata.num_cells[0] = AVAC["nx"]
@@ -142,7 +144,6 @@ def setrun(claw_pkg='geoclaw', avid=""):
 
     clawdata.output_q_components = 'all'   # could be list such as [True,True]
     clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
-
 
 
     # ---------------------------------------------------
@@ -316,6 +317,24 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata.uprint = False      # update/upbnd reporting
     
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
+
+    # fgmax grid output for TSUL
+    fgout_grids = rundata.fgout_data.fgout_grids  # empty list initially
+
+    fgout = FGoutGrid()
+    fgout.fgno = 1
+    fgout.point_style = 2       # will specify a 2d grid of points
+    fgout.output_format = 'ascii'  # ascii, binary32 4-byte, float32
+    fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
+    fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
+    fgout.x1 = clawdata.lower[0]
+    fgout.x2 = clawdata.upper[0]
+    fgout.y1 = clawdata.lower[1]
+    fgout.y2 = clawdata.upper[1]
+    fgout.tstart = 0.
+    fgout.tend = clawdata.tfinal
+    fgout.nout = config["nsim"]
+    fgout_grids.append(fgout)    # written to fgout_grids.data
 
     # == setregions.data values ==
     regions = rundata.regiondata.regions

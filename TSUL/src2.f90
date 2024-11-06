@@ -16,7 +16,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     use friction_module, only: variable_friction, friction_index
 
     use helpers, only : q_avac, closest, times, damping, inflow_mode, &
-                        interp1d2d, interp1d4d
+                        interp1d2d, interp1d4d, q_src, grid_interp
 
     implicit none
     
@@ -52,25 +52,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! AVAC inflows
     if (trim(inflow_mode) == "src") then
         ! ti = closest(t, times)
-        qt = interp1d4d(t, times, q_avac)
-        qt(1,:,3) = qt(1,:,3) * damping
-        do j = 1, my
-            yc = ylower + (j - 0.5d0) * dy
-            do i = 1, mx
-                xc = xlower + (i - 0.5d0) * dx
-                dist = SQRT((qt(1,:,1)-xc)**2 + (qt(1,:,2)-yc)**2)
-                k = closest(0.d0, dist)
-                if (abs(xc-qt(1,k,1)) < dx) then
-                    if (abs(yc-qt(1,k,2)) < dy) then
-                        q(1:3,i,j) = q(1:3,i,j) + &
-                            interp1d2d(0.d0,dist,qt(1,:,3:5))
-                        ! q(1,i,j) = q(1,i,j) + damping*qt(1,k,3)
-                        ! q(2,i,j) = qt(1,k,4)
-                        ! q(3,i,j) = qt(1,k,5)
-                    end if
-                end if
-            end do
-        end do
+        q_src(1,:,:,3) = q_src(1,:,:,3) * damping
+        grid_interp(q_src(1,:,:,1), q_src(1,:,:,1), q_src, ...)
     end if
 
     ! ----------------------------------------------------------------

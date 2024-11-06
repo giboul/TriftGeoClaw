@@ -27,9 +27,9 @@ AVAC:
   out_format: binary
 
   amr_ratios:
-    x: [2, 4, 8]
-    y: [2, 4, 8]
-    t: [2, 4, 8]
+    x: [2, 2, 2]
+    y: [2, 2, 2]
+    t: [2, 2, 2]
     max_level: 3
   cells_max: 60
 
@@ -57,4 +57,4 @@ TSUL:
   qinit: TSUL/qinit.xyz
   out_format: binary
 
-  inflow: "bc"  # "bc" or "src"
+  inflow: "src"  # "bc" or "src"

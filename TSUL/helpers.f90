@@ -7,28 +7,37 @@ module helpers
     real(kind=8) :: damping = 500.d0 / 1e3
     character(len=4) :: avid
     character(len=3) :: inflow_mode
+    INTEGER :: mx, my
 
 contains
 
-    subroutine read_avid(avid)
-        character(len=4), intent(out) :: avid
-        open(2, file="../avac.data", status='old')
-            read(2,*) avid
-        close(2)
-        if (avid == "None") then
-            avid = ""
-        end if
-    end subroutine read_avid
 
-    subroutine read_inflow_mode(mode)
-        character(len=3), intent(out) :: mode
-        open(2, file="../inflow.data", status='old')
-            read(2,*) mode
-        close(2)
-        if (mode == "None") then
+    SUBROUTINE read_data(avid, mode, mx, my)
+
+        CHARACTER(LEN=3), INTENT(OUT) :: mode
+        CHARACTER(LEN=4), INTENT(OUT) :: avid
+        INTEGER, INTENT(OUT) :: mx, my
+        INTEGER :: i, unit=2
+
+        OPEN(unit, FILE="../setprob.data", STATUS='old')
+            DO i=1,6
+                READ(unit,*)
+            END DO
+            READ(unit,*) avid
+            READ(unit,*) mode
+            READ(unit,*) mx 
+            READ(unit,*) my 
+        CLOSE(unit)
+
+        IF (mode == "None") then
             mode = "bc"
-        end if
-    end subroutine read_inflow_mode
+        END IF
+        IF (avid == "None") then
+            avid = ""
+        END IF
+        ! ALLOCATE(data(1, my, mx, 5)) ! data(iy, ix, (x, y, h, hu, hv))
+
+    END SUBROUTINE read_data
 
     integer function closest(value, array)
         integer :: i

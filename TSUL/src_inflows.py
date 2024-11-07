@@ -7,6 +7,7 @@ from clawpack.visclaw import gridtools
 from clawpack.pyclaw.solution import Solution
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.collections import LineCollection
 
 projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
@@ -58,31 +59,42 @@ def write():
 
 def plot(movie):
     with plt.style.context("bmh"):
-        fig, ax = plt.subplots(layout="tight")
+        fig, (ax1, ax2) = plt.subplots(ncols=2, layout="tight")
         q, t = extract(0)
         h, hu, hv, eta = q
         z = eta - h
         zlow = 1.1*z.min()-0.1*z.max()
-        eta_steps = ax.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
-        z_steps = ax.stairs(z, dist, baseline=zlow,
+        eta_steps = ax1.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
+        z_steps = ax1.stairs(z, dist, baseline=zlow,
                             label="land", fill=True, color="sienna", lw=1)
         title = "Cut @ t=%.2f"
-        ax.set_title(title % t)
+        ax1.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow
         prev_dist = 0
-        # ax.set_aspect("equal")
-        ax.legend(loc="lower right")
-        ax.set_xlabel("Distance [m]")
-        ax.set_ylabel("Elevation [MASL]")
-        ax.set_xlim(dist[0], dist[-1])
-        ax.set_ylim(zlow, eta.max())
+        # ax1.set_aspect("equal")
+        ax1.legend(loc="lower right")
+        ax1.set_xlabel("Distance [m]")
+        ax1.set_ylabel("Elevation [MASL]")
+        ax1.set_xlim(dist[0], dist[-1])
+        ax1.set_ylim(zlow, eta.max())
+
+        lines = np.c_[x[:-1], y[:-1], x[1:], y[1:]]
+        lc = LineCollection(lines.reshape(-1, 2, 2), array=h, linewidths=5)
+        ax2.add_collection(lc)
+        ax2.set_xlim(x.min(), x.max())
+        ax2.set_ylim(y.min(), y.max())
+        # contour = ax2.scatter(x, y)
     
     def update(i):
         (h, hu, hv, eta), t = extract(i)
         z = eta-h
         eta_steps.set_data(eta, dist, z)
         z_steps.set_data(z, dist, zlow)
-        ax.set_title(title % t)
+        ax1.set_title(title % t)
+        lc.set_color(plt.cm.viridis(h))
+        lc.set_clim(vmin=h.min(), vmax=h.max())
+        # contour.set_color(plt.cm.viridis(h))
+        # contour.set_clim(vmin=h.min(), vmax=h.max())
 
     anim = FuncAnimation(fig, update, len(files), interval=500)
     if movie:

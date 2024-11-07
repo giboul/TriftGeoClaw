@@ -14,8 +14,10 @@ from clawpack.clawutil.data import ClawRunData
 projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["TOPM"]
-    config = config["TSUL"]
+    AVAC = config["AVAC"]
+    TOPM = config["TOPM"]
+    TSUL = config["TSUL"]
+    del config
 
 def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
     """
@@ -25,23 +27,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     ------
         ClawRunData
     """
-    if avid and avid != 'None':
-        avid = int(avid)
-    else:
-        avid = None
-    with open("avac.data", "w") as file:
-        file.write(
-            f"{avid} := avid\n"
-        )
-    inflow_mode = config.get('inflow') or inflow
-    with open("inflow.data", "w") as file:
-        file.write(
-            f"{inflow_mode} := inflow\n"
-        )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
     rundata = setgeo(rundata, bouss)
-
     # Standard Clawpack parameters to be written to claw.data:
     # (or to amr2ez.data for AMR)
     clawdata = rundata.clawdata  # initialized when rundata instantiated
@@ -57,15 +45,14 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     # Lower and upper edge of computational domain:
     xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
-    print(xmin, xmax, ymin, ymax)
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
     clawdata.upper[1] = ymax
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = config["nx"]
-    clawdata.num_cells[1] = config["ny"]
+    clawdata.num_cells[0] = TSUL["nx"]
+    clawdata.num_cells[1] = TSUL["ny"]
 
     # ---------------
     # Size of system:
@@ -112,7 +99,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = config["out_format"]   # 'ascii' or 'binary' 
+    clawdata.output_format = TSUL["out_format"]   # 'ascii' or 'binary' 
     clawdata.output_q_components = "all"   # h, hu, hv, eta
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -195,18 +182,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    if inflow_mode == "src":
+    if inflow == "src":
         clawdata.bc_lower[0] = 'wall'
         clawdata.bc_upper[0] = 'wall'
         clawdata.bc_lower[1] = 'wall'
         clawdata.bc_upper[1] = 'wall'
-    elif inflow_mode == "bc":
+    elif inflow == "bc":
         clawdata.bc_lower[0] = 'user'
         clawdata.bc_upper[0] = 'user'
         clawdata.bc_lower[1] = 'user'
         clawdata.bc_upper[1] = 'user'
     else:
-        raise ValueError(f"inflow mode '{inflow_mode}' is not 'bc' or 'src'")
+        raise ValueError(f"inflow mode '{inflow}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -229,15 +216,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = config["cells_max"]
+    amrdata.max1d = TSUL["cells_max"]
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = TSUL["amr_ratios"]["x"]
+    amrdata.refinement_ratios_y = TSUL["amr_ratios"]["y"]
+    amrdata.refinement_ratios_t = TSUL["amr_ratios"]["t"]
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = config["amr_ratios"]["max_level"]
+    amrdata.amr_levels_max = TSUL["amr_ratios"]["max_level"]
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -301,6 +288,17 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
     # rundata.gaugedata.gauges.append([32412, xcoords.mean(), ycoords.mean(), clawdata.t0, tf])
 
+    if avid and avid != 'None':
+        avid = int(avid)
+    else:
+        avid = None
+    inflow = TSUL.get('inflow') or inflow
+
+    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    probdata.add_param('avid', avid,  'Avalanche ID')
+    probdata.add_param('mode', inflow,  'The method for introucing the avalanche')
+    probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
+    probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
 
     return rundata
 
@@ -339,7 +337,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[2, projdir/config["topo"]]]
+    topo_data.topofiles = [[2, projdir/TSUL["topo"]]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -360,7 +358,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = [[projdir/config["qinit"]]]
+    rundata.qinit_data.qinitfiles = [[projdir/TSUL["qinit"]]]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)

@@ -111,8 +111,6 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), &
     dimension(size(q_avac,1),size(q_avac,3),size(q_avac,4)) :: qt
 
-    print *, "BC2AMR"
-
     ! it = closest(time, times)
     if (inflow_mode=="bc") then
         qt = interp1d4d(time, times, q_avac)

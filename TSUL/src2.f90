@@ -16,7 +16,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     use friction_module, only: variable_friction, friction_index
 
     use helpers, only : q_avac, closest, times, damping, inflow_mode, &
-                        interp1d2d, interp1d4d, q_src, grid_interp
+                        interp1d2d, interp1d4d, q_src, gridinterp
 
     implicit none
     
@@ -53,7 +53,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     if (trim(inflow_mode) == "src") then
         ! ti = closest(t, times)
         q_src(1,:,:,3) = q_src(1,:,:,3) * damping
-        grid_interp(q_src(1,:,:,1), q_src(1,:,:,1), q_src, ...)
+        ! call gridinterp(q_src(1,:,:,1), q_src(1,:,:,1), q_src, ...)
     end if
 
     ! ----------------------------------------------------------------

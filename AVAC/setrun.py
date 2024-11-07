@@ -324,7 +324,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout = FGoutGrid()
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
-    fgout.output_format = 'ascii'  # ascii, binary32 4-byte, float32
+    fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
     fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
     fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
     fgout.x1 = clawdata.lower[0]

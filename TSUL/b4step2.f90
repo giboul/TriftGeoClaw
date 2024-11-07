@@ -65,12 +65,9 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
     call set_storm_fields(maux,mbc,mx,my,xlower,ylower,dx,dy,t,aux)
 
     ! Update source term for avalanche
-    print *, "B4STEP2"
     if (inflow_mode == "src") then
         call set_q_src_time(q_src, t, times, avid) ! TODO
     end if
-    print *, q_src
-    print *, MINVAL(q_src), MAXVAL(q_src)
-    print *, "B4STEP2 end"
+    ! print *, MAXVAL(q_src)
 
 end subroutine b4step2

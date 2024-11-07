@@ -137,8 +137,8 @@ CONTAINS
 
         it = closest_inf(t, times)
         write(file,"(A,I0.4)") TRIM(ftemp)//TRIM(avid)//"/fgout0001.q", it
-        call read_fgout_ascii(it, avid, q1)
-        call read_fgout_ascii(it+1, avid, q2)
+        call read_fgout(it, avid, q1)
+        call read_fgout(it+1, avid, q2)
 
         ! write(file,"(A,I0.4)") TRIM(ftemp)//TRIM(avid)//"/fgout0001.q", it+1
         ! OPEN(unit,FILE=file,STATUS="old",FORM="UNFORMATTED",ACCESS="stream")
@@ -164,6 +164,7 @@ CONTAINS
         INTEGER :: mx, my, i, j, unit
 
         WRITE(file,"(A,I0.4)")TRIM(ftemp)//TRIM(avid)//"/fgout0001.q",it
+        PRINT *, "Reading fgout ", TRIM(file)
         OPEN(unit,FILE=TRIM(file),STATUS="old")
             READ(unit,*)
             READ(unit,*)
@@ -175,12 +176,12 @@ CONTAINS
             READ(unit,*) dy
         CLOSE(unit)
         print *, mx, my, xlow, ylow, dx, dy
-        ALLOCATE(q(mx,my,6))
+        ALLOCATE(q(my,mx,6))
         WRITE(file,"(A,I0.4)") TRIM(ftemp)//TRIM(avid)//"/fgout0001.b", it
         OPEN(unit,FILE=TRIM(file),STATUS="old",ACCESS="stream")
-            READ(unit) q(1:20,1:20,3:6)
+            READ(unit) q(:,:,3:6)
         CLOSE(unit)
-        print *, q(1:20,1:20,3:6)
+        print *, "MAXVAL(q)", MAXVAL(q)
 
     END SUBROUTINE read_fgout
 

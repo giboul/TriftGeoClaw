@@ -50,7 +50,7 @@ def write():
         q, t = extract(ti)
         times.append(t)
         h, hu, hv, eta = q
-        data = np.vstack((x, y, h, hu, hv)).T
+        data = np.column_stack((x, y, h, hu, hv))
         path = inflowdir / f"cut{ti:0>{4}}.txt"
         np.savetxt(path, data, comments="")
     np.savetxt(inflowdir / "timing.txt", times)

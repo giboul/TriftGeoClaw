@@ -72,7 +72,7 @@ def write():
         h, hu, hv, eta = q
         for bi, boundary in enumerate(boundaries):
             s = slice(bi*n, (bi+1)*n)
-            data = np.vstack((x[s], y[s], h[s], hu[s], hv[s])).T
+            data = np.column_stack((x[s], y[s], h[s], hu[s], hv[s]))
             path = inflowdir / f"{boundary}_{ti:0>{4}}.txt"
             np.savetxt(path, data, comments="")
     np.savetxt(inflowdir / "timing.txt", times)

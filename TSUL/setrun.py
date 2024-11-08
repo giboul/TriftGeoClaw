@@ -11,13 +11,14 @@ from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
 
+
 projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     AVAC = config["AVAC"]
     TOPM = config["TOPM"]
     TSUL = config["TSUL"]
-    del config
+
 
 def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
     """
@@ -27,6 +28,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     ------
         ClawRunData
     """
+    if avid and avid != 'None':
+        avid = int(avid)
+    else:
+        avid = None
+    inflow = TSUL.get('inflow') or inflow
+
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
     rundata = setgeo(rundata, bouss)
@@ -43,8 +50,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # Number of space dimensions:
     clawdata.num_dim = num_dim
 
-    # Lower and upper edge of computational domain:
-    xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+    if TSUL["inflow"] == "bc":
+        xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+    elif TSUL["inflow"] == "src":
+        xmin, xmax, ymin, ymax = TSUL["bounds"].values()
+    else:
+        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
@@ -85,7 +96,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 20
+        clawdata.num_output_times = 10
         clawdata.tfinal = 200
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
@@ -270,11 +281,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    rundata.regiondata.regions.append([
-        amrdata.amr_levels_max, amrdata.amr_levels_max,
-        clawdata.t0, clawdata.tfinal,
-        2670134, 2670360, 1171800, 1171935
-    ])
     # rundata.regiondata.regions.append([
     #     3, 3, clawdata.t0, tf/5,
     #     0, 0.3,
@@ -287,12 +293,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # rundata.gaugedata.gauges = []
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
     # rundata.gaugedata.gauges.append([32412, xcoords.mean(), ycoords.mean(), clawdata.t0, tf])
-
-    if avid and avid != 'None':
-        avid = int(avid)
-    else:
-        avid = None
-    inflow = TSUL.get('inflow') or inflow
 
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')

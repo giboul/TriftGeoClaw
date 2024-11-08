@@ -36,7 +36,7 @@ def write_qinit(avid, plot=False):
 
     qinit = make_qinit(X, Y, indices=avid, plot=plot)
     print("Saving qinit.xyz...", end=" ", flush=True)
-    np.savetxt("qinit.xyz", np.vstack((X.flatten(), Y.flatten(), qinit.flatten())).T)
+    np.savetxt("qinit.xyz", np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     print("Saved.")
     qinit[qinit <= 0] = float("nan")
 
@@ -66,8 +66,8 @@ def make_qinit(X, Y, indices="", plot=False):
             raise ValueError(f"Avalanche #{i} is out o bounds {ix.min(), ix.max()}")
         x = x_all[i==ix]
         y = y_all[i==ix]
-        path = mPath(np.vstack((x, y)).T)
-        inside = path.contains_points(np.vstack((X.flatten(), Y.flatten())).T)
+        path = mPath(np.column_stack((x, y)))
+        inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
         inside = inside.reshape(X.shape)
         inside = isotropic_dilation(inside, 2)
         Z[inside] = 3

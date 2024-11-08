@@ -35,29 +35,63 @@ contains
         IF (avid == "None") then
             avid = ""
         END IF
-        ! ALLOCATE(data(1, my, mx, 5)) ! data(iy, ix, (x, y, h, hu, hv))
 
     END SUBROUTINE read_data
+
+    subroutine read_times(times, avid)
+        character(len=4), intent(in) :: avid
+        character(len=255) :: fname
+        integer :: io, n, i
+        integer :: unit
+        real(kind=8), allocatable :: times(:)
+
+        unit = 2
+        fname = "../_inflows"//trim(avid)//"/timing.txt"
+        print "(A,A)", "Reading ", trim(fname)
+        open(unit, file=fname)
+            n = 0
+            do 
+                read(unit,*,iostat=io)
+                if (io /= 0) then
+                    exit
+                end if
+                n = n + 1
+            end do
+            allocate(times(n))
+        rewind(unit)
+            do i = 1, n
+                read(unit,*) times(i)
+            end do
+        close(unit)
+    end subroutine read_times
 
     integer function closest(value, array)
         integer :: i
         real(kind=8), intent(in) :: value
         real(kind=8), dimension(:), intent(in) :: array
-
-        closest = 1
-        do i = 1, size(array)
-            if (abs(value-array(i))<abs(value-array(closest))) then
-                closest = i
-            end if
-        end do
+        closest = MINLOC(ABS(array-value), DIM=1)
     end function closest
+
+    INTEGER FUNCTION closest_inf(value, array)
+
+        REAL(KIND=8), INTENT(IN) :: value
+        REAL(KIND=8), DIMENSION(:), INTENT(IN) :: array
+        LOGICAL, DIMENSION(SIZE(array)) :: mask
+
+        closest_inf = MINLOC(ABS(array-value), MASK=array<value, DIM=1)
+        IF (closest_inf < 1) THEN
+            closest_inf = MINLOC(array, DIM=1)
+        END IF
+        closest_inf = MIN(SIZE(array)-1, closest_inf)
+
+    END FUNCTION closest_inf
 
     real(kind=8) function interp(newx, x, y)
         real(kind=8), intent(in) :: x(:), y(:), newx
         real(kind=8) :: xp, yp
         integer :: ix
 
-        ix = closest(newx, x) ! closest_back
+        ix = closest_inf(newx, x)
         if (ix == 0) then
             interp = y(1)
         else if (ix == size(x)) then
@@ -189,32 +223,5 @@ contains
             end do
         end do
     end subroutine init_bc
-
-    subroutine read_times(times, avid)
-        character(len=4), intent(in) :: avid
-        character(len=255) :: fname
-        integer :: io, n, i
-        integer :: unit
-        real(kind=8), allocatable :: times(:)
-
-        unit = 2
-        fname = "../_inflows"//trim(avid)//"/timing.txt"
-        print "(A,A)", "Reading ", trim(fname)
-        open(unit, file=fname)
-            n = 0
-            do 
-                read(unit,*,iostat=io)
-                if (io /= 0) then
-                    exit
-                end if
-                n = n + 1
-            end do
-            allocate(times(n))
-        rewind(unit)
-            do i = 1, n
-                read(unit,*) times(i)
-            end do
-        close(unit)
-    end subroutine read_times
 
 end module helpers

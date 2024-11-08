@@ -38,20 +38,20 @@ AVAC:
 
 TSUL:
   nx: 30
-  ny: 20
+  ny: 40
 
-  # bounds:
-  #   xmin: 2669750.
-  #   xmax: 2671000.
-  #   ymin: 1170200.
-  #   ymax: 1172160.
+  bounds:
+    xmin: 2669650.
+    xmax: 2671000.
+    ymin: 1170100.
+    ymax: 1172260.
 
   amr_ratios:
-    x: [2, 4, 8]
-    y: [2, 4, 8]
-    t: [2, 4, 8]
+    x: [2, 2, 2]
+    y: [2, 2, 2]
+    t: [2, 2, 2]
     max_level: 3
-  cells_max: 60
+  cells_max: 100
 
 
   topo: *topofile

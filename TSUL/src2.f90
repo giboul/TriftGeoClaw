@@ -15,7 +15,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, times, damping, inflow_mode
+    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
 
     implicit none
     
@@ -36,7 +36,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8) :: tau, wind_speed, theta, phi, psi, P_gradient(2), S(2)
     real(kind=8) :: Ddt, sloc(2)
     real(kind=8) :: tanyR, huv, huu, hvv
-    real(kind=8), ALLOCATABLE :: dist(:)
+    real(kind=8), ALLOCATABLE :: dist(:), qt(:,:)
 
     ! Algorithm parameters
 
@@ -47,22 +47,22 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! ----------------------------------------------------------------
     ! AVAC inflows
     if (trim(inflow_mode) == "src") then
-        allocate(dist(size(q_avac,2)))
-        ti = closest(t, times)
-        print *, "src2.f90: ti = ", ti
+        allocate(dist(size(q_avac,3)))
+        allocate(qt(size(q_avac,3),3))
+        ti = closest_inf(t, times)
+        qt(:,:) = q_avac(1,ti,:,3:5) + &
+            (MIN(t,times(ti+1))-times(ti))/(times(ti+1)-times(ti)) * &
+            (q_avac(1,ti+1,:,3:5)-q_avac(1,ti,:,3:5))
         do j = 1, my
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
                 dist = (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2
                 k = closest(0.d0, dist) 
-                if (dist(k) < (dx**2+dy**2)) then
-                    if (q_avac(1,ti,k,1)<2670250 .or. q_avac(1,ti,k,2)>1.1718e6) then
-                        print *, xc, q_avac(1,ti,k,1:2), yc
-                    end if
-                    q(1,i,j) = q(1,i,j) + damping*q_avac(1,ti,k,3)
-                    q(2,i,j) = q_avac(1,ti,k,4)
-                    q(3,i,j) = q_avac(1,ti,k,5)
+                if (dist(k)<2*(dx**2+dx**2)) then
+                    q(1,i,j) = qt(k,1)*damping
+                    q(2,i,j) = qt(k,2)
+                    q(3,i,j) = qt(k,3)
                 end if
             end do
         end do

@@ -69,7 +69,7 @@ def write_topo(plot=False):
     xd = np.linspace(X[mask].min(), X[mask].max(), 100)
     yd = (dam_downstream(xd)+dam_upstream(xd))/2
     mask = np.isfinite(yd)
-    np.savetxt("dam.xy", np.vstack((xd[mask], yd[mask])).T)
+    np.savetxt("dam.xy", np.column_stack((xd[mask], yd[mask])))
 
     rmtree(tempdir)
 
@@ -84,7 +84,7 @@ def write_topo(plot=False):
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
     yc = ymin + (ymax-yc)  # Reverse y
-    contour_coords = np.vstack((xc, yc)).T
+    contour_coords = np.column_stack((xc, yc))
     np.savetxt(projdir / "TOPM" / "contour.xy", contour_coords)
 
     dilated = isotropic_dilation(flooded, 50/topoconfig['resolution'])
@@ -92,7 +92,7 @@ def write_topo(plot=False):
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
     yc = ymin + (ymax-yc)  # Reverse y
-    dilated_contour_coords = np.vstack((xc, yc)).T
+    dilated_contour_coords = np.column_stack((xc, yc))
     np.savetxt(projdir / "TOPM" / "contour_dilated.xy", dilated_contour_coords)
 
     avacs = read_geojson(projdir / topoconfig["avalanches"])

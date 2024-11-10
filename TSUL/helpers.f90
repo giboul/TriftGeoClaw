@@ -29,10 +29,10 @@ contains
             READ(unit,*) my 
         CLOSE(unit)
 
-        IF (mode == "None") then
+        IF (TRIM(mode) == "None") then
             mode = "bc"
         END IF
-        IF (avid == "None") then
+        IF (TRIM(avid) == "None") then
             avid = ""
         END IF
 
@@ -160,7 +160,7 @@ contains
         character(len=6), dimension(4) :: sides
         character(len=255) :: fdir, ftemp
         character(len=255) :: fname
-        character(len=4) :: avid
+        character(len=4), INTENT(IN) :: avid
         real(kind=8) :: x, y, h, hu, hv
         integer :: unit, io, i, n, mthbc
         integer :: num_cells
@@ -169,12 +169,6 @@ contains
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
  
-        open(unit, file="../avac.data", status='old')
-            read(unit,*) avid
-        close(unit)
-        if (avid == "None") then
-            avid = "    "
-        end if
         print *, "Avalanche id #", trim(avid)
 
         fdir = "../_inflows"//trim(avid)//"/"

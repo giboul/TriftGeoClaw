@@ -24,6 +24,7 @@ args = parser.parse_args()
 
 outdir = projdir / "AVAC" / f"_output{args.avid}"
 inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
+print(f"{inflowdir = }")
 
 files = list(outdir.glob("fort.q*"))
 xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")

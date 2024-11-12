@@ -11,7 +11,7 @@ from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     TOPM = config["TOPM"]

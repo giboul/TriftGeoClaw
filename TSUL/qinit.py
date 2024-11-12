@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from skimage.morphology import flood, isotropic_dilation
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     TOPM = config["TOPM"]
@@ -46,7 +46,7 @@ def write_qinit(filename = projdir / TOPM["bathymetry"]):
     z_lake = z_lake.flatten()
 
     # Write qinit
-    np.savetxt("qinit.xyz", np.column_stack((x, y, z_lake)))
+    np.savetxt(projdir/TSUL["qinit"], np.column_stack((x, y, z_lake)))
 
 
 def pick_seed(z_im, x, y, res=0, alt=0):

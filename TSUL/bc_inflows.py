@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     topoconfig = config["TOPM"]
@@ -24,10 +24,10 @@ args = parser.parse_args()
 
 outdir = projdir / "AVAC" / f"_output{args.avid}"
 inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
-print(f"{inflowdir = }")
 
 files = list(outdir.glob("fort.q*"))
-xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+print(f"{outdir}: {files}")
+xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
 n = 100
 x = np.hstack((
     np.linspace(xmin, xmax, n, endpoint=True),  # South
@@ -118,9 +118,11 @@ def plot(movie):
     else:
         plt.show()
 
-
-if __name__ == "__main__":
+def main():
     if args.plot or args.movie:
         plot(args.movie)
     else:
         write()
+
+if __name__ == "__main__":
+    main()

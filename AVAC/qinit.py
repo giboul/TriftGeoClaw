@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from skimage.morphology import isotropic_dilation
 
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     TOPM = config["TOPM"]
@@ -17,7 +17,7 @@ with open(projdir / "config.yaml") as file:
 def write_qinit(avid, plot=False):
 
     path = projdir / TOPM["bathymetry"]
-    print(f"\tINFO: Opening {path}... ", end="")
+    print(f"INFO: Opening {path}... ", end="")
     def readline(f, t):
         s = f.readline()
         return t(s[:s.find(" ")])
@@ -34,36 +34,45 @@ def write_qinit(avid, plot=False):
     X, Y = np.meshgrid(x, y)
     z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
 
-    qinit = make_qinit(X, Y, indices=avid, plot=plot)
-    print("Saving qinit.xyz...", end=" ", flush=True)
-    np.savetxt(projdir/"AVAC"/"qinit.xyz", np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
-    print("Saved.")
-    qinit[qinit <= 0] = float("nan")
+    for p in (projdir/"AVAC").glob("qinit*.xyz"):
+        p.unlink()
+    geojson = np.loadtxt(projdir / AVAC["avalanches"])
+    if avid:
+        avids = [int(a) for a in avid]
+    else:
+        avids = ["", *np.unique(geojson[0].astype(np.int64))]
+    for avid in avids:
+        qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
+        filename = projdir/"AVAC"/f"qinit{avid}.xyz"
+        print(f"Saving {filename}...", end=" ", flush=True)
+        np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+        print("Saved.")
+        qinit[qinit <= 0] = float("nan")
 
-    if plot:
-        ext = xmin, x.max(), ymin, y.max()
-        plt.imshow(z, extent=ext)
-        plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
-        bounds = AVAC.get("bounds") or TOPM["bounds"]
-        plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
-        plt.legend()
-        plt.show()
+        if plot:
+            ext = xmin, x.max(), ymin, y.max()
+            plt.imshow(z, extent=ext)
+            plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
+            bounds = AVAC.get("bounds") or TOPM["bounds"]
+            plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
+            plt.legend()
+            plt.show()
 
 
-def make_qinit(X, Y, indices="", plot=False):
+def make_qinit(X, Y, geojson, indices="", plot=False):
     Z = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
-    ix, x_all, y_all = np.loadtxt(projdir / AVAC["avalanches"])
+    ix, x_all, y_all = geojson
     print("Loaded.")
     ix = ix.astype(np.uint8)
-    if not indices:
+    if indices == "":
         indices = np.unique(ix)
     else:
-        indices = [int(indices)]
+        indices = [indices]
     for _i, i in enumerate(indices):
         print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
         if i not in ix:
-            raise ValueError(f"Avalanche #{i} is out o bounds {ix.min(), ix.max()}")
+            raise ValueError(f"Avalanche #{i} is out of bounds {ix.min(), ix.max()}")
         x = x_all[i==ix]
         y = y_all[i==ix]
         path = mPath(np.column_stack((x, y)))

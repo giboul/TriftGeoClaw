@@ -8,7 +8,7 @@ from clawpack.pyclaw.solution import Solution
 from clawpack.visclaw import gridtools
 from matplotlib.animation import FuncAnimation
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     TOPM = config["TOPM"]

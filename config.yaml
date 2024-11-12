@@ -34,7 +34,6 @@ AVAC:
   cells_max: 60
 
   topo: *topofile
-  qinit: AVAC/qinit.xyz
 
 TSUL:
   nx: 30

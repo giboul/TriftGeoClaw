@@ -61,13 +61,18 @@ include $(CLAWMAKE)
 
 .PHONY: topo all
 avid=""
+data:
+	-rm -f .data
+	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(avid)
+	touch .data
 topo:
 	$(CLAW_PYTHON) ../TOPM/topo.py
 qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
 run:
-	make qinit "avid=$(avid)"
-	make output "OUTDIR=_output$(avid)"
+	make data avid=$(avid)
+	make qinit avid=$(avid)
+	make output OUTDIR=_output$(avid)
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)
 

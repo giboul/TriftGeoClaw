@@ -11,15 +11,15 @@ from yaml import safe_load
 from pathlib import Path
 
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["TOPM"]
-    config = config["AVAC"]
+    TOPM = config["TOPM"]
+    AVAC = config["AVAC"]
 
 
 #------------------------------
-def setrun(claw_pkg='geoclaw'):
+def setrun(claw_pkg='geoclaw', avid=""):
 #------------------------------
 
     """
@@ -43,7 +43,7 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
-    rundata = setgeo(rundata)
+    rundata = setgeo(rundata, avid)
 
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -64,22 +64,22 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    if "bounds" in config:
-        clawdata.lower[0] = config["bounds"]["xmin"]
-        clawdata.upper[0] = config["bounds"]["xmax"]
+    if "bounds" in AVAC:
+        clawdata.lower[0] = AVAC["bounds"]["xmin"]
+        clawdata.upper[0] = AVAC["bounds"]["xmax"]
 
-        clawdata.lower[1] = config["bounds"]["ymin"]
-        clawdata.upper[1] = config["bounds"]["ymax"]
+        clawdata.lower[1] = AVAC["bounds"]["ymin"]
+        clawdata.upper[1] = AVAC["bounds"]["ymax"]
     else:
-        clawdata.lower[0] = topoconfig["bounds"]["xmin"]
-        clawdata.upper[0] = topoconfig["bounds"]["xmax"]
+        clawdata.lower[0] = TOPM["bounds"]["xmin"]
+        clawdata.upper[0] = TOPM["bounds"]["xmax"]
 
-        clawdata.lower[1] = topoconfig["bounds"]["ymin"]
-        clawdata.upper[1] = topoconfig["bounds"]["ymax"]
+        clawdata.lower[1] = TOPM["bounds"]["ymin"]
+        clawdata.upper[1] = TOPM["bounds"]["ymax"]
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = config["nx"]
-    clawdata.num_cells[1] = config["ny"] 
+    clawdata.num_cells[0] = AVAC["nx"]
+    clawdata.num_cells[1] = AVAC["ny"] 
 
     # ---------------
     # Size of system:
@@ -123,8 +123,8 @@ def setrun(claw_pkg='geoclaw'):
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = config["nsim"]
-        clawdata.tfinal = config["tmax"]
+        clawdata.num_output_times = AVAC["nsim"]
+        clawdata.tfinal = AVAC["tmax"]
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -138,7 +138,7 @@ def setrun(claw_pkg='geoclaw'):
         clawdata.output_t0 = True
         
 
-    clawdata.output_format = config['out_format']      # 'ascii' or 'binary' 
+    clawdata.output_format = AVAC['out_format']      # 'ascii' or 'binary' 
 
     clawdata.output_q_components = 'all'   # could be list such as [True,True]
     clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
@@ -166,18 +166,18 @@ def setrun(claw_pkg='geoclaw'):
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = config["dt0"]
+    clawdata.dt_initial = AVAC["dt0"]
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
 
     # Desired Courant number if variable dt used, and max to allow without
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = config["cfl"]
+    clawdata.cfl_desired = AVAC["cfl"]
     clawdata.cfl_max = 0.95
 
     # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = config["max_iter"]
+    clawdata.steps_max = AVAC["max_iter"]
 
 
 
@@ -265,15 +265,15 @@ def setrun(claw_pkg='geoclaw'):
     # AMR parameters:
     # ---------------
     amrdata = rundata.amrdata
-    amrdata.max1d = config["cells_max"]
+    amrdata.max1d = AVAC["cells_max"]
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = config["amr_ratios"]['max_level']
+    amrdata.amr_levels_max = AVAC["amr_ratios"]['max_level']
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = AVAC["amr_ratios"]["x"]
+    amrdata.refinement_ratios_y = AVAC["amr_ratios"]["y"]
+    amrdata.refinement_ratios_t = AVAC["amr_ratios"]["t"]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -347,7 +347,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
 #-------------------
-def setgeo(rundata):
+def setgeo(rundata, avid):
 #-------------------
     """
     Set GeoClaw specific runtime parameters.
@@ -372,7 +372,7 @@ def setgeo(rundata):
 
     # == Algorithm and Initial Conditions ==
     geo_data.sea_level = 0
-    geo_data.dry_tolerance = config["dry_tolerance"]
+    geo_data.dry_tolerance = AVAC["dry_tolerance"]
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025
     geo_data.friction_depth = 20.0
@@ -387,7 +387,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #    [topotype, minlevel, maxlevel, t1, t2, fname]
     # topo_data.topofiles.append([2, 1, 3, 0., 1.e10, 'topo.asc'])
-    topo_data.topofiles = [[2, projdir/config['topo']]]
+    topo_data.topofiles = [[2, projdir/AVAC['topo']]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -396,7 +396,7 @@ def setgeo(rundata):
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
-    rundata.qinit_data.qinitfiles = [[projdir/config['qinit']]]
+    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
     # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])
@@ -416,12 +416,13 @@ def main():
     # Set up run-time parameters and write all data files.
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    parser.add_argument('avid', default='', nargs='?')
     args = parser.parse_args()
 
     data = Path(".data")
     data.unlink(missing_ok=True)
     rundata = setrun(**args.__dict__)
-    rundata.write()
+    rundata.write(projdir / "AVAC")
     data.touch()
 
 

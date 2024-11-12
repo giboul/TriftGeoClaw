@@ -7,7 +7,7 @@ from clawpack.visclaw import colormaps, frametools, geoplot, gridtools
 from clawpack.pyclaw import solution
 from yaml import safe_load
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     topoconfig = config["TOPM"]

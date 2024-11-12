@@ -12,7 +12,7 @@ import numpy as np
 from clawpack.clawutil.data import ClawRunData
 
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     AVAC = config["AVAC"]
@@ -51,7 +51,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     if TSUL["inflow"] == "bc":
-        xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+        xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
     elif TSUL["inflow"] == "src":
         xmin, xmax, ymin, ymax = TSUL["bounds"].values()
     else:
@@ -392,7 +392,7 @@ def main():
     data = Path(".data")
     data.unlink(missing_ok=True)
     rundata = setrun(**args.__dict__)
-    rundata.write()
+    rundata.write(projdir / "TSUL")
     data.touch()
 
 

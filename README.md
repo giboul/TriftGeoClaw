@@ -7,7 +7,7 @@ This work is divided in two parts which are both base on David George's [Geoclaw
 
 # 1. Avalanches: [AVAC](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/README.md)
 
-This part is copied from Christophe Ancey's (cancey) work on avalanches, see his [AVAC](https://github.com/cancey/avac.git) repo.
+This part is copied from Christophe Ancey's (@cancey) work on avalanches, see his [AVAC](https://github.com/cancey/avac.git) repo.
 
 ## `topo.asc`
 A `tiff` file is expected. It will be cropped, downsampled and maybe rotated in the future to find the best bounding box of the lake. The expected final format is either `.xyz` or `.asc`. This can be done with tools like `gdal`, the `tifffile` package is used here because it comes with `scikit-image`. See [`topo.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/topo.py).
@@ -63,9 +63,20 @@ dilated = isotropic_dilation(flooded, radius)
 
 ## Introducing a flow
 
-The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `src2.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`
+The mode of momentum introduction can be chosen in the `config.yaml` file (`TSUL->inflow: 'src' or 'bc'`).
 
-<img src="TSUL/movie.gif"/>
+### From the boundary conditions
+
+The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`.
+
+
+<img src="TSUL/movie_bc.gif"/>
+
+### With the source term
+
+SAme as boundary condition but with `src2.f90`.
+
+<img src="TSUL/movie_src.gif"/>
 
 ## Reading the dam overflows
 

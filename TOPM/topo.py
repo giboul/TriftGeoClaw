@@ -14,13 +14,13 @@ from tifffile import TiffFile
 projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["TOPM"]
+    TOPM = config["TOPM"]
 
 def write_topo(plot=False):
 
     # Temporary directory
-    path = projdir / topoconfig["topography"]
-    tempdir = Path("_temp")
+    path = projdir / TOPM["topography"]
+    tempdir = projdir / "TOPM" / "_temp"
     tempdir.mkdir(exist_ok=True)
 
     print(f"\tINFO: Opening {path}... ")
@@ -34,10 +34,10 @@ def write_topo(plot=False):
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
 
-    xmin = topoconfig['bounds']['xmin']
-    xmax = topoconfig['bounds']['xmax']
-    ymin = topoconfig['bounds']['ymin']
-    ymax = topoconfig['bounds']['ymax']
+    xmin = TOPM['bounds']['xmin']
+    xmax = TOPM['bounds']['xmax']
+    ymin = TOPM['bounds']['ymin']
+    ymax = TOPM['bounds']['ymax']
     print(f"\tINFO: Cropping to {xmin, ymin, xmax, ymax = }")
     xmask = (xmin <= xtif) & (xtif <= xmax)
     ymask = (ymin <= ytif) & (ytif <= ymax)
@@ -45,21 +45,21 @@ def write_topo(plot=False):
     ytif = ytif[ymask][::-1]
     Ztif = Ztif[ymask, :][:, xmask]
 
-    print(f"\tINFO: Downscaling to resolution = {topoconfig['resolution']}")
-    x = np.arange(xmin, xmax+topoconfig['resolution'], step=topoconfig['resolution'])
-    y = np.arange(ymin, ymax+topoconfig['resolution'], step=topoconfig['resolution'])
+    print(f"\tINFO: Downscaling to resolution = {TOPM['resolution']}")
+    x = np.arange(xmin, xmax+TOPM['resolution'], step=TOPM['resolution'])
+    y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])
     Z = grid_interp(xtif, ytif, Ztif, x, y)
     X, Y = np.meshgrid(x, y)
     mask = dam_mask(X, Y, Z)
-    Z[mask] = topoconfig['dam_alt']
-    path = projdir / topoconfig["bathymetry"]
+    Z[mask] = TOPM['dam_alt']
+    path = projdir / TOPM["bathymetry"]
     print(f"\tINFO: Saving {path}... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
         f"{y.size} nrows",
         f"{x.min()} xllcenter",
         f"{y.min()} yllcenter",
-        f"{topoconfig['resolution']} cellsize",
+        f"{TOPM['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
     np.savetxt(path, Z.flatten(), header=asc_header, comments="")
@@ -69,17 +69,17 @@ def write_topo(plot=False):
     xd = np.linspace(X[mask].min(), X[mask].max(), 100)
     yd = (dam_downstream(xd)+dam_upstream(xd))/2
     mask = np.isfinite(yd)
-    np.savetxt("dam.xy", np.column_stack((xd[mask], yd[mask])))
+    np.savetxt(projdir / "TOPM" / "dam.xy", np.column_stack((xd[mask], yd[mask])))
 
     rmtree(tempdir)
 
     y = y[::-1]
-    if 'flood_seed' in topoconfig and not plot:
-        seed = (np.abs(x-topoconfig['flood_seed'][0]).argmin(),
-                np.abs(y-topoconfig['flood_seed'][1]).argmin())
+    if 'flood_seed' in TOPM and not plot:
+        seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
+                np.abs(y-TOPM['flood_seed'][1]).argmin())
     else:
-        seed, topoconfig['lake_alt'], r = pick_seed(Z, x, y, topoconfig['resolution'], topoconfig['lake_alt'])
-    flooded = fill_lake(Z, seed[::-1], topoconfig['lake_alt'])
+        seed, TOPM['lake_alt'], r = pick_seed(Z, x, y, TOPM['resolution'], TOPM['lake_alt'])
+    flooded = fill_lake(Z, seed[::-1], TOPM['lake_alt'])
     xc, yc = find_contours(flooded.T, 0.5)[0].T
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
@@ -87,7 +87,7 @@ def write_topo(plot=False):
     contour_coords = np.column_stack((xc, yc))
     np.savetxt(projdir / "TOPM" / "contour.xy", contour_coords)
 
-    dilated = isotropic_dilation(flooded, 50/topoconfig['resolution'])
+    dilated = isotropic_dilation(flooded, 50/TOPM['resolution'])
     xc, yc = find_contours(dilated.T, 0.5)[0].T
     xc = xmin + xc/x.size * (xmax - xmin)
     yc = ymin + yc/y.size * (ymax - ymin)
@@ -95,7 +95,7 @@ def write_topo(plot=False):
     dilated_contour_coords = np.column_stack((xc, yc))
     np.savetxt(projdir / "TOPM" / "contour_dilated.xy", dilated_contour_coords)
 
-    avacs = read_geojson(projdir / topoconfig["avalanches"])
+    avacs = read_geojson(projdir / TOPM["avalanches"])
     np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
 
     if plot:
@@ -114,7 +114,7 @@ def write_topo(plot=False):
         plt.legend()
         plt.show()
 
-def expand_bounds(xmin, xmax, ymin, ymax, margin=5*topoconfig['resolution']):
+def expand_bounds(xmin, xmax, ymin, ymax, margin=5*TOPM['resolution']):
     _xmin = xmin - margin
     _ymin = ymin - margin
     _xmax = xmax + margin
@@ -143,7 +143,7 @@ def dam_mask(x, y, z):
     dam_y1 = dam_upstream(x)
     dam_y2 = dam_downstream(x)
     y = y[::-1]
-    return (dam_y1 <= y) & (y <= dam_y2) & (z < topoconfig['dam_alt'])
+    return (dam_y1 <= y) & (y <= dam_y2) & (z < TOPM['dam_alt'])
 
 def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000):
     x = x + offset

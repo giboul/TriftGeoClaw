@@ -11,12 +11,12 @@ from skimage.morphology import isotropic_dilation
 projdir = Path().absolute().parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["TOPM"]
-    config = config["AVAC"]
+    TOPM = config["TOPM"]
+    AVAC = config["AVAC"]
 
 def write_qinit(avid, plot=False):
 
-    path = projdir / topoconfig["bathymetry"]
+    path = projdir / TOPM["bathymetry"]
     print(f"\tINFO: Opening {path}... ", end="")
     def readline(f, t):
         s = f.readline()
@@ -36,7 +36,7 @@ def write_qinit(avid, plot=False):
 
     qinit = make_qinit(X, Y, indices=avid, plot=plot)
     print("Saving qinit.xyz...", end=" ", flush=True)
-    np.savetxt("qinit.xyz", np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    np.savetxt(projdir/"AVAC"/"qinit.xyz", np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     print("Saved.")
     qinit[qinit <= 0] = float("nan")
 
@@ -44,7 +44,7 @@ def write_qinit(avid, plot=False):
         ext = xmin, x.max(), ymin, y.max()
         plt.imshow(z, extent=ext)
         plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
-        bounds = config.get("bounds") or topoconfig["bounds"]
+        bounds = AVAC.get("bounds") or TOPM["bounds"]
         plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
         plt.legend()
         plt.show()
@@ -53,7 +53,7 @@ def write_qinit(avid, plot=False):
 def make_qinit(X, Y, indices="", plot=False):
     Z = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
-    ix, x_all, y_all = np.loadtxt(projdir / config["avalanches"])
+    ix, x_all, y_all = np.loadtxt(projdir / AVAC["avalanches"])
     print("Loaded.")
     ix = ix.astype(np.uint8)
     if not indices:

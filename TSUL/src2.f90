@@ -15,7 +15,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
+    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode, interp2contours
 
     implicit none
     
@@ -36,7 +36,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8) :: tau, wind_speed, theta, phi, psi, P_gradient(2), S(2)
     real(kind=8) :: Ddt, sloc(2)
     real(kind=8) :: tanyR, huv, huu, hvv
-    real(kind=8), ALLOCATABLE :: dist(:), qt(:,:)
+    real(kind=8), ALLOCATABLE :: dist(:), qt2(:,:), qt3(:,:)
 
     ! Algorithm parameters
 
@@ -48,21 +48,32 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! AVAC inflows
     if (trim(inflow_mode) == "src") then
         allocate(dist(size(q_avac,3)))
-        allocate(qt(size(q_avac,3),3))
+        allocate(qt2(size(q_avac,3),3))
+        allocate(qt3(size(q_avac,3),3))
         ti = closest_inf(t, times)
-        qt(:,:) = q_avac(1,ti,:,3:5) + &
+        qt2(:,:) = q_avac(1,ti,:,3:5) + &
             (MIN(t,times(ti+1))-times(ti))/(times(ti+1)-times(ti)) * &
             (q_avac(1,ti+1,:,3:5)-q_avac(1,ti,:,3:5))
+        ! print *, qt2
+        qt3(:,:) = q_avac(2,ti,:,3:5) + &
+            (MIN(t,times(ti+1))-times(ti))/(times(ti+1)-times(ti)) * &
+            (q_avac(2,ti+1,:,3:5)-q_avac(2,ti,:,3:5))
         do j = 1, my
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
-                dist = (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2
-                k = closest(0.d0, dist) 
-                if (dist(k)<2*(dx**2+dx**2)) then
-                    q(1,i,j) = qt(k,1)*damping
-                    q(2,i,j) = qt(k,2)
-                    q(3,i,j) = qt(k,3)
+                ! if (dist(k)<2*(dx**2+dx**2)) then
+                if (1768<aux(1,i,j) .and. aux(1,i,j)<1900) then
+                    q(1:3,i,j) = interp2contours( &
+                        xc, yc, &
+                        q_avac(1,ti,:,1), q_avac(1,ti,:,2), qt2(:,1:3), &
+                        q_avac(2,ti,:,1), q_avac(2,ti,:,2), qt3(:,1:3) &
+                    )
+                    ! dist = (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2
+                    ! k = closest(0.d0, dist) 
+                    ! q(1,i,j) = qt3(k,1)*damping
+                    ! q(2,i,j) = qt3(k,2)
+                    ! q(3,i,j) = qt3(k,3)
                 end if
             end do
         end do

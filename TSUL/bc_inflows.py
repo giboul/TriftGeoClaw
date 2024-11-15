@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from shutil import rmtree
 from yaml import safe_load
 import numpy as np
 from clawpack.visclaw import gridtools
@@ -23,7 +22,6 @@ args = parser.parse_args()
 
 
 outdir = projdir / "AVAC" / f"_output{args.avid}"
-inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
 
 files = list(outdir.glob("fort.q*"))
 print(f"{outdir}: {files}")
@@ -62,9 +60,10 @@ def extract(i):
     return q, frame_sol.t
 
 def write():
-    rmtree(inflowdir, ignore_errors=True)
+    Path(outdir).mkdir(exist_ok=True)
+    for f in sum(list(oudir.glob(f"{b}*.txt") for b in boundaries):
+        f.unlink()
     nf = len(files)
-    Path(inflowdir).mkdir(exist_ok=True)
     times = []
     for ti in range(nf):
         print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
@@ -74,9 +73,9 @@ def write():
         for bi, boundary in enumerate(boundaries):
             s = slice(bi*n, (bi+1)*n)
             data = np.column_stack((x[s], y[s], h[s], hu[s], hv[s]))
-            path = inflowdir / f"{boundary}_{ti:0>{4}}.txt"
+            path = outdir / f"{boundary}_{ti:0>{4}}.txt"
             np.savetxt(path, data, comments="")
-    np.savetxt(inflowdir / "timing.txt", times)
+    np.savetxt(outdir / "times.txt", times)
     print()
 
 

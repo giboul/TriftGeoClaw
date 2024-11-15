@@ -50,9 +50,12 @@ def write_topo(plot=False):
     y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])
     Z = grid_interp(xtif, ytif, Ztif, x, y)
     X, Y = np.meshgrid(x, y)
+
+    print(f"\tINFO: Inserting dam...")
     mask = dam_mask(X, Y, Z)
     Z[mask] = TOPM['dam_alt']
     path = projdir / TOPM["bathymetry"]
+
     print(f"\tINFO: Saving {path}... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
@@ -66,53 +69,59 @@ def write_topo(plot=False):
     print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
     
     print("\tINFO: writing dam coordinates")
-    xd = np.linspace(X[mask].min(), X[mask].max(), 100)
-    yd = (dam_downstream(xd)+dam_upstream(xd))/2
-    mask = np.isfinite(yd)
-    np.savetxt(projdir / "TOPM" / "dam.xy", np.column_stack((xd[mask], yd[mask])))
+    xdam = np.linspace(X[mask].min(), X[mask].max(), 100)
+    ydam = (dam_downstream(xdam)+dam_upstream(xdam))/2
+    mask = np.isfinite(ydam)
+    np.savetxt(projdir / "TOPM" / "dam.xy", np.column_stack((xdam[mask], ydam[mask])))
 
     rmtree(tempdir)
 
     y = y[::-1]
-    if 'flood_seed' in TOPM and not plot:
+    if 'flood_seed' in TOPM:
         seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
                 np.abs(y-TOPM['flood_seed'][1]).argmin())
     else:
         seed, TOPM['lake_alt'], r = pick_seed(Z, x, y, TOPM['resolution'], TOPM['lake_alt'])
-    flooded = fill_lake(Z, seed[::-1], TOPM['lake_alt'])
-    xc, yc = find_contours(flooded.T, 0.5)[0].T
-    xc = xmin + xc/x.size * (xmax - xmin)
-    yc = ymin + yc/y.size * (ymax - ymin)
-    yc = ymin + (ymax-yc)  # Reverse y
-    contour_coords = np.column_stack((xc, yc))
-    np.savetxt(projdir / "TOPM" / "contour.xy", contour_coords)
 
-    dilated = isotropic_dilation(flooded, 50/TOPM['resolution'])
-    xc, yc = find_contours(dilated.T, 0.5)[0].T
-    xc = xmin + xc/x.size * (xmax - xmin)
-    yc = ymin + yc/y.size * (ymax - ymin)
-    yc = ymin + (ymax-yc)  # Reverse y
-    dilated_contour_coords = np.column_stack((xc, yc))
-    np.savetxt(projdir / "TOPM" / "contour_dilated.xy", dilated_contour_coords)
+    contour1 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T)
+    contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
+
+    contour2 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+20).T)
+    contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
+
+    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+100).T)
+    contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
 
     avacs = read_geojson(projdir / TOPM["avalanches"])
     np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
 
     if plot:
-        extent = (xmin, xmax, ymin, ymax) 
         plt.title("Processed topography")
-        plt.imshow(Z, extent=extent)
+        plt.imshow(Z, extent=TOPM['bounds'].values())
         for i in np.unique(avacs[0]):
             av = avacs.T[i==avacs[0]].T
             plt.fill(*av[1:])
-        plt.plot(*contour_coords.T, '-', label="Lake contour")
-        plt.plot(*dilated_contour_coords.T, '-', label="Dilated contour")
+        plt.plot(*contour1.T, '-', label="Lake contour")
+        plt.plot(*contour2.T, '-', label="Dilated contour")
+        plt.plot(*contour3.T, '-', label="Dilated contour")
         plt.scatter(x[seed[0]], y[seed[1]], c="g", label="Fill seed")
-        plt.plot(xd, yd, label="Dam middle line")
-        plt.plot(xd, dam_upstream(xd), label="Dam upper line")
-        plt.plot(xd, dam_downstream(xd), label="Dam lower line")
+        plt.plot(xdam, ydam, label="Dam middle line")
+        plt.plot(xdam, dam_upstream(xdam), label="Dam upper line")
+        plt.plot(xdam, dam_downstream(xdam), label="Dam lower line")
         plt.legend()
         plt.show()
+
+def contour(mask):
+    return find_contours(mask, 0.5)[0]
+
+def scale_contour(x, y, nx, ny, xmin, xmax, ymin, ymax):
+    x = xmin + x/nx * (xmax - xmin)
+    y = ymin + y/ny * (ymax - ymin)
+    y = ymin + (ymax-y)  # Reverse y
+    return np.column_stack((x, y))
 
 def expand_bounds(xmin, xmax, ymin, ymax, margin=5*TOPM['resolution']):
     _xmin = xmin - margin

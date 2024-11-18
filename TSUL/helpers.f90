@@ -124,14 +124,6 @@ contains
         c2 = closest(0.d0, (x-x2)**2+(y-y2**2))
         n1 = next_closest(c1, x, y, x1, y1)
         n2 = next_closest(c2, x, y, x2, y2)
-        print *, c1, n1
-        print *, c2, n2
-        print *, size(q2,1), size(q2,2)
-        print *, x1(c1), y1(c1), q1(c1,:)
-        print *, x2(c2)
-        print *, y2(c2)
-        print *, q2(:,:)
-        ! print *, q2(c2,:)
 
         h = quadrangular_interp(x, y, &
             x1(c1), y1(c1), q1(c1,1), &
@@ -168,45 +160,74 @@ contains
                                     y1, y2, y3, y4, &
                                     z1, z2, z3, z4
         REAL(KIND=8), DIMENSION(4,4) :: D0, D1, D2, D3, D4
-        REAL(KIND=8) :: a, b, c, d
+        REAL(KIND=8) :: a, b, c, d, f
 
         D0(1,:) = [1.d0, x1, y1, x1*y1]
-        D0(1,:) = [1.d0, x2, y2, x2*y2]
-        D0(1,:) = [1.d0, x3, y3, x3*y3]
-        D0(1,:) = [1.d0, x4, y4, x4*y4]
+        D0(2,:) = [1.d0, x2, y2, x2*y2]
+        D0(3,:) = [1.d0, x3, y3, x3*y3]
+        D0(4,:) = [1.d0, x4, y4, x4*y4]
 
         D1(1,:) = [z1, x1, y1, x1*y1]
-        D1(1,:) = [z2, x2, y2, x2*y2]
-        D1(1,:) = [z3, x3, y3, x3*y3]
-        D1(1,:) = [z4, x4, y4, x4*y4]
+        D1(2,:) = [z2, x2, y2, x2*y2]
+        D1(3,:) = [z3, x3, y3, x3*y3]
+        D1(4,:) = [z4, x4, y4, x4*y4]
 
         D2(1,:) = [1.d0, z1, y1, x1*y1]
-        D2(1,:) = [1.d0, z2, y2, x2*y2]
-        D2(1,:) = [1.d0, z3, y3, x3*y3]
-        D2(1,:) = [1.d0, z4, y4, x4*y4]
+        D2(2,:) = [1.d0, z2, y2, x2*y2]
+        D2(3,:) = [1.d0, z3, y3, x3*y3]
+        D2(4,:) = [1.d0, z4, y4, x4*y4]
 
         D3(1,:) = [1.d0, x1, z1, x1*y1]
-        D3(1,:) = [1.d0, x2, z2, x2*y2]
-        D3(1,:) = [1.d0, x3, z3, x3*y3]
-        D3(1,:) = [1.d0, x4, z4, x4*y4]
+        D3(2,:) = [1.d0, x2, z2, x2*y2]
+        D3(3,:) = [1.d0, x3, z3, x3*y3]
+        D3(4,:) = [1.d0, x4, z4, x4*y4]
 
         D4(1,:) = [1.d0, x1, y1, z1]
-        D4(1,:) = [1.d0, x2, y2, z2]
-        D4(1,:) = [1.d0, x3, y3, z3]
-        D4(1,:) = [1.d0, x4, y4, z4]
+        D4(2,:) = [1.d0, x2, y2, z2]
+        D4(3,:) = [1.d0, x3, y3, z3]
+        D4(4,:) = [1.d0, x4, y4, z4]
 
-        a = det4x4(D1)
-        b = det4x4(D2)
-        c = det4x4(D3)
-        d = det4x4(D4)
-
-        quadrangular_interp = (a + b*x + c*y + d*x*y)/det4x4(D0)
+        call det(D1, 4, a)
+        call det(D2, 4, b)
+        call det(D3, 4, c)
+        call det(D4, 4, d)
+        call det(D0, 4, f)
+        quadrangular_interp = (a + b*x + c*y + d*x*y)/f
+        IF (ISNAN(quadrangular_interp)) THEN
+            STOP
+        END IF
 
     END FUNCTION quadrangular_interp
+
+    SUBROUTINE det(A, m, D)                                              
+
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: m
+        REAL(KIND=8), DIMENSION(m,m), INTENT(IN) :: A
+        INTEGER :: i
+        INTEGER, DIMENSION(m) :: ipiv
+        REAL(KIND=8), INTENT(OUT) :: D
+
+        D = 0.d0
+        CALL dgetrf(m, m, A, m, ipiv, i)
+
+        D = 1.0d0
+        DO i = 1, m
+            D = D * A(i,i)
+            IF (ipiv(i) /= i) THEN
+                D = -D
+            END IF
+        END DO
+
+    END SUBROUTINE det
 
     REAL(KIND=8) FUNCTION det4x4(D)
         ! Because numpy and lapack use LU decomposition, I wanted a direct method
         REAL(KIND=8), DIMENSION(4,4), INTENT(IN) :: D
+        print *, D(1,:)
+        print *, D(2,:)
+        print *, D(3,:)
+        print *, D(4,:)
         det4x4 = &
          + D(1,1)*D(2,2)*D(3,3)*D(4,4) + D(1,1)*D(2,3)*D(3,4)*D(4,2) + D(1,1)*D(2,4)*D(3,2)*D(4,3) &
          - D(1,1)*D(2,4)*D(3,3)*D(4,2) - D(1,1)*D(2,3)*D(3,2)*D(4,4) - D(1,1)*D(2,2)*D(3,4)*D(4,3) &
@@ -216,6 +237,7 @@ contains
          - D(1,4)*D(2,3)*D(3,1)*D(4,2) - D(1,3)*D(2,2)*D(3,1)*D(4,4) - D(1,2)*D(2,4)*D(3,1)*D(4,3) &
          - D(1,2)*D(2,3)*D(3,4)*D(4,1) - D(1,3)*D(2,4)*D(3,2)*D(4,1) - D(1,4)*D(2,2)*D(3,3)*D(4,1) &
          + D(1,4)*D(2,3)*D(3,2)*D(4,1) + D(1,3)*D(2,2)*D(3,4)*D(4,1) + D(1,2)*D(2,4)*D(3,3)*D(4,1) 
+        print *, "==>", det4x4
     END FUNCTION det4x4
 
     real(kind=8) function interp(newx, x, y)

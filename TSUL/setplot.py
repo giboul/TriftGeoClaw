@@ -63,11 +63,19 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     # Water
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.surface
-    plotitem.plot_var = geoplot.surface_or_depth
+    if False:
+        plotitem.plot_var = geoplot.surface
+        plotitem.pcolor_cmax = topoconfig["lake_alt"]+5
+        plotitem.pcolor_cmin = topoconfig["lake_alt"]-5
+    elif False:
+        plotitem.plot_var = geoplot.surface_or_depth
+        plotitem.pcolor_cmax = 2
+        plotitem.pcolor_cmin = 0
+    else:
+        plotitem.plot_var = 2 # geoplot.surface_or_depth
+        plotitem.pcolor_cmax = 2
+        plotitem.pcolor_cmin = 0
     plotitem.pcolor_cmap = plt.cm.Blues
-    plotitem.pcolor_cmax = 2 # topoconfig["lake_alt"]+5
-    plotitem.pcolor_cmin = 0 # topoconfig["lake_alt"]-5
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 0
@@ -164,3 +172,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotdata.parallel = True                 # make multiple frame png's at once
 
     return plotdata
+
+
+if __name__ == "__main__":
+    from clawpack.visclaw.Iplotclaw import Iplotclaw as IPC
+    ip = IPC()
+    ip.plotloop()

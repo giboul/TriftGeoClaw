@@ -137,6 +137,18 @@ contains
             x2(c2), y2(c2), q2(c2,3), &
             x2(n2), y2(n2), q2(n2,3) &
         )
+        ! IF ((x<x1(c1) .and. x<x1(n1) .and. x<x1(c1) .and. x<x1(n1)) .or. &
+        !     (x2(c2)<x .and. x2(n2)<x .and. x2(c2)<x .and. x2(n2)<x) .or. &
+        !     (y<y1(c1) .and. y<y1(n1) .and. y<y1(c1) .and. y<y1(n1)) .or. &
+        !     (y2(c2)<y .and. y2(n2)<y .and. y2(c2)<y .and. y2(n2)<y)) THEN
+        ! ELSE
+        !     PRINT *, x, y
+        !     PRINT *, x1(c1), y1(c1), q1(c1,1)
+        !     PRINT *, x1(n1), y1(n1), q1(n1,1)
+        !     PRINT *, x2(c2), y2(c2), q2(c2,1)
+        !     PRINT *, x2(n2), y2(n2), q2(n2,1)
+        !     PRINT *, "-----------------------------"
+        ! END IF
 
         interp2contours = [h, hu, hv]
 
@@ -157,51 +169,51 @@ contains
         REAL(KIND=8) :: a, b, c, d, e
 
         IF ((x<x1 .and. x<x2 .and. x<x3 .and. x<x4) .or. &
-             (x1<x .and. x2<x .and. x3<x .and. x4<x) .or. &
-             (y<y1 .and. y<y2 .and. y<y3 .and. y<y4) .or. &
-             (y1<y .and. y2<y .and. y3<y .and. y4<y)) THEN
-             quadrangular_interp = 0.d0
-             RETURN
-         END IF 
+            (x1<x .and. x2<x .and. x3<x .and. x4<x) .or. &
+            (y<y1 .and. y<y2 .and. y<y3 .and. y<y4) .or. &
+            (y1<y .and. y2<y .and. y3<y .and. y4<y)) THEN
+            quadrangular_interp = 0.d0
+            RETURN
+        END IF 
 
-         D0(1,:) = [1.d0, x1, y1, x1*y1]
-         D0(2,:) = [1.d0, x2, y2, x2*y2]
-         D0(3,:) = [1.d0, x3, y3, x3*y3]
-         D0(4,:) = [1.d0, x4, y4, x4*y4]
+        D0(1,:) = [1.d0, x1, y1, x1*y1]
+        D0(2,:) = [1.d0, x2, y2, x2*y2]
+        D0(3,:) = [1.d0, x3, y3, x3*y3]
+        D0(4,:) = [1.d0, x4, y4, x4*y4]
 
-         D1(1,:) = [z1, x1, y1, x1*y1]
-         D1(2,:) = [z2, x2, y2, x2*y2]
-         D1(3,:) = [z3, x3, y3, x3*y3]
-         D1(4,:) = [z4, x4, y4, x4*y4]
+        D1(1,:) = [z1, x1, y1, x1*y1]
+        D1(2,:) = [z2, x2, y2, x2*y2]
+        D1(3,:) = [z3, x3, y3, x3*y3]
+        D1(4,:) = [z4, x4, y4, x4*y4]
 
-         D2(1,:) = [1.d0, z1, y1, x1*y1]
-         D2(2,:) = [1.d0, z2, y2, x2*y2]
-         D2(3,:) = [1.d0, z3, y3, x3*y3]
-         D2(4,:) = [1.d0, z4, y4, x4*y4]
+        D2(1,:) = [1.d0, z1, y1, x1*y1]
+        D2(2,:) = [1.d0, z2, y2, x2*y2]
+        D2(3,:) = [1.d0, z3, y3, x3*y3]
+        D2(4,:) = [1.d0, z4, y4, x4*y4]
 
-         D3(1,:) = [1.d0, x1, z1, x1*y1]
-         D3(2,:) = [1.d0, x2, z2, x2*y2]
-         D3(3,:) = [1.d0, x3, z3, x3*y3]
-         D3(4,:) = [1.d0, x4, z4, x4*y4]
+        D3(1,:) = [1.d0, x1, z1, x1*y1]
+        D3(2,:) = [1.d0, x2, z2, x2*y2]
+        D3(3,:) = [1.d0, x3, z3, x3*y3]
+        D3(4,:) = [1.d0, x4, z4, x4*y4]
 
-         D4(1,:) = [1.d0, x1, y1, z1]
-         D4(2,:) = [1.d0, x2, y2, z2]
-         D4(3,:) = [1.d0, x3, y3, z3]
-         D4(4,:) = [1.d0, x4, y4, z4]
+        D4(1,:) = [1.d0, x1, y1, z1]
+        D4(2,:) = [1.d0, x2, y2, z2]
+        D4(3,:) = [1.d0, x3, y3, z3]
+        D4(4,:) = [1.d0, x4, y4, z4]
 
-         call det(D1, 4, a)
-         call det(D2, 4, b)
-         call det(D3, 4, c)
-         call det(D4, 4, d)
-         call det(D0, 4, e)
+        call det(D1, 4, a)
+        call det(D2, 4, b)
+        call det(D3, 4, c)
+        call det(D4, 4, d)
+        call det(D0, 4, e)
 
-         IF (e>1.0E-8) THEN
-             quadrangular_interp = (a + b*x + c*y + d*x*y)/e
-             ! PRINT *, quadrangular_interp
-         ELSE
-             quadrangular_interp = (z1+z2+z3+z4)/4
-         END IF
-         quadrangular_interp = MAX(0.d0, quadrangular_interp)
+        IF (e>1.0E-8) THEN
+            quadrangular_interp = (a + b*x + c*y + d*x*y)/e
+            ! PRINT *, quadrangular_interp
+        ELSE
+            quadrangular_interp = (z1+z2+z3+z4)/4
+        END IF
+        quadrangular_interp = MAX(0.d0, quadrangular_interp)
 
     END FUNCTION quadrangular_interp
 

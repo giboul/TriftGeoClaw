@@ -22,7 +22,7 @@ outdir = projdir / "TSUL" / f"_output{args.avid}"
 AVACoutdir = projdir / "AVAC" / f"_output{args.avid}"
 
 def read_contour(path):
-    x, y = np.loadtxt(path)[::5].T
+    x, y = np.loadtxt(path)[::10].T
     dist = np.cumsum(np.sqrt(np.diff(x) ** 2 + np.diff(y) ** 2))
     dist = np.hstack((0, dist, 2 * dist[-1] - dist[-2]))
     return np.column_stack((x, y))
@@ -66,8 +66,8 @@ def plot(movie):
     with plt.style.context("bmh"):
         fig, (ax1, ax2) = plt.subplots(ncols=2, layout="tight")
         x, y = contour1.T
-        dist = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
-        dist = np.hstack((dist[0], dist, dist[-1]))
+        dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
+        dist = np.hstack((-dist[1], dist, 2*dist[-1]-dist[-2]))
         q, t = extract(0, x, y)
         h, hu, hv, eta = q
         z = eta - h

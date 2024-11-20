@@ -1,50 +1,19 @@
-from matplotlib import pyplot as plt
-from matplotlib.collections import LineCollection
 import numpy as np
-from pathlib import Path
+from matplotlib import pyplot as plt
 
+data = """
+   2669891.8750000000        1171551.2500000000     
+   2669897.6405274114        1171560.3081827844        0.0000000000000000     
+   2669880.1526717558        1171527.8427205102        0.0000000000000000     
+   2669870.1596113811        1171567.8002125400        0.0000000000000000     
+   2669895.1422623177        1171592.7736450585        0.0000000000000000
+"""
 
-mx = 1920
-my = 1280
+P, P1, P2, P3, P4 = [np.array([float(e) for e in line.split(" ") if e]) for line in data.split("\n")[1:-1]]
 
-def norm(a):
-    amin = a.min()
-    amax = a.max()
-    if np.isclose(amin, amax):
-        return np.zeros_like(a)
-    return (a-amin)/(amax-amin)
-inflow_dir = Path(__file__).parent/"_inflows5"
-files = list(inflow_dir.glob("cut*.txt"))
-x, y = np.loadtxt(Path(__file__).parents[1]/"TOPM"/"contour_dilated.xy").T
-
-fig, axes = plt.subplots(ncols=3, sharey=True, sharex=True)
-axes[0].set_title("$h$")
-axes[1].set_title("$hu$")
-axes[2].set_title("$hv$")
-pts = []
-lines = []
-for ax in axes:
-    ax.set_aspect("equal")
-    line = LineCollection(np.c_[x[:-1], y[:-1], x[1:], y[1:]].reshape(-1, 2, 2))
-    line.set(linewidths=4)
-    line.set(cmap=plt.cm.viridis)
-    line.set(array=norm(x))
-    ax.add_collection(line)
-    ax.update_datalim(np.column_stack((x, y)))
-    ax.autoscale_view()
-    lines.append(line)
-
-state = dict(i=0)
-def update(event):
-    global i
-    if event.key in ["up","right"]:
-        state["i"] += 1
-    elif event.key in ["down", "left"]:
-        state["i"] -=1
-    state["i"] = min(max(0,state["i"]), len(files)-1)
-    data = np.loadtxt(inflow_dir/f"cut{state['i']:0>4}.txt")
-    for i, line in enumerate(lines):
-        line.set_array(norm(data[:,i+2]))
-    fig.canvas.draw()
-plt.gcf().canvas.mpl_connect("key_press_event", update)
+plt.plot(*np.loadtxt("../TOPM/contour1.xy").T)
+plt.plot(*np.loadtxt("../TOPM/contour2.xy").T)
+xp, yp, zp = np.vstack((P1, P2, P4, P3)).T
+plt.fill(xp, yp)
+plt.scatter(*P)
 plt.show()

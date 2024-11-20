@@ -22,13 +22,13 @@ outdir = projdir / "TSUL" / f"_output{args.avid}"
 AVACoutdir = projdir / "AVAC" / f"_output{args.avid}"
 
 def read_contour(path):
-    x, y = np.loadtxt(path).T
+    x, y = np.loadtxt(path)[::5].T
     dist = np.cumsum(np.sqrt(np.diff(x) ** 2 + np.diff(y) ** 2))
     dist = np.hstack((0, dist, 2 * dist[-1] - dist[-2]))
     return np.column_stack((x, y))
 
+contour1 = read_contour(projdir/"TOPM"/"contour1.xy")
 contour2 = read_contour(projdir/"TOPM"/"contour2.xy")
-contour3 = read_contour(projdir/"TOPM"/"contour3.xy")
 
 def extract(i, x, y):
     frame_sol = Solution(i, path=AVACoutdir, file_format=AVAC["out_format"])
@@ -49,7 +49,7 @@ def write():
     times = []
     for ti in range(nf):
         print(f"Saving cuts to '{outdir}' {ti+1:>{4}}/{nf}...", end="\r")
-        for i, contour in enumerate((contour2, contour3), start=2):
+        for i, contour in enumerate((contour1, contour2), start=1):
             q, t = extract(ti, *contour.T)
             h, hu, hv, eta = q
             data = np.column_stack((*contour.T, h, hu, hv))
@@ -65,7 +65,7 @@ def plot(movie):
 
     with plt.style.context("bmh"):
         fig, (ax1, ax2) = plt.subplots(ncols=2, layout="tight")
-        x, y = contour2.T
+        x, y = contour1.T
         dist = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
         dist = np.hstack((dist[0], dist, dist[-1]))
         q, t = extract(0, x, y)
@@ -94,7 +94,7 @@ def plot(movie):
         ax2.set_ylim(y.min(), y.max())
 
     def update(i):
-        x, y = contour2.T
+        x, y = contour1.T
         (h, hu, hv, eta), t = extract(i, x, y)
         z = eta - h
         eta_steps.set_data(eta, dist, z)

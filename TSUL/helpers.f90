@@ -87,26 +87,17 @@ contains
 
     END FUNCTION closest_inf
 
-    INTEGER FUNCTION next_closest(i1, x, y, xarray, yarray)
+    INTEGER FUNCTION next_closest(i_closest, value, array)
 
-        INTEGER, INTENT(IN) :: i1
-        REAL(KIND=8), INTENT(IN) :: x, y
-        REAL(KIND=8), DIMENSION(:), INTENT(IN) :: xarray, yarray
-        REAL(KIND=8) :: a1, a2, b1, b2, c1, c2
-        INTEGER :: i2
+        INTEGER, INTENT(IN) :: i_closest
+        REAL(KIND=8), INTENT(IN) :: value
+        REAL(KIND=8), DIMENSION(:), INTENT(IN) :: array
+        REAL(KIND=8), DIMENSION(:), ALLOCATABLE :: ma
 
-        i2 = i1 + 1
-        a1 = xarray(i2) - xarray(i1)
-        a2 = yarray(i2) - yarray(i1)
-        b1 = xarray(i1) - x
-        b2 = yarray(i1) - y
-        c1 = xarray(i2) - x
-        c2 = yarray(i2) - y
-        IF (a1*(b1+c1)+a2*(b2+c2)<0) THEN
-            next_closest = i2
-        ELSE
-            next_closest = i1 -1
-        END IF
+        ma = [array(:(i_closest-1)), &
+              ieee_value(array(i_closest),  ieee_positive_inf), &
+              array((i_closest+1):)]
+        next_closest = closest(value, ma)
 
     END FUNCTION next_closest
 
@@ -116,14 +107,17 @@ contains
         REAL(KIND=8), INTENT(IN) :: x, y
         REAL(KIND=8), INTENT(IN), DIMENSION(:) :: x1, y1, x2, y2
         REAL(KIND=8), INTENT(IN), DIMENSION(:,:) :: q1, q2
+        REAL(KIND=8), DIMENSION(:), ALLOCATABLE :: dist2
         INTEGER :: c1, n1
         INTEGER :: c2, n2
         REAL(KIND=8) :: h, hu, hv
 
-        c1 = closest(0.d0, (x-x1)**2+(y-y1**2))
-        c2 = closest(0.d0, (x-x2)**2+(y-y2**2))
-        n1 = next_closest(c1, x, y, x1, y1)
-        n2 = next_closest(c2, x, y, x2, y2)
+        dist2 = (x-x1)**2 + (y-y1)**2
+        c1 = closest(0.d0, dist2)
+        n1 = next_closest(c1, 0.d0, dist2)
+        dist2 = (x-x2)**2 + (y-y2)**2
+        c2 = closest(0.d0, dist2)
+        n2 = next_closest(c2, 0.d0, dist2)
 
         h = quadrangular_interp(x, y, &
             x1(c1), y1(c1), q1(c1,1), &
@@ -154,48 +148,60 @@ contains
                                               x3, y3, z3, &
                                               x4, y4, z4)
         ! doi:10.3390/atmos10030123 
-        ! An Alternative Bilinear Interpolation Method Between Spherical Grids
+        ! An alternative bilinear interpolation method between spherical grids
         REAL(KIND=8), INTENT(IN) :: x, y, &
                                     x1, x2, x3, x4, &
                                     y1, y2, y3, y4, &
                                     z1, z2, z3, z4
         REAL(KIND=8), DIMENSION(4,4) :: D0, D1, D2, D3, D4
-        REAL(KIND=8) :: a, b, c, d, f
+        REAL(KIND=8) :: a, b, c, d, e
 
-        D0(1,:) = [1.d0, x1, y1, x1*y1]
-        D0(2,:) = [1.d0, x2, y2, x2*y2]
-        D0(3,:) = [1.d0, x3, y3, x3*y3]
-        D0(4,:) = [1.d0, x4, y4, x4*y4]
+        IF ((x<x1 .and. x<x2 .and. x<x3 .and. x<x4) .or. &
+             (x1<x .and. x2<x .and. x3<x .and. x4<x) .or. &
+             (y<y1 .and. y<y2 .and. y<y3 .and. y<y4) .or. &
+             (y1<y .and. y2<y .and. y3<y .and. y4<y)) THEN
+             quadrangular_interp = 0.d0
+             RETURN
+         END IF 
 
-        D1(1,:) = [z1, x1, y1, x1*y1]
-        D1(2,:) = [z2, x2, y2, x2*y2]
-        D1(3,:) = [z3, x3, y3, x3*y3]
-        D1(4,:) = [z4, x4, y4, x4*y4]
+         D0(1,:) = [1.d0, x1, y1, x1*y1]
+         D0(2,:) = [1.d0, x2, y2, x2*y2]
+         D0(3,:) = [1.d0, x3, y3, x3*y3]
+         D0(4,:) = [1.d0, x4, y4, x4*y4]
 
-        D2(1,:) = [1.d0, z1, y1, x1*y1]
-        D2(2,:) = [1.d0, z2, y2, x2*y2]
-        D2(3,:) = [1.d0, z3, y3, x3*y3]
-        D2(4,:) = [1.d0, z4, y4, x4*y4]
+         D1(1,:) = [z1, x1, y1, x1*y1]
+         D1(2,:) = [z2, x2, y2, x2*y2]
+         D1(3,:) = [z3, x3, y3, x3*y3]
+         D1(4,:) = [z4, x4, y4, x4*y4]
 
-        D3(1,:) = [1.d0, x1, z1, x1*y1]
-        D3(2,:) = [1.d0, x2, z2, x2*y2]
-        D3(3,:) = [1.d0, x3, z3, x3*y3]
-        D3(4,:) = [1.d0, x4, z4, x4*y4]
+         D2(1,:) = [1.d0, z1, y1, x1*y1]
+         D2(2,:) = [1.d0, z2, y2, x2*y2]
+         D2(3,:) = [1.d0, z3, y3, x3*y3]
+         D2(4,:) = [1.d0, z4, y4, x4*y4]
 
-        D4(1,:) = [1.d0, x1, y1, z1]
-        D4(2,:) = [1.d0, x2, y2, z2]
-        D4(3,:) = [1.d0, x3, y3, z3]
-        D4(4,:) = [1.d0, x4, y4, z4]
+         D3(1,:) = [1.d0, x1, z1, x1*y1]
+         D3(2,:) = [1.d0, x2, z2, x2*y2]
+         D3(3,:) = [1.d0, x3, z3, x3*y3]
+         D3(4,:) = [1.d0, x4, z4, x4*y4]
 
-        call det(D1, 4, a)
-        call det(D2, 4, b)
-        call det(D3, 4, c)
-        call det(D4, 4, d)
-        call det(D0, 4, f)
-        quadrangular_interp = (a + b*x + c*y + d*x*y)/f
-        IF (ISNAN(quadrangular_interp)) THEN
-            STOP
-        END IF
+         D4(1,:) = [1.d0, x1, y1, z1]
+         D4(2,:) = [1.d0, x2, y2, z2]
+         D4(3,:) = [1.d0, x3, y3, z3]
+         D4(4,:) = [1.d0, x4, y4, z4]
+
+         call det(D1, 4, a)
+         call det(D2, 4, b)
+         call det(D3, 4, c)
+         call det(D4, 4, d)
+         call det(D0, 4, e)
+
+         IF (e>1.0E-8) THEN
+             quadrangular_interp = (a + b*x + c*y + d*x*y)/e
+             ! PRINT *, quadrangular_interp
+         ELSE
+             quadrangular_interp = (z1+z2+z3+z4)/4
+         END IF
+         quadrangular_interp = MAX(0.d0, quadrangular_interp)
 
     END FUNCTION quadrangular_interp
 
@@ -266,7 +272,7 @@ contains
         integer :: num_cells
     
         num_cells = 0
-        do c = 2, 3
+        do c = 1, 2
             do i = 1, num_times
                 n = 0
                 write(fname,"(A,I0.1,A,I0.4, A4)") "cut",c,"_",i-1,".npy"
@@ -291,20 +297,21 @@ contains
         print "(A,I10)", "size(data, 3) = ", size(data, 3)
         print "(A,I10)", "size(data, 3) = ", size(data, 4)
    
-        do c = 2, 3
+        do c = 1, 2
             do i = 1, num_times
                 write(fname,"(A,I0.1,A,I0.4, A4)") "cut",c,"_",i-1,".npy"
+                print "(A,A)", "Reading ", trim(fname)
                 open(unit, file=fname, status="old")
                 do n = 1, num_cells
                     read(unit,*, iostat=io) x, y, h, hu, hv
                     if (io == 0) then
-                        data(c-1, i, n, 1) = x
-                        data(c-1, i, n, 2) = y
-                        data(c-1, i, n, 3) = h
-                        data(c-1, i, n, 4) = hu
-                        data(c-1, i, n, 5) = hv
+                        data(c, i, n, 1) = x
+                        data(c, i, n, 2) = y
+                        data(c, i, n, 3) = h
+                        data(c, i, n, 4) = hu
+                        data(c, i, n, 5) = hv
                     else
-                        data(c-1, i, n, :) = ieee_value(x, ieee_positive_inf)
+                        data(c, i, n, :) = ieee_value(x, ieee_positive_inf)
                     end if
                 end do
                 close(unit)

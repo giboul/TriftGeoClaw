@@ -46,9 +46,9 @@ TSUL:
     ymax: 1172260.
 
   amr_ratios:
-    x: [2, 2, 2]
-    y: [2, 2, 2]
-    t: [2, 2, 2]
+    x: [4, 4, 4]
+    y: [4, 4, 4]
+    t: [4, 4, 4]
     max_level: 3
   cells_max: 100
 

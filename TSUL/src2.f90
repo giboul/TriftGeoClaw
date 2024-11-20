@@ -15,7 +15,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode, interp2contours
+    use helpers, only : q_avac, closest_inf, times, damping, inflow_mode, interp2contours
 
     implicit none
     
@@ -63,7 +63,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
                 ! if (dist(k)<2*(dx**2+dx**2)) then
-                if (1768<aux(1,i,j) .and. aux(1,i,j)<1900) then
+                if (1768<aux(1,i,j)) then
                     q(1:3,i,j) = interp2contours( &
                         xc, yc, &
                         q_avac(1,ti,:,1), q_avac(1,ti,:,2), qt2(:,1:3), &

@@ -83,17 +83,18 @@ def write_topo(plot=False):
     else:
         seed, TOPM['lake_alt'], r = pick_seed(Z, x, y, TOPM['resolution'], TOPM['lake_alt'])
 
-    contour1 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T)
+    print(f"\tINFO: Saving countours...")
+    contour0 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T)
+    contour0 = scale_contour(*contour0.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour0.xy", contour0)
+
+    contour1 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+50).T)
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
 
-    contour2 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+20).T)
+    contour2 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+100).T)
     contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
-
-    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+100).T)
-    contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
-    np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
 
     avacs = read_geojson(projdir / TOPM["avalanches"])
     np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
@@ -104,9 +105,9 @@ def write_topo(plot=False):
         for i in np.unique(avacs[0]):
             av = avacs.T[i==avacs[0]].T
             plt.fill(*av[1:])
-        plt.plot(*contour1.T, '-', label="Lake contour")
+        plt.plot(*contour0.T, '-', label="Lake contour")
+        plt.plot(*contour1.T, '-', label="Dilated contour")
         plt.plot(*contour2.T, '-', label="Dilated contour")
-        plt.plot(*contour3.T, '-', label="Dilated contour")
         plt.scatter(x[seed[0]], y[seed[1]], c="g", label="Fill seed")
         plt.plot(xdam, ydam, label="Dam middle line")
         plt.plot(xdam, dam_upstream(xdam), label="Dam upper line")

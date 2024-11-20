@@ -54,7 +54,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
         # addgauges(current_data)
         t = current_data.t
-        plt.title(f'Surface at {t//60:.0f}min {t%60:.2f}s', fontsize=20)
+        plt.title(f'Surface at {int(t//60):.0f}min {t%60:.2f}s', fontsize=20)
         # plt.title("")
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
@@ -64,10 +64,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Water
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
-    # plotitem.plot_var = geoplot.surface_or_depth
+    plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = plt.cm.Blues
-    plotitem.pcolor_cmax = topoconfig["lake_alt"]+5
-    plotitem.pcolor_cmin = topoconfig["lake_alt"]-5
+    plotitem.pcolor_cmax = 2 # topoconfig["lake_alt"]+5
+    plotitem.pcolor_cmin = 0 # topoconfig["lake_alt"]-5
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 0

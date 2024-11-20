@@ -61,8 +61,9 @@ def extract(i):
 
 def write():
     Path(outdir).mkdir(exist_ok=True)
-    for f in sum(list(oudir.glob(f"{b}*.txt") for b in boundaries):
-        f.unlink()
+    for b in boundaries:
+        for f in outdir.glob(f"{b}*.txt"):
+            f.unlink()
     nf = len(files)
     times = []
     for ti in range(nf):

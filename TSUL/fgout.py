@@ -5,13 +5,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.path import Path as mPath
 
-projdir = Path().absolute().parent
+projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)["AVAC"]
 
 
-xc, yc = np.loadtxt(projdir / "TOPM" / "contour.xy").T
-xd, yd = np.loadtxt(projdir / "TOPM" / "contour_dilated.xy").T
+xc, yc = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
+xd, yd = np.loadtxt(projdir / "TOPM" / "contour2.xy").T
 
 fgno = 1
 outdir = Path().absolute().parent / "AVAC" / '_output5'

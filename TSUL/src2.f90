@@ -15,8 +15,9 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, times, damping, inflow_mode, &
-                        interp1d2d, interp1d4d, q_src, gridinterp
+    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
+    use helpers, only : gridinterp, fgoutinterp
+    use fgout_module, only : fgout_grid, FGOUT_fgrids
 
     implicit none
     
@@ -40,9 +41,6 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8), ALLOCATABLE :: dist(:), qt2(:,:), qt3(:,:)
 
     ! Algorithm parameters
-    real(kind=8),&
-    dimension(size(q_avac,1),size(q_avac,3),size(q_avac,4)) :: qt
-    real(kind=8),dimension(size(q_avac,3)) :: dist
 
     ! Parameter controls when to zero out the momentum at a depth in the
     ! friction source term
@@ -51,9 +49,32 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! ----------------------------------------------------------------
     ! AVAC inflows
     if (trim(inflow_mode) == "src") then
-        ! ti = closest(t, times)
-        q_src(1,:,:,3) = q_src(1,:,:,3) * damping
-        ! call gridinterp(q_src(1,:,:,1), q_src(1,:,:,1), q_src, ...)
+        ti = closest_inf(t, times)
+        do j = 1, my
+            yc = ylower + (j - 0.5d0) * dy
+            do i = 1, mx
+                xc = xlower + (i - 0.5d0) * dx
+                if (1768<aux(1,i,j)) then
+                    ! TODO avoid 3 different calls to gridinterp
+                    ! PRINT *, q_avac(ti,1,:,1)
+                    ! PRINT *, q_avac(ti,2,1,:)
+                    q(1,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,1,:,:), xc, yc)
+                    q(2,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,2,:,:), xc, yc)
+                    q(3,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,3,:,:), xc, yc)
+                    q(1,i,j) = q(1,i,j) * damping
+                    ! q(1:3,i,j) = interp2contours( &
+                    !     xc, yc, &
+                    !     q_avac(1,ti,:,1), q_avac(1,ti,:,2), qt2(:,1:3), &
+                    !     q_avac(2,ti,:,1), q_avac(2,ti,:,2), qt3(:,1:3) &
+                    ! )
+                    ! dist = (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2
+                    ! k = closest(0.d0, dist) 
+                    ! q(1,i,j) = qt3(k,1)*damping
+                    ! q(2,i,j) = qt3(k,2)
+                    ! q(3,i,j) = qt3(k,3)
+                end if
+            end do
+        end do
     end if
 
     ! ----------------------------------------------------------------

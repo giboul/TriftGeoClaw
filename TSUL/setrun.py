@@ -44,12 +44,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    if TSUL["inflow"] == "bc":
-        xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
-    elif TSUL["inflow"] == "src":
-        xmin, xmax, ymin, ymax = TOPM["bounds"].values()
-    else:
-        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
+    xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
@@ -91,7 +86,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 10
-        clawdata.tfinal = 50
+        clawdata.tfinal = 150
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -299,6 +294,10 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     probdata.add_param('mode', inflow_mode,  'The method for introucing the avalcnhe')
     probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
     probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
+    probdata.add_param("x1", (AVAC.get("bounds") or TSUL["bounds"])["xmin"], "")
+    probdata.add_param("x2", (AVAC.get("bounds") or TSUL["bounds"])["xmax"], "")
+    probdata.add_param("y1", (AVAC.get("bounds") or TSUL["bounds"])["ymin"], "")
+    probdata.add_param("y2", (AVAC.get("bounds") or TSUL["bounds"])["ymax"], "")
 
     return rundata
 
@@ -381,8 +380,6 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
 
 def main():
     # Treating command line arguments
-    with open('.data', 'w') as file:
-        pass
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('avid', default='None', nargs='?')

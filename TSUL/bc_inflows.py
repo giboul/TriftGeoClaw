@@ -20,13 +20,12 @@ parser.add_argument("-p", "--plot", action="store_true")
 parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
 
+outTSUL = projdir/"TSUL"/f"_output{args.avid}"
+outAVAC = projdir/"AVAC"/f"_output{args.avid}"
+ntimes = len(list(outAVAC.glob("fort.q*")))
 
-outTSUL = projdir / "AVAC" / f"_output{args.avid}"
-outAVAC = projdir / "AVAC" / f"_output{args.avid}"
-inflowdir = projdir / "TSUL" / f"_inflows{args.avid}"
-
-files = list(outTSUL.glob("fort.q*"))
-xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
+boundaries = ("bottom", "right", "top", "left")
 n = 100
 x = np.hstack((
     np.linspace(xmin, xmax, n, endpoint=True),  # South
@@ -40,7 +39,6 @@ y = np.hstack((
     np.full(n, ymax),
     np.linspace(ymax, ymin, n)
 ))
-boundaries = ("bottom", "right", "top", "left")
 
 dist1 = x.max()-x.min()
 dist2 = dist1 + y.max()-y.min()
@@ -49,8 +47,8 @@ dist4 = dist3 + dist2 - dist1
 dist = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 dist = np.hstack((0, dist, 2*dist[-1]-dist[-2]))
 
-def extract(i, outdir, format):
-    frame_sol = Solution(i, path=outdir, file_format=format)
+def extract(i, outdir=outAVAC):
+    frame_sol = Solution(i, path=outdir, file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -60,15 +58,15 @@ def extract(i, outdir, format):
     )
     return q, frame_sol.t
 
-def write():
+def write(outdir=outTSUL):
     Path(outdir).mkdir(exist_ok=True)
-    for f in sum(list(oudir.glob(f"{b}*.txt") for b in boundaries):
-        f.unlink()
-    nf = len(files)
+    for b in boundaries:
+        for f in outdir.glob(f"{b}*.txt"):
+            f.unlink()
     times = []
-    for ti in range(nf):
-        print(f"Saving cut {ti+1:>{4}}/{nf}...", end="\r")
-        q, t = extract(ti, outTSUL, config["out_format"])
+    for ti in range(ntimes):
+        print(f"Saving cut {ti+1:>{4}}/{ntimes}...", end="\r")
+        q, t = extract(ti)
         times.append(t)
         h, hu, hv, eta = q
         for bi, boundary in enumerate(boundaries):
@@ -83,12 +81,13 @@ def write():
 def plot(movie):
     with plt.style.context("bmh"):
         fig, ax = plt.subplots(layout="tight")
-        q, t = extract(0, outTSUL, config["out_format"])
+        q, t = extract(0)
         h, hu, hv, eta = q
         z = eta - h
         zlow = 1.1*z.min()-0.1*z.max()
         eta_steps = ax.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
-        z_steps = ax.stairs(z, dist, baseline=zlow, label="land", fill=True, color="sienna", lw=1)
+        z_steps = ax.stairs(z, dist, baseline=zlow,
+                            label="land", fill=True, color="sienna", lw=1)
         title = "Cut @ t=%.2f"
         ax.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow
@@ -105,13 +104,13 @@ def plot(movie):
         ax.set_ylim(zlow, eta.max())
     
     def update(i):
-        (h, hu, hv, eta), t = extract(i, outTSUL, config["out_format"])
+        (h, hu, hv, eta), t = extract(i)
         z = eta-h
         eta_steps.set_data(eta, dist, z)
         z_steps.set_data(z, dist, zlow)
         ax.set_title(title % t)
 
-    anim = FuncAnimation(fig, update, len(files), interval=500)
+    anim = FuncAnimation(fig, update, range(ntimes), interval=500)
     if movie:
         anim.save("cut_movie.gif")
     else:

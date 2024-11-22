@@ -41,22 +41,26 @@ def write_qinit(avid, plot=False):
         avids = [int(a) for a in avid]
     else:
         avids = ["", *np.unique(geojson[0].astype(np.int64))]
-    for avid in avids:
-        qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
-        filename = projdir/"AVAC"/f"qinit{avid}.xyz"
-        print(f"Saving {filename}...", end=" ", flush=True)
-        np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
-        print("Saved.")
-        qinit[qinit <= 0] = float("nan")
+    # for avid in avids:
+    #     qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
+    #     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
+    #     print(f"Saving {filename}...", end=" ", flush=True)
+    #     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    #     print("Saved.")
+    #     qinit[qinit <= 0] = float("nan")
 
-        if plot:
-            ext = xmin, x.max(), ymin, y.max()
-            plt.imshow(z, extent=ext)
-            plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
-            bounds = AVAC.get("bounds") or TOPM["bounds"]
-            plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
-            plt.legend()
-            plt.show()
+    #     if plot:
+    #         ext = xmin, x.max(), ymin, y.max()
+    #         plt.imshow(z, extent=ext)
+    #         plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
+    #         bounds = AVAC.get("bounds") or TOPM["bounds"]
+    #         plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
+    filename = projdir/"AVAC"/"qinit.xyz"
+    qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
+    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    if plot:
+        plt.legend()
+        plt.show()
 
 
 def make_qinit(X, Y, geojson, indices="", plot=False):

@@ -18,6 +18,7 @@ with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     TOPM = config["TOPM"]
     AVAC = config["AVAC"]
+    TSUL = config["TSUL"]
 
 
 #------------------------------
@@ -333,7 +334,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.y2 = clawdata.upper[1]
     fgout.tstart = 0.
     fgout.tend = clawdata.tfinal
-    fgout.nout = config["nsim"]
+    fgout.nout = AVAC["nsim"]
     fgout_grids.append(fgout)    # written to fgout_grids.data
 
     # == setregions.data values ==
@@ -359,6 +360,15 @@ def setrun(claw_pkg='geoclaw', avid=""):
     #     x = r + .001  # shift a bit away from cell corners
     #     y = .001
      #    rundata.gaugedata.gauges.append([gaugeno, x, y, 0., 1e10])
+
+    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    probdata.add_param("out_format", fgout.output_format, "Avalanche ID")
+    probdata.add_param("nx", fgout.nx, "Number of cells in y direction")
+    probdata.add_param("ny", fgout.ny, "Number of cells in x direction")
+    probdata.add_param("x1", fgout.x1, "")
+    probdata.add_param("x2", fgout.x2, "")
+    probdata.add_param("y1", fgout.y1, "")
+    probdata.add_param("y2", fgout.y2, "")
 
     return rundata
     # end of function setrun
@@ -415,7 +425,8 @@ def setgeo(rundata, avid):
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
-    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
+    # rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
+    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit.xyz"]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
     # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])

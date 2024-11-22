@@ -51,7 +51,7 @@ def write_topo(plot=False):
     Z = grid_interp(xtif, ytif, Ztif, x, y)
     X, Y = np.meshgrid(x, y)
 
-    print(f"\tINFO: Inserting dam...")
+    print("\tINFO: Inserting dam...")
     mask = dam_mask(X, Y, Z)
     Z[mask] = TOPM['dam_alt']
     path = projdir / TOPM["bathymetry"]

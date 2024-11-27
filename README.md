@@ -1,6 +1,6 @@
 <img src="drawing.png"/>
 
-# TriftGeoclaw IN PROGRESS
+# TriftGeoclaw [IN PROGRESS]
 This repository is an attempt to quantify the potential of impulse waves induced by snow avalanches in the future [Trift reservoir](https://www.researchgate.net/publication/313646761_L'amenagement_hydroelectrique_de_Trift) (Gadmen, Bern, Switerland).
 
 This work is divided in two parts which are both base on David George's [Geoclaw](https://www.clawpack.org/geoclaw) module from Randall J. Leveque's [Clawpack](https://www.clawpack.org/).

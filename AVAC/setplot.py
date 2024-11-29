@@ -5,6 +5,7 @@ Set up the plot figures, axes, and items to be done for each frame.
 This module is imported by the plotting routines and then the
 function setplot is called to set the plot parameters.
 """
+from yaml import safe_load
 from matplotlib import pyplot as plt
 from pathlib import Path
 from os import system
@@ -12,8 +13,12 @@ import numpy as np
 
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
-from AddSetrun import out_format, lake_alt
 
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["TOPM"]
+    config = config["AVAC"]
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 
@@ -26,7 +31,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = out_format    # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = config["out_format"]    # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -43,15 +48,14 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes('pcolor')
-    plotaxes.title = 'Surface'
+    # plotaxes.title = 'Surface'
     plotaxes.scaled = True
 
     def fixup(current_data):
 
         # addgauges(current_data)
         t = current_data.t
-        # plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
-        plt.title("")
+        plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
 
@@ -72,8 +76,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
     plotitem.pcolor_cmap = plt.cm.viridis  # geoplot.land_colors
-    plotitem.pcolor_cmin = lake_alt - 500
-    plotitem.pcolor_cmax = lake_alt + 1300
+    plotitem.pcolor_cmin = topoconfig["lake_alt"] - 500
+    plotitem.pcolor_cmax = topoconfig["lake_alt"] + 1300
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = []
     # plotitem.patchedges_show = 1

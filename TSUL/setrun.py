@@ -5,18 +5,22 @@ Module to set up run time parameters for Clawpack.
 The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 """
-import argparse
+from subprocess import Popen
+from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
 
-with open(Path("..") / "config.yaml") as file:
-    config = safe_load(file)
-    topoconfig = config["topo"]
-    config = config["TSUL"]
 
-def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
+    config = safe_load(file)
+    AVAC = config["AVAC"]
+    TOPM = config["TOPM"]
+    TSUL = config["TSUL"]
+
+def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -24,18 +28,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     ------
         ClawRunData
     """
-    if avid:
-        avid = int(avid)
-    else:
-        avid = None
-    with open("avac.data", "w") as file:
-        file.write(
-            f"{avid} := avid\n"
-        )
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
     rundata = setgeo(rundata, bouss)
-
     # Standard Clawpack parameters to be written to claw.data:
     # (or to amr2ez.data for AMR)
     clawdata = rundata.clawdata  # initialized when rundata instantiated
@@ -50,15 +45,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    bounds = config.get("bounds") or topoconfig["bounds"]
-    clawdata.lower[0] = bounds["xmin"]
-    clawdata.upper[0] = bounds["xmax"]
-    clawdata.lower[1] = bounds["ymin"]
-    clawdata.upper[1] = bounds["ymax"]
+    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
+    clawdata.lower[0] = xmin
+    clawdata.upper[0] = xmax
+    clawdata.lower[1] = ymin
+    clawdata.upper[1] = ymax
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = config["nx"]
-    clawdata.num_cells[1] = config["ny"]
+    clawdata.num_cells[0] = 70
+    clawdata.num_cells[1] = 100
 
     # ---------------
     # Size of system:
@@ -91,8 +86,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 20
-        clawdata.tfinal = 200
+        clawdata.num_output_times = 10
+        clawdata.tfinal = 150
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -105,8 +100,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = config["out_format"]   # 'ascii' or 'binary' 
-    clawdata.output_q_components = 'none'   # need all
+    clawdata.output_format = TSUL["out_format"]   # 'ascii' or 'binary' 
+    clawdata.output_q_components = "all"   # h, hu, hv, eta
     clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
 
@@ -116,7 +111,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 2
+    clawdata.verbosity = 0
 
     # --------------
     # Time stepping:
@@ -188,10 +183,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    clawdata.bc_lower[0] = 'wall'
-    clawdata.bc_upper[0] = 'wall'
-    clawdata.bc_lower[1] = 'wall'
-    clawdata.bc_upper[1] = 'wall'
+    if TSUL["inflow"] == "src":
+        clawdata.bc_lower[0] = 'wall'
+        clawdata.bc_upper[0] = 'wall'
+        clawdata.bc_lower[1] = 'wall'
+        clawdata.bc_upper[1] = 'wall'
+    elif TSUL["inflow"] == "bc":
+        clawdata.bc_lower[0] = 'user'
+        clawdata.bc_upper[0] = 'user'
+        clawdata.bc_lower[1] = 'user'
+        clawdata.bc_upper[1] = 'user'
+    else:
+        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -214,20 +217,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = 300
+    amrdata.max1d = 100
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = [2, 2, 2]
+    amrdata.refinement_ratios_y = [2, 2, 2]
+    amrdata.refinement_ratios_t = [2, 2, 2]
 
     # max number of refinement levels:
-    max_levels = 1 + max(map(len, (
-      amrdata.refinement_ratios_x,
-      amrdata.refinement_ratios_y,
-      amrdata.refinement_ratios_t
-    )))
-    amrdata.amr_levels_max = max_levels
+    amrdata.amr_levels_max = 3
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -273,11 +271,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    rundata.regiondata.regions.append([
-        amrdata.amr_levels_max, amrdata.amr_levels_max,
-        clawdata.t0, clawdata.tfinal,
-        2670134, 2670360, 1171800, 1171935
-    ])
     # rundata.regiondata.regions.append([
     #     3, 3, clawdata.t0, tf/5,
     #     0, 0.3,
@@ -291,6 +284,21 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None') -> ClawRunData:
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
     # rundata.gaugedata.gauges.append([32412, xcoords.mean(), ycoords.mean(), clawdata.t0, tf])
 
+    if avid and avid != 'None':
+        avid = int(avid)
+    else:
+        avid = None
+    inflow_mode = TSUL.get('inflow') or inflow
+
+    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    probdata.add_param('avid', avid,  'Avalanche ID')
+    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
+    probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
+    probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
+    probdata.add_param("x1", (AVAC.get("bounds") or TSUL["bounds"])["xmin"], "")
+    probdata.add_param("x2", (AVAC.get("bounds") or TSUL["bounds"])["xmax"], "")
+    probdata.add_param("y1", (AVAC.get("bounds") or TSUL["bounds"])["ymin"], "")
+    probdata.add_param("y2", (AVAC.get("bounds") or TSUL["bounds"])["ymax"], "")
 
     return rundata
 
@@ -315,7 +323,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     geo_data.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geo_data.dry_tolerance = 1.e-5
+    geo_data.dry_tolerance = 1.e-10
     geo_data.friction_forcing = True
     geo_data.manning_coefficient =.025
     geo_data.friction_depth = 1e9
@@ -329,7 +337,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[k, Path("..")/p] for k, p in config["topo"]]
+    topo_data.topofiles = [[2, projdir/TSUL["topo"]]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -350,18 +358,18 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = config["qinit"]
+    rundata.qinit_data.qinitfiles = [[projdir/"TSUL"/"qinit.xyz"]]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)
     # fixed_grid_data script doesn't exist anymore...
-    
+ 
     if bouss is True:
         print("Adding BoussData")
         from clawpack.geoclaw.data import BoussData
         rundata.add_data(BoussData(), 'bouss_data')
         
-        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN
+        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN # TODO
         rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
         rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss
         rundata.bouss_data.bouss_min_depth = 1.   # depth to switch to SWE
@@ -373,17 +381,20 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
 
 def main():
     # Treating command line arguments
-    with open('.data', 'w') as file:
-        pass
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('avid', default='None', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()
 
+    data = Path(".data")
+    data.unlink(missing_ok=True)
     rundata = setrun(**args.__dict__)
-    rundata.write()
-    # kmltools.make_input_data_kmls(rundata)
+    rundata.write(projdir / "TSUL")
+    data.touch()
+
+    if TSUL["inflow"] == "bc":
+        Popen(["python", projdir/"TSUL"/"bc_inflows", args.avid])
 
 
 if __name__ == '__main__':

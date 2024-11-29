@@ -13,6 +13,8 @@ OUTDIR = _output               # Directory for output
 SETPLOT_FILE = setplot.py      # File containing function to set plots
 PLOTDIR = _plots               # Directory for plots
 
+FFLAGS = -O2 -fopenmp -llapack -lblas
+OMP_NUM_THREADS = 16
 
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
@@ -43,6 +45,7 @@ MODULES = \
 
 SOURCES = \
   ./setprob.f90 \
+  ./bc2amr.f90 \
   ./src2.f90 \
   $(CLAW)/riemann/src/rpn2_geoclaw.f \
   $(CLAW)/riemann/src/rpt2_geoclaw.f \
@@ -54,24 +57,23 @@ include $(CLAWMAKE)
 
 # Construct the topography data
 .PHONY: topo all
-topo:
-	$(CLAW_PYTHON) topo.py
 qinit:
 	$(CLAW_PYTHON) qinit.py
+topo:
+	$(CLAW_PYTHON) ../TOPM/topo.py
+	make qinit
 
 avid=""
-
 data:
 	-rm -f .data
 	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(avid)
 	touch .data
-
-# OUTDIR="$(OUTDIR)$(avid)"
-
 run:
 	make data avid=$(avid)
+	make inflows avid=$(avid)
 	make output OUTDIR=_output$(avid)
-
-flows:
-	$(CLAW_PYTHON) flows.py $(avid)
+inflows:
+	$(CLAW_PYTHON) inflows.py $(avid)
+outflows:
+	$(CLAW_PYTHON) damspills.py
 

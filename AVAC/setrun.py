@@ -6,19 +6,23 @@ The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 
 """
-from yaml import load, safe_load, load_all, FullLoader
+from argparse import ArgumentParser
+from yaml import safe_load
 from pathlib import Path
+import numpy as np
+from clawpack.geoclaw.fgout_tools import FGoutGrid
 
 
-with open(Path("..") / "config.yaml") as file:
-    # config = safe_load(file)
-    config = load(file, FullLoader)
-    topoconfig = config["topo"]
-    config = config["AVAC"]
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
+    config = safe_load(file)
+    TOPM = config["TOPM"]
+    AVAC = config["AVAC"]
+    TSUL = config["TSUL"]
 
 
 #------------------------------
-def setrun(claw_pkg='geoclaw'):
+def setrun(claw_pkg='geoclaw', avid=""):
 #------------------------------
 
     """
@@ -42,17 +46,13 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
-    rundata = setgeo(rundata)
+    rundata = setgeo(rundata, avid)
 
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
     #   (or to amr2ez.data for AMR)
     #------------------------------------------------------------------
     clawdata = rundata.clawdata  # initialized when rundata instantiated
-
-
-    # Set single grid parameters first.
-    # See below for AMR parameters.
 
 
     # ---------------
@@ -63,22 +63,19 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    if "bounds" in config:
-        clawdata.lower[0] = config["bounds"]["xmin"]
-        clawdata.upper[0] = config["bounds"]["xmax"]
+    bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
+    clawdata.lower[0] = bounds["xmin"]
+    clawdata.upper[0] = bounds["xmax"]
+    clawdata.lower[1] = bounds["ymin"]
+    clawdata.upper[1] = bounds["ymax"]
 
-        clawdata.lower[1] = config["bounds"]["ymin"]
-        clawdata.upper[1] = config["bounds"]["ymax"]
-    else:
-        clawdata.lower[0] = topoconfig["bounds"]["xmin"]
-        clawdata.upper[0] = topoconfig["bounds"]["xmax"]
 
-        clawdata.lower[1] = topoconfig["bounds"]["ymin"]
-        clawdata.upper[1] = topoconfig["bounds"]["ymax"]
+    # Set single grid parameters first.
+    # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = config["nx"]
-    clawdata.num_cells[1] = config["ny"] 
+    clawdata.num_cells[0] = AVAC["nx"]
+    clawdata.num_cells[1] = AVAC["ny"] 
 
     # ---------------
     # Size of system:
@@ -122,8 +119,8 @@ def setrun(claw_pkg='geoclaw'):
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = config["nsim"]
-        clawdata.tfinal = config["tmax"]
+        clawdata.num_output_times = 10
+        clawdata.tfinal = 90
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -137,11 +134,10 @@ def setrun(claw_pkg='geoclaw'):
         clawdata.output_t0 = True
         
 
-    clawdata.output_format = config['out_format']      # 'ascii' or 'binary' 
+    clawdata.output_format = AVAC['out_format']      # 'ascii' or 'binary' 
 
     clawdata.output_q_components = 'all'   # could be list such as [True,True]
     clawdata.output_aux_onlyonce = True    # output aux arrays only at t0
-
 
 
     # ---------------------------------------------------
@@ -151,7 +147,7 @@ def setrun(claw_pkg='geoclaw'):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 2
+    clawdata.verbosity = 0
 
 
 
@@ -165,18 +161,18 @@ def setrun(claw_pkg='geoclaw'):
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = config["dt0"]
+    clawdata.dt_initial = 1.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
 
     # Desired Courant number if variable dt used, and max to allow without
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = config["cfl"]
+    clawdata.cfl_desired = 0.5
     clawdata.cfl_max = 0.95
 
     # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = config["max_iter"]
+    clawdata.steps_max = 500
 
 
 
@@ -264,14 +260,15 @@ def setrun(claw_pkg='geoclaw'):
     # AMR parameters:
     # ---------------
     amrdata = rundata.amrdata
+    amrdata.max1d = 60
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = config["amr_ratios"]['max_level']
+    amrdata.amr_levels_max = AVAC["amr_ratios"]['max_level']
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = AVAC["amr_ratios"]["x"]
+    amrdata.refinement_ratios_y = AVAC["amr_ratios"]["y"]
+    amrdata.refinement_ratios_t = AVAC["amr_ratios"]["t"]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -315,6 +312,24 @@ def setrun(claw_pkg='geoclaw'):
     
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
+    # fgmax grid output for TSUL
+    fgout_grids = rundata.fgout_data.fgout_grids  # empty list initially
+
+    fgout = FGoutGrid()
+    fgout.fgno = 1
+    fgout.point_style = 2       # will specify a 2d grid of points
+    fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
+    fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
+    fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
+    fgout.x1 = clawdata.lower[0]
+    fgout.x2 = clawdata.upper[0]
+    fgout.y1 = clawdata.lower[1]
+    fgout.y2 = clawdata.upper[1]
+    fgout.tstart = 0.
+    fgout.tend = clawdata.tfinal
+    fgout.nout = clawdata.num_output_times
+    fgout_grids.append(fgout)    # written to fgout_grids.data
+
     # == setregions.data values ==
     regions = rundata.regiondata.regions
     # to specify regions of refinement append lines of the form
@@ -339,25 +354,40 @@ def setrun(claw_pkg='geoclaw'):
     #     y = .001
      #    rundata.gaugedata.gauges.append([gaugeno, x, y, 0., 1e10])
 
+    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    probdata.add_param("out_format", fgout.output_format, "Avalanche ID")
+    probdata.add_param("nx", fgout.nx, "Number of cells in y direction")
+    probdata.add_param("ny", fgout.ny, "Number of cells in x direction")
+    probdata.add_param("x1", fgout.x1, "")
+    probdata.add_param("x2", fgout.x2, "")
+    probdata.add_param("y1", fgout.y1, "")
+    probdata.add_param("y2", fgout.y2, "")
+
+    voellmydata = rundata.new_UserData(name='probdata',fname='voellmy.data')
+    voellmydata.add_param("snow_density", 300.0, "")
+    voellmydata.add_param("xi", 560, "Voellmy: geometrical resistance")
+    voellmydata.add_param("mu", 0.2, "Voellmy: friction coefficient ~snow viscosity")
+    voellmydata.add_param("u_", 300.0, "Velocity threshold")
+    voellmydata.add_param("beta_slope", 300.0, "Threshold bed slope")
+    voellmydata.add_param("coulomb", 0, "Wether to use the Coulomb model")
+
     return rundata
     # end of function setrun
     # ----------------------
 
 
 #-------------------
-def setgeo(rundata):
+def setgeo(rundata, avid):
 #-------------------
     """
     Set GeoClaw specific runtime parameters.
     For documentation see ....
     """
 
-    try:
+    if hasattr(rundata, 'geo_data'):
         geo_data = rundata.geo_data
-    except:
-        print("*** Error, this rundata has no geo_data attribute")
-        raise AttributeError("Missing geo_data attribute")
-
+    else:
+        raise AttributeError("*** Error, this rundata has no 'geo_data' attribute")
 
     # == Physics ==
     geo_data.gravity = 9.81
@@ -372,7 +402,7 @@ def setgeo(rundata):
 
     # == Algorithm and Initial Conditions ==
     geo_data.sea_level = 0
-    geo_data.dry_tolerance = config["DryWetLimit"]
+    geo_data.dry_tolerance = 1e-4
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025
     geo_data.friction_depth = 20.0
@@ -387,7 +417,7 @@ def setgeo(rundata):
     # for topography, append lines of the form
     #    [topotype, minlevel, maxlevel, t1, t2, fname]
     # topo_data.topofiles.append([2, 1, 3, 0., 1.e10, 'topo.asc'])
-    topo_data.topofiles = [[k, Path("..")/p] for k, p in config['topo']]
+    topo_data.topofiles = [[2, projdir/AVAC['topo']]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -396,7 +426,8 @@ def setgeo(rundata):
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
-    rundata.qinit_data.qinitfiles = config['qinit']
+    # rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
+    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
     # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])
@@ -412,10 +443,20 @@ def setgeo(rundata):
     # ----------------------
 
 
+def main():
+    # Set up run-time parameters and write all data files.
+    parser = ArgumentParser()
+    parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    parser.add_argument('avid', default='', nargs='?')
+    args = parser.parse_args()
+
+    data = Path(".data")
+    data.unlink(missing_ok=True)
+    rundata = setrun(**args.__dict__)
+    rundata.write(projdir / "AVAC")
+    data.touch()
+
 
 if __name__ == '__main__':
-    # Set up run-time parameters and write all data files.
-    import sys
-    rundata = setrun(*sys.argv[1:])
-    rundata.write()
+    main()
 

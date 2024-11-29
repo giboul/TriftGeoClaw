@@ -16,12 +16,12 @@ if __name__ == "__main__":
     z[(0.3*x**2 <= y) & (y <= 0.3*x**2 + 0.2)] = 1 
     z[(y < -1) & (y > -1.2)] = 1
   
-    np.savetxt("bathymetry.xyz", np.vstack((x.flatten(), y.flatten(), z.flatten())).T)
+    np.savetxt("bathymetry.xyz", np.column_stack((x.flatten(), y.flatten(), z.flatten())))
   
     q0 = np.full_like(z, 0.5)
     q0[y > 0.3*x**2] = 0
     q0[y < -1] = 0
-    np.savetxt("qinit.xyz", np.vstack((x.flatten(), y.flatten(), q0.flatten())).T)
+    np.savetxt("qinit.xyz", np.column_stack((x.flatten(), y.flatten(), q0.flatten())))
   
     plt.imshow(z, cmap="inferno")
     q0[q0 <= 0] = float("nan")

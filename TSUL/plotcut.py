@@ -3,22 +3,27 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-from params import bounds, out_format
 from clawpack.visclaw import colormaps, frametools, geoplot, gridtools
 from clawpack.pyclaw import solution
+from yaml import safe_load
 
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
+    config = safe_load(file)
+    topoconfig = config["TOPM"]
+    config = config["TSUL"]
 
-outdir = "_output"
-files = list(Path(outdir).glob('fort.q*'))
+outdir = projdir / "TSUL" / "_output"
+files = list(outdir.glob('fort.q*'))
 
-y = np.linspace(bounds["ymin"], bounds["ymax"])
+y = np.linspace(config["bounds"]["ymin"], config["bounds"]["ymax"])
 x = np.linspace(2670500, 2670100)
 l = np.cumsum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
 l = np.hstack((0, l, 2*l[-1]-l[-2]))
 
 
 def extract(i):
-    frame_sol = solution.Solution(i, path="_output", file_format=out_format)
+    frame_sol = solution.Solution(i, path="_output", file_format=config["out_format"])
     q = gridtools.grid_output_2d(
         frame_sol,
         lambda q: q,
@@ -45,7 +50,7 @@ with plt.style.context("bmh"):
     ax.set_ylabel("Elevation [MASL]")
 
 def update(frame_num):
-    frame_sol = solution.Solution(frame_num, path="_output", file_format=out_format)
+    frame_sol = solution.Solution(frame_num, path="_output", file_format=config["out_format"])
 
     q, t = extract(frame_num)
     h, hu, hv, eta = q
@@ -59,9 +64,9 @@ def update(frame_num):
 anim = FuncAnimation(fig, update, len(files), interval=500)
 
 parser = ArgumentParser()
-parser.add_argument("-f", "--file", action="store_true")
+parser.add_argument("-m", "--movie", action="store_true")
 args = parser.parse_args()
-if args.file:
+if args.movie:
     anim.save("stairs.gif", savefig_kwargs=dict(bbox_inches="tight"))
 else:
     plt.show()

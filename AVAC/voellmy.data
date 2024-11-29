@@ -1,8 +1,0 @@
-# Modified by Launcher
-
-300.0 =: snow_density
-560.9554956658873 =: Voellmy xi
-0.20043795207894274 =: Voellmy mu
-0.30132020656948993 =: velocity threshold
-1.080519828597941 =: beta_slope
-0 =: coulomb

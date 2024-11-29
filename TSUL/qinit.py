@@ -5,12 +5,13 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from skimage.morphology import flood, isotropic_dilation
 
-with open(Path("..") / "config.yaml") as file:
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
-    config = config["TSUL"]
+    TOPM = config["TOPM"]
+    TSUL = config["TSUL"]
 
-def write_qinit(filename = config["topo"]):
+def write_qinit(filename = projdir / TOPM["bathymetry"]):
 
     def before_space(str: str):
         return str[:str.index(" ")]
@@ -29,22 +30,26 @@ def write_qinit(filename = config["topo"]):
 
     # Fill topo
     z_lake = z.reshape(ny, nx)
-    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res)
-    flooded = fill_lake(z_lake, (seed_iy, seed_ix), topoconfig["lake_alt"])
+    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, TOPM["lake_alt"])
+    flooded = fill_lake(z_lake, (seed_iy, seed_ix), TOPM["lake_alt"])
     dilated = isotropic_dilation(flooded, radius)
-    z_lake[dilated] = topoconfig["lake_alt"]
+    z_lake[dilated] = TOPM["lake_alt"]
 
     # To .xyz format
-    z_lake = z_lake.flatten()
     x, y = np.meshgrid(x, y)
+    np.savetxt(projdir/"TSUL"/"lake_extent.txt", (
+        x[dilated].min(), x[dilated].max(),
+        y[dilated].min(), y[dilated].max()
+    ))
     x = x.flatten()
     y = y.flatten()
+    z_lake = z_lake.flatten()
 
     # Write qinit
-    np.savetxt("qinit.xyz", np.vstack((x, y, z_lake)).T)
+    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((x, y, z_lake)))
 
 
-def pick_seed(z_im, x, y, res=0):
+def pick_seed(z_im, x, y, res=0, alt=TOPM["lake_alt"]):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
@@ -59,7 +64,7 @@ def pick_seed(z_im, x, y, res=0):
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 
-    data = dict(alt="", x=0, y=0, r=0, status="waiting")
+    data = dict(alt=str(alt), x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
 

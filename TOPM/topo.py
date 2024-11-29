@@ -2,6 +2,7 @@
 from pathlib import Path
 from argparse import ArgumentParser
 from shutil import rmtree
+from json import load
 from yaml import safe_load
 import numpy as np
 from matplotlib import pyplot as plt
@@ -10,19 +11,20 @@ from skimage.morphology import flood, isotropic_dilation
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
-with open("config.yaml") as file:
+projdir = Path(__file__).parents[1]
+with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["topo"]
+    TOPM = config["TOPM"]
 
 def write_topo(plot=False):
 
     # Temporary directory
-    ifile = Path(topoconfig["rawfile"])
-    tempdir = Path("_temp")
+    path = projdir / TOPM["topography"]
+    tempdir = projdir / "TOPM" / "_temp"
     tempdir.mkdir(exist_ok=True)
 
-    print(f"\tINFO: Opening {topoconfig['rawfile']}... ")
-    with TiffFile(ifile) as tif:
+    print(f"\tINFO: Opening {path}... ")
+    with TiffFile(path) as tif:
         Ztif = tif.asarray()
         nx = tif.pages[0].tags["ImageWidth"].value
         ny = tif.pages[0].tags["ImageLength"].value
@@ -32,10 +34,10 @@ def write_topo(plot=False):
     xtif = xmin + (np.arange(nx) + 0.5)*x_res
     ytif = ymax - (np.arange(ny) + 0.5)*y_res
 
-    xmin = topoconfig['bounds']['xmin']
-    xmax = topoconfig['bounds']['xmax']
-    ymin = topoconfig['bounds']['ymin']
-    ymax = topoconfig['bounds']['ymax']
+    xmin = TOPM['bounds']['xmin']
+    xmax = TOPM['bounds']['xmax']
+    ymin = TOPM['bounds']['ymin']
+    ymax = TOPM['bounds']['ymax']
     print(f"\tINFO: Cropping to {xmin, ymin, xmax, ymax = }")
     xmask = (xmin <= xtif) & (xtif <= xmax)
     ymask = (ymin <= ytif) & (ytif <= ymax)
@@ -43,69 +45,85 @@ def write_topo(plot=False):
     ytif = ytif[ymask][::-1]
     Ztif = Ztif[ymask, :][:, xmask]
 
-    print(f"\tINFO: Downscaling to resolution = {topoconfig['resolution']}")
-    x = np.arange(xmin, xmax+topoconfig['resolution'], step=topoconfig['resolution'])
-    y = np.arange(ymin, ymax+topoconfig['resolution'], step=topoconfig['resolution'])
+    print(f"\tINFO: Downscaling to resolution = {TOPM['resolution']}")
+    x = np.arange(xmin, xmax+TOPM['resolution'], step=TOPM['resolution'])
+    y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])
     Z = grid_interp(xtif, ytif, Ztif, x, y)
     X, Y = np.meshgrid(x, y)
+
+    print("\tINFO: Inserting dam...")
     mask = dam_mask(X, Y, Z)
-    Z[mask] = topoconfig['dam_alt']
-    print(f"\tINFO: Saving {topoconfig['file']}... ")
+    Z[mask] = TOPM['dam_alt']
+    path = projdir / TOPM["bathymetry"]
+
+    print(f"\tINFO: Saving {path}... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
         f"{y.size} nrows",
         f"{x.min()} xllcenter",
         f"{y.min()} yllcenter",
-        f"{topoconfig['resolution']} cellsize",
+        f"{TOPM['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt(topoconfig['file'], Z.flatten(), header=asc_header, comments="")
-    print(f"\tINFO: File size is {Path(topoconfig['file']).stat().st_size:.2g} bytes.")
+    np.savetxt(path, Z.flatten(), header=asc_header, comments="")
+    print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
     
     print("\tINFO: writing dam coordinates")
-    xd = np.linspace(X[mask].min(), X[mask].max(), 100)
-    yd = (dam_downstream(xd)+dam_upstream(xd))/2
-    mask = np.isfinite(yd)
-    np.savetxt("dam.xy", np.vstack((xd[mask], yd[mask])).T)
+    xdam = np.linspace(X[mask].min(), X[mask].max(), 100)
+    ydam = (dam_downstream(xdam)+dam_upstream(xdam))/2
+    mask = np.isfinite(ydam)
+    np.savetxt(projdir / "TOPM" / "dam.xy", np.column_stack((xdam[mask], ydam[mask])))
 
     rmtree(tempdir)
 
     y = y[::-1]
-    if 'flood_seed' in topoconfig:
-        seed = (np.abs(x-topoconfig['flood_seed'][0]).argmin(),
-                np.abs(y-topoconfig['flood_seed'][1]).argmin())
+    if 'flood_seed' in TOPM:
+        seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
+                np.abs(y-TOPM['flood_seed'][1]).argmin())
     else:
-        seed, r = pick_seed(Z, x, y, topoconfig['resolution'])
-    flooded = fill_lake(Z, seed[::-1], topoconfig['lake_alt'])
-    xc, yc = find_contours(flooded.T, 0.5)[0].T
-    xc = xmin + xc/x.size * (xmax - xmin)
-    yc = ymin + yc/y.size * (ymax - ymin)
-    yc = ymin + (ymax-yc)  # Reverse y
-    contour_coords = np.vstack((xc, yc)).T
-    np.savetxt("contour.xy", contour_coords)
+        seed, TOPM['lake_alt'], r = pick_seed(Z, x, y, TOPM['resolution'], TOPM['lake_alt'])
 
-    dilated = isotropic_dilation(flooded, 50/topoconfig['resolution'])
-    xc, yc = find_contours(dilated.T, 0.5)[0].T
-    xc = xmin + xc/x.size * (xmax - xmin)
-    yc = ymin + yc/y.size * (ymax - ymin)
-    yc = ymin + (ymax-yc)  # Reverse y
-    dilated_contour_coords = np.vstack((xc, yc)).T
-    np.savetxt("contour_dilated.xy", dilated_contour_coords)
+    contour1 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T)
+    contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
+
+    contour2 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+20).T)
+    contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
+
+    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+100).T)
+    contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
+
+    avacs = read_geojson(projdir / TOPM["avalanches"])
+    np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
 
     if plot:
-        extent = (xmin, xmax, ymin, ymax) 
         plt.title("Processed topography")
-        plt.imshow(Z, extent=extent)
-        plt.plot(*contour_coords.T, '-', label="Lake contour")
-        plt.plot(*dilated_contour_coords.T, '-', label="Dilated contour")
+        plt.imshow(Z, extent=TOPM['bounds'].values())
+        for i in np.unique(avacs[0]):
+            av = avacs.T[i==avacs[0]].T
+            plt.fill(*av[1:])
+        plt.plot(*contour1.T, '-', label="Lake contour")
+        plt.plot(*contour2.T, '-', label="Dilated contour")
+        plt.plot(*contour3.T, '-', label="Dilated contour")
         plt.scatter(x[seed[0]], y[seed[1]], c="g", label="Fill seed")
-        plt.plot(xd, yd, label="Dam middle line")
-        plt.plot(xd, dam_upstream(xd), label="Dam upper line")
-        plt.plot(xd, dam_downstream(xd), label="Dam lower line")
+        plt.plot(xdam, ydam, label="Dam middle line")
+        plt.plot(xdam, dam_upstream(xdam), label="Dam upper line")
+        plt.plot(xdam, dam_downstream(xdam), label="Dam lower line")
         plt.legend()
         plt.show()
 
-def expand_bounds(xmin, xmax, ymin, ymax, margin=5*topoconfig['resolution']):
+def contour(mask):
+    return find_contours(mask, 0.5)[0]
+
+def scale_contour(x, y, nx, ny, xmin, xmax, ymin, ymax):
+    x = xmin + x/nx * (xmax - xmin)
+    y = ymin + y/ny * (ymax - ymin)
+    y = ymin + (ymax-y)  # Reverse y
+    return np.column_stack((x, y))
+
+def expand_bounds(xmin, xmax, ymin, ymax, margin=5*TOPM['resolution']):
     _xmin = xmin - margin
     _ymin = ymin - margin
     _xmax = xmax + margin
@@ -118,19 +136,15 @@ def grid_interp(xt, yt, Zt, x, y):
     ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-2)
     iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-2)
     iyz = yt.size-2-iy
-    Z11 = Zt[iyz, :][:, ix]
-    Z21 = Zt[iyz, :][:, ix+1]
-    Z12 = Zt[iyz+1, :][:, ix]
-    Z22 = Zt[iyz+1, :][:, ix+1]
     x1 = xt[ix]
     x2 = xt[ix+1]
     y1 = yt[iy]
     y2 = yt[iy+1]
     Z = ((
-        + (x2-x)*((y2-y)*Z11.T).T
-        + (x2-x)*((y-y1)*Z12.T).T
-        + (x-x1)*((y2-y)*Z21.T).T
-        + (x-x1)*((y-y1)*Z22.T).T
+        + (x2-x)*((y2-y)*Zt[iyz+1, :][:, ix].T).T
+        + (x2-x)*((y-y1)*Zt[iyz, :][:, ix].T).T
+        + (x-x1)*((y2-y)*Zt[iyz+1, :][:, ix+1].T).T
+        + (x-x1)*((y-y1)*Zt[iyz, :][:, ix+1].T).T
     ).T/(y2-y1)).T/(x2-x1)
     return Z[::-1, :]
 
@@ -138,7 +152,7 @@ def dam_mask(x, y, z):
     dam_y1 = dam_upstream(x)
     dam_y2 = dam_downstream(x)
     y = y[::-1]
-    return (dam_y1 <= y) & (y <= dam_y2) & (z < topoconfig['dam_alt'])
+    return (dam_y1 <= y) & (y <= dam_y2) & (z < TOPM['dam_alt'])
 
 def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000):
     x = x + offset
@@ -151,7 +165,7 @@ def dam_downstream(x, thk=50):
     u = dam_upstream(x, offset=thk)
     return np.maximum(u, d)
 
-def pick_seed(z_im, x, y, res=0):
+def pick_seed(z_im, x, y, res=0, lake_alt=0):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()
@@ -166,7 +180,7 @@ def pick_seed(z_im, x, y, res=0):
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 
-    data = dict(alt="", x=0, y=0, r=0, status="waiting")
+    data = dict(alt=str(lake_alt), x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
 
@@ -213,7 +227,7 @@ def pick_seed(z_im, x, y, res=0):
     fig.canvas.mpl_connect("button_press_event", flood_pick)
     
     plt.show()
-    return (data["x"], data["y"]), data["r"]
+    return (data["x"], data["y"]), float(data["alt"]), data["r"]
 
 def fill_lake(topo, seed, max_level=0):
     mask = topo < max_level
@@ -224,6 +238,19 @@ def fill_lake(topo, seed, max_level=0):
     topo[flooded] = max_level
     return flooded
 
+def read_geojson(path):
+    with open(path, "r") as file:
+        data = load(file)
+
+    coords = []
+    for e in data["features"]:
+        ix = e['properties']['id']
+        points = e['geometry']['coordinates'][0][0]
+        for x, y in points:
+            coords.append([ix-1, x, y])
+
+    avacs = np.array(coords).T
+    return avacs
 
 if __name__ == "__main__":
     parser = ArgumentParser()

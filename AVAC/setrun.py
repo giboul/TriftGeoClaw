@@ -63,18 +63,11 @@ def setrun(claw_pkg='geoclaw', avid=""):
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    if "bounds" in AVAC:
-        clawdata.lower[0] = AVAC["bounds"]["xmin"]
-        clawdata.upper[0] = AVAC["bounds"]["xmax"]
-
-        clawdata.lower[1] = AVAC["bounds"]["ymin"]
-        clawdata.upper[1] = AVAC["bounds"]["ymax"]
-    else:
-        clawdata.lower[0] = TOPM["bounds"]["xmin"]
-        clawdata.upper[0] = TOPM["bounds"]["xmax"]
-
-        clawdata.lower[1] = TOPM["bounds"]["ymin"]
-        clawdata.upper[1] = TOPM["bounds"]["ymax"]
+    bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
+    clawdata.lower[0] = bounds["xmin"]
+    clawdata.upper[0] = bounds["xmax"]
+    clawdata.lower[1] = bounds["ymin"]
+    clawdata.upper[1] = bounds["ymax"]
 
 
     # Set single grid parameters first.
@@ -328,10 +321,10 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
     fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
     fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
-    fgout.x1 = clawdata.lower[0] or TOPM["bounds"]["xmin"]  # 
-    fgout.x2 = clawdata.upper[0] or TOPM["bounds"]["xmax"]  # 
-    fgout.y1 = clawdata.lower[1] or TOPM["bounds"]["ymin"]  # 
-    fgout.y2 = clawdata.upper[1] or TOPM["bounds"]["ymax"]  # 
+    fgout.x1 = clawdata.lower[0]
+    fgout.x2 = clawdata.upper[0]
+    fgout.y1 = clawdata.lower[1]
+    fgout.y2 = clawdata.upper[1]
     fgout.tstart = 0.
     fgout.tend = clawdata.tfinal
     fgout.nout = clawdata.num_output_times
@@ -369,6 +362,14 @@ def setrun(claw_pkg='geoclaw', avid=""):
     probdata.add_param("x2", fgout.x2, "")
     probdata.add_param("y1", fgout.y1, "")
     probdata.add_param("y2", fgout.y2, "")
+
+    voellmydata = rundata.new_UserData(name='probdata',fname='voellmy.data')
+    voellmydata.add_param("snow_density", 300.0, "")
+    voellmydata.add_param("xi", 560, "Voellmy: geometrical resistance")
+    voellmydata.add_param("mu", 0.2, "Voellmy: friction coefficient ~snow viscosity")
+    voellmydata.add_param("u_", 300.0, "Velocity threshold")
+    voellmydata.add_param("beta_slope", 300.0, "Threshold bed slope")
+    voellmydata.add_param("coulomb", 0, "Wether to use the Coulomb model")
 
     return rundata
     # end of function setrun

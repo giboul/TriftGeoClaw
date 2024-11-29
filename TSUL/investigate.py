@@ -15,7 +15,7 @@ def norm(a):
     return (a-amin)/(amax-amin)
 inflow_dir = Path(__file__).parent/"_inflows5"
 files = list(inflow_dir.glob("cut*.txt"))
-x, y = np.loadtxt(Path(__file__).parents[1]/"TOPM"/"contour_dilated.xy").T
+x, y = np.loadtxt(Path(__file__).parents[1]/"TOPM"/"contour2.xy").T
 
 fig, axes = plt.subplots(ncols=3, sharey=True, sharex=True)
 axes[0].set_title("$h$")

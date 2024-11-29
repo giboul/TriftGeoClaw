@@ -30,8 +30,8 @@ def write_qinit(filename = projdir / TOPM["bathymetry"]):
 
     # Fill topo
     z_lake = z.reshape(ny, nx)
-    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, topoconfig["lake_alt"])
-    flooded = fill_lake(z_lake, (seed_iy, seed_ix), topoconfig["lake_alt"])
+    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, TOPM["lake_alt"])
+    flooded = fill_lake(z_lake, (seed_iy, seed_ix), TOPM["lake_alt"])
     dilated = isotropic_dilation(flooded, radius)
     z_lake[dilated] = TOPM["lake_alt"]
 
@@ -46,10 +46,10 @@ def write_qinit(filename = projdir / TOPM["bathymetry"]):
     z_lake = z_lake.flatten()
 
     # Write qinit
-    np.savetxt(projdir/TSUL["qinit"], np.column_stack((x, y, z_lake)))
+    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((x, y, z_lake)))
 
 
-def pick_seed(z_im, x, y, res=0, alt=topoconfig["lake_alt"]):
+def pick_seed(z_im, x, y, res=0, alt=TOPM["lake_alt"]):
 
     extent = x.min(), x.max(), y.min(), y.max()
     fig, ax = plt.subplots()

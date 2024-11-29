@@ -16,45 +16,26 @@ TOPM:
 
 AVAC:
   avalanches: TOPM/avalanches.csv
-  nx: 30
-  ny: 20
-  nsim: 10
-  tmax: 90
-  dt0: 1.
-  cfl: 0.5
-  max_iter: 500
-  dry_tolerance: 0.0001
+  nx: 100
+  ny: 70
   out_format: binary
 
   amr_ratios:
-    x: [2, 2, 2]
-    y: [2, 2, 2]
-    t: [2, 2, 2]
+    x: [2, 3, 4]
+    y: [2, 3, 4]
+    t: [2, 3, 4]
     max_level: 3
-  cells_max: 60
 
   topo: *topofile
 
 TSUL:
-  nx: 30
-  ny: 40
-
   bounds:
     xmin: 2669650.
     xmax: 2671000.
     ymin: 1170100.
     ymax: 1172260.
 
-  amr_ratios:
-    x: [2, 2, 2]
-    y: [2, 2, 2]
-    t: [2, 2, 2]
-    max_level: 3
-  cells_max: 100
-
-
   topo: *topofile
-  qinit: TSUL/qinit.xyz
   out_format: binary
 
-  inflow: "src"  # "bc" or "src"
+  inflow: "bc"  # "bc" or "src"

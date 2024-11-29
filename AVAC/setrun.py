@@ -126,8 +126,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = AVAC["nsim"]
-        clawdata.tfinal = AVAC["tmax"]
+        clawdata.num_output_times = 10
+        clawdata.tfinal = 90
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -168,18 +168,18 @@ def setrun(claw_pkg='geoclaw', avid=""):
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = AVAC["dt0"]
+    clawdata.dt_initial = 1.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
 
     # Desired Courant number if variable dt used, and max to allow without
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = AVAC["cfl"]
+    clawdata.cfl_desired = 0.5
     clawdata.cfl_max = 0.95
 
     # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = AVAC["max_iter"]
+    clawdata.steps_max = 500
 
 
 
@@ -267,7 +267,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # AMR parameters:
     # ---------------
     amrdata = rundata.amrdata
-    amrdata.max1d = AVAC["cells_max"]
+    amrdata.max1d = 60
 
     # max number of refinement levels:
     amrdata.amr_levels_max = AVAC["amr_ratios"]['max_level']
@@ -328,13 +328,13 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
     fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
     fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
-    fgout.x1 = clawdata.lower[0]
-    fgout.x2 = clawdata.upper[0]
-    fgout.y1 = clawdata.lower[1]
-    fgout.y2 = clawdata.upper[1]
+    fgout.x1 = clawdata.lower[0] or TOPM["bounds"]["xmin"]  # 
+    fgout.x2 = clawdata.upper[0] or TOPM["bounds"]["xmax"]  # 
+    fgout.y1 = clawdata.lower[1] or TOPM["bounds"]["ymin"]  # 
+    fgout.y2 = clawdata.upper[1] or TOPM["bounds"]["ymax"]  # 
     fgout.tstart = 0.
     fgout.tend = clawdata.tfinal
-    fgout.nout = AVAC["nsim"]
+    fgout.nout = clawdata.num_output_times
     fgout_grids.append(fgout)    # written to fgout_grids.data
 
     # == setregions.data values ==
@@ -401,7 +401,7 @@ def setgeo(rundata, avid):
 
     # == Algorithm and Initial Conditions ==
     geo_data.sea_level = 0
-    geo_data.dry_tolerance = AVAC["dry_tolerance"]
+    geo_data.dry_tolerance = 1e-4
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025
     geo_data.friction_depth = 20.0
@@ -426,7 +426,7 @@ def setgeo(rundata, avid):
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
     # rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
-    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit.xyz"]]
+    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
     # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])

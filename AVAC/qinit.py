@@ -14,7 +14,7 @@ with open(projdir / "config.yaml") as file:
     TOPM = config["TOPM"]
     AVAC = config["AVAC"]
 
-def write_qinit(avid, plot=False):
+def write_qinit(avid="", plot=False):
 
     path = projdir / TOPM["bathymetry"]
     print(f"INFO: Opening {path}... ", end="")
@@ -38,9 +38,9 @@ def write_qinit(avid, plot=False):
         p.unlink()
     geojson = np.loadtxt(projdir / AVAC["avalanches"])
     if avid:
-        avids = [int(a) for a in avid]
+        avids = [int(a) for a in avid.split(",")]
     else:
-        avids = ["", *np.unique(geojson[0].astype(np.int64))]
+        avids = np.unique(geojson[0].astype(np.int64))
     # for avid in avids:
     #     qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
     #     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
@@ -55,28 +55,24 @@ def write_qinit(avid, plot=False):
     #         plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
     #         bounds = AVAC.get("bounds") or TOPM["bounds"]
     #         plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
-    filename = projdir/"AVAC"/"qinit.xyz"
-    qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
+    filename = projdir/"AVAC"/f"qinit{avid}.xyz"
+    qinit = make_qinit(X, Y, geojson, indices=avids, plot=plot)
     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     if plot:
         plt.legend()
         plt.show()
 
 
-def make_qinit(X, Y, geojson, indices="", plot=False):
+def make_qinit(X, Y, geojson, indices, plot=False):
     Z = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
     ix, x_all, y_all = geojson
     print("Loaded.")
     ix = ix.astype(np.uint8)
-    if indices == "":
-        indices = np.unique(ix)
-    else:
-        indices = [indices]
     for _i, i in enumerate(indices):
         print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
         if i not in ix:
-            raise ValueError(f"Avalanche #{i} is out of bounds {ix.min(), ix.max()}")
+            raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
         x = x_all[i==ix]
         y = y_all[i==ix]
         path = mPath(np.column_stack((x, y)))

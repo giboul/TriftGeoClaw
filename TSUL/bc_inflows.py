@@ -61,7 +61,7 @@ def extract(i, outdir=outAVAC):
 def write(outdir=outTSUL):
     Path(outdir).mkdir(exist_ok=True)
     for b in boundaries:
-        for f in outdir.glob(f"{b}*.txt"):
+        for f in outdir.glob(f"{b}*.npy"):
             f.unlink()
     times = []
     for ti in range(ntimes):
@@ -72,7 +72,7 @@ def write(outdir=outTSUL):
         for bi, boundary in enumerate(boundaries):
             s = slice(bi*n, (bi+1)*n)
             data = np.column_stack((x[s], y[s], h[s], hu[s], hv[s]))
-            path = outdir / f"{boundary}_{ti:0>{4}}.txt"
+            path = outdir / f"{boundary}_{ti:0>{4}}.npy"
             np.savetxt(path, data, comments="")
     np.savetxt(outdir / "times.txt", times)
     print()
@@ -86,8 +86,7 @@ def plot(movie):
         z = eta - h
         zlow = 1.1*z.min()-0.1*z.max()
         eta_steps = ax.stairs(eta, dist, baseline=z, fill=True, label="water", color="skyblue")
-        z_steps = ax.stairs(z, dist, baseline=zlow,
-                            label="land", fill=True, color="sienna", lw=1)
+        z_steps = ax.stairs(z, dist, baseline=zlow, label="land", fill=True, color="sienna", lw=1)
         title = "Cut @ t=%.2f"
         ax.set_title(title % t)
         text_z = 0.9*eta.max()+0.1*zlow

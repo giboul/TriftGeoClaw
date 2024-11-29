@@ -5,6 +5,7 @@ Module to set up run time parameters for Clawpack.
 The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 """
+from subprocess import Popen
 from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
@@ -44,15 +45,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    xmin, xmax, ymin, ymax = np.loadtxt("lake_extent.txt")
+    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
     clawdata.upper[1] = ymax
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = TSUL["nx"]
-    clawdata.num_cells[1] = TSUL["ny"]
+    clawdata.num_cells[0] = 70
+    clawdata.num_cells[1] = 100
 
     # ---------------
     # Size of system:
@@ -216,15 +217,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = TSUL["cells_max"]
+    amrdata.max1d = 100
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = TSUL["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = TSUL["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = TSUL["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = [2, 2, 2]
+    amrdata.refinement_ratios_y = [2, 2, 2]
+    amrdata.refinement_ratios_t = [2, 2, 2]
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = TSUL["amr_ratios"]["max_level"]
+    amrdata.amr_levels_max = 3
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -291,7 +292,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')
-    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalcnhe')
+    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
     probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
     probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
     probdata.add_param("x1", (AVAC.get("bounds") or TSUL["bounds"])["xmin"], "")
@@ -357,18 +358,18 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     #     print("INFO: Using the boundary conditions for momentum introduction.")
     # else:
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = [[projdir/TSUL["qinit"]]]
+    rundata.qinit_data.qinitfiles = [[projdir/"TSUL"/"qinit.xyz"]]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)
     # fixed_grid_data script doesn't exist anymore...
-    
+ 
     if bouss is True:
         print("Adding BoussData")
         from clawpack.geoclaw.data import BoussData
         rundata.add_data(BoussData(), 'bouss_data')
         
-        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN
+        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN # TODO
         rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
         rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss
         rundata.bouss_data.bouss_min_depth = 1.   # depth to switch to SWE
@@ -391,6 +392,9 @@ def main():
     rundata = setrun(**args.__dict__)
     rundata.write(projdir / "TSUL")
     data.touch()
+
+    if TSUL["inflow"] == "bc":
+        Popen(["python", projdir/"TSUL"/"bc_inflows", args.avid])
 
 
 if __name__ == '__main__':

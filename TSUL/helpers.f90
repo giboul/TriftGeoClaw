@@ -1,7 +1,7 @@
 module helpers
 
     use IEEE_ARITHMETIC, only : ieee_value, ieee_positive_inf
-    use fgout_module, only : fgout_grid, set_fgout, FGOUT_fgrids
+    use fgout_module, only : fgout_grid, set_fgout, FGOUT_fgrids, FGOUT_num_grids
     implicit none
     save
 
@@ -449,7 +449,7 @@ contains
 
     ! END SUBROUTINE set_q_src_time
 
-    SUBROUTINE init_src_fgout_bin(avid, num_times, q_avac, FGOUT_fgrids)
+    SUBROUTINE init_src_fgout_bin(avid, num_times, q_avac, FGOUT_fgrids, FGOUT_num_grids)
 
         CHARACTER(LEN=4), INTENT(IN) :: avid
         INTEGER, INTENT(IN) :: num_times
@@ -457,9 +457,11 @@ contains
         TYPE(fgout_grid), ALLOCATABLE :: FGOUT_fgrids(:)
         CHARACTER(len=255) :: file, ftemp
         INTEGER :: i, j, k
+        INTEGER, INTENT(OUT) :: FGOUT_num_grids
 
         ftemp = "../../AVAC/_output" // trim(avid) // "/"
         call set_fgout(.false., 4, TRIM(ftemp) // "fgout_grids.data")
+        FGOUT_num_grids = 0
         ftemp = TRIM(ftemp) // "fgout0001.b"
 
         PRINT *, FGOUT_fgrids(1)%mx
@@ -631,14 +633,14 @@ contains
             + (xe-x) * (y-ys) * q(w,s+1) &
             + (xe-x) * (yn-y) * q(w,s) &
         ) / ((xe-xw) * (yn-ys))
-        if (fgoutinterp < 0 .and. .false.) then
-            print *, fgoutinterp
-            print *, xw, x, xe
-            print *, ys, y, yn
-            print *, (x<xw) .or. (xe<x) .or. (y<ys) .or. (yn<y)
-            print *, ANY(q<0)
-            print *, "--------------"
-        end if
+        ! if (fgoutinterp < 0 .and. .false.) then
+        !     print *, fgoutinterp
+        !     print *, xw, x, xe
+        !     print *, ys, y, yn
+        !     print *, (x<xw) .or. (xe<x) .or. (y<ys) .or. (yn<y)
+        !     print *, ANY(q<0)
+        !     print *, "--------------"
+        ! end if
 
     end function fgoutinterp
 

@@ -37,7 +37,7 @@ def write_qinit(filename = projdir / TOPM["bathymetry"]):
 
     # To .xyz format
     x, y = np.meshgrid(x, y)
-    np.savetxt("lake_extent.txt", (
+    np.savetxt(projdir/"TSUL"/"lake_extent.txt", (
         x[dilated].min(), x[dilated].max(),
         y[dilated].min(), y[dilated].max()
     ))

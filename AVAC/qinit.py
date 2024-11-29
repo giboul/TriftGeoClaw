@@ -32,7 +32,7 @@ def write_qinit(avid="", plot=False):
     x = xmin + np.arange(nx)*resolution
     y = ymin + np.arange(ny)[::-1]*resolution
     X, Y = np.meshgrid(x, y)
-    z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
+    Z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
 
     for p in (projdir/"AVAC").glob("qinit*.xyz"):
         p.unlink()
@@ -56,15 +56,17 @@ def write_qinit(avid="", plot=False):
     #         bounds = AVAC.get("bounds") or TOPM["bounds"]
     #         plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
-    qinit = make_qinit(X, Y, geojson, indices=avids, plot=plot)
+    qinit = make_qinit(X, Y, Z, geojson, indices=avids, plot=plot)
     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     if plot:
+        # plt.imshow(np.ma.MaskedArray(qinit, mask=qinit<=0), extent=(X.min(), X.max(), Y.min(), Y.max()))
+        plt.imshow(qinit, extent=(X.min(), X.max(), Y.min(), Y.max()))
         plt.legend()
         plt.show()
 
 
-def make_qinit(X, Y, geojson, indices, plot=False):
-    Z = np.zeros_like(X, dtype=np.float16)
+def make_qinit(X, Y, Z, geojson, indices, plot=False):
+    H = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
     ix, x_all, y_all = geojson
     print("Loaded.")
@@ -79,11 +81,12 @@ def make_qinit(X, Y, geojson, indices, plot=False):
         inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
         inside = inside.reshape(X.shape)
         inside = isotropic_dilation(inside, 2)
-        Z[inside] = 3
+        H[inside] = np.maximum(Z[inside] - 1000, 0)*30/100/100
+        # H[inside] = 3  # np.minimum(Z[inside] - 1000, 0)*30/100
         if plot:
             plt.plot(x, y, label=i)
     print()
-    return Z
+    return H
 
 
 if __name__ == "__main__":

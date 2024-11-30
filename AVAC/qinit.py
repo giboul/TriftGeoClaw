@@ -60,17 +60,30 @@ def write_qinit(avid="", plot=False):
     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     if plot:
         # plt.imshow(np.ma.MaskedArray(qinit, mask=qinit<=0), extent=(X.min(), X.max(), Y.min(), Y.max()))
-        plt.imshow(qinit, extent=(X.min(), X.max(), Y.min(), Y.max()))
+        im = plt.imshow(qinit, extent=(X.min(), X.max(), Y.min(), Y.max()))
+        plt.colorbar(im)
         plt.legend()
         plt.show()
 
 
 def make_qinit(X, Y, Z, geojson, indices, plot=False):
+
     H = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
     ix, x_all, y_all = geojson
     print("Loaded.")
     ix = ix.astype(np.uint8)
+    dX = X[1:-1, 2:] - X[1:-1,:-2]
+    dY = Y[2:, 1:-1] - Y[:-2, 1:-1]
+    d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 y, Western Bernese Oberland
+    gradZ = np.zeros((3, Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
+    gradZ[0] = (Z[1:-1, 2:]-Z[1:-1, :-2])/dX
+    gradZ[1] = (Z[2:, 1:-1]-Z[:-2, 1:-1])/dY
+    gradZ[2] = (gradZ[:2]**2).sum(axis=0)
+    dip = np.zeros((Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
+    m = ~np.isclose(gradZ[2], 0)
+    dip[m] = np.arccos(np.linalg.norm(gradZ[:2], axis=0)[m] / np.linalg.norm(gradZ, axis=0)[m])
+
     for _i, i in enumerate(indices):
         print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
         if i not in ix:
@@ -81,8 +94,9 @@ def make_qinit(X, Y, Z, geojson, indices, plot=False):
         inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
         inside = inside.reshape(X.shape)
         inside = isotropic_dilation(inside, 2)
-        H[inside] = np.maximum(Z[inside] - 1000, 0)*30/100/100
-        # H[inside] = 3  # np.minimum(Z[inside] - 1000, 0)*30/100
+        # H[1:-1, 1:-1][inside] = np.maximum(Z[1:-1, 1:-1][inside] - 1000, 0)*30/100/100
+        psi = dip[inside[1:-1, 1:-1]].mean()
+        H[inside] = 0*d0s[inside[1:-1, 1:-1]].mean() + 0.291/(np.sin(psi)-0.202*np.cos(psi))
         if plot:
             plt.plot(x, y, label=i)
     print()

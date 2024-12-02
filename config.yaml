@@ -3,8 +3,8 @@ TOPM:
   bathymetry: &topofile TOPM/bathymetry.asc
   avalanches: avalanches.geojson
   lake_alt: 1767
-  dam_alt: 1780
-  resolution: 5
+  dam_alt: 1779
+  resolution: 1
 
   bounds:
     xmin: 2666500.
@@ -38,4 +38,4 @@ TSUL:
   topo: *topofile
   out_format: binary
 
-  inflow: "bc"  # "bc" or "src"
+  inflow: "src"  # "bc" or "src"

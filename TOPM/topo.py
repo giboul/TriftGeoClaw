@@ -141,10 +141,10 @@ def grid_interp(xt, yt, Zt, x, y):
     y1 = yt[iy]
     y2 = yt[iy+1]
     Z = ((
-        + (x2-x)*((y2-y)*Zt[iyz+1, :][:, ix].T).T
-        + (x2-x)*((y-y1)*Zt[iyz, :][:, ix].T).T
+        + (x2-x)*((y2-y)*Zt[iyz+1, :][:, ix  ].T).T
+        + (x2-x)*((y-y1)*Zt[iyz,   :][:, ix  ].T).T
         + (x-x1)*((y2-y)*Zt[iyz+1, :][:, ix+1].T).T
-        + (x-x1)*((y-y1)*Zt[iyz, :][:, ix+1].T).T
+        + (x-x1)*((y-y1)*Zt[iyz,   :][:, ix+1].T).T
     ).T/(y2-y1)).T/(x2-x1)
     return Z[::-1, :]
 
@@ -154,13 +154,15 @@ def dam_mask(x, y, z):
     y = y[::-1]
     return (dam_y1 <= y) & (y <= dam_y2) & (z < TOPM['dam_alt'])
 
-def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000):
+def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000, eps=1e-5):
     x = x + offset
-    yd = y0 - 0.3*(x-x0) - 50000/(x-x1) - 300 + offset
-    yd[(x < x0) | (x > x1) | (yd > ymax)] = float("inf")
+    # np.divide(500, x-x1, out=np.zeros_like(x), where=~np.isclose(x, x1))
+    yd = y0 - 0.3*(x-x0) - np.divide(50000, x-x1, out=np.full_like(x, np.inf, dtype=np.float64), where=(x0<x)&(x+1e-8<x1)) - 300 + offset
+    # yd[yd > ymax] = np.inf
+    # yd[(x < x0) | (x > x1) | (yd > ymax)] = float("inf")
     return yd
 
-def dam_downstream(x, thk=50):
+def dam_downstream(x, thk=20):
     d = dam_upstream(x)
     u = dam_upstream(x, offset=thk)
     return np.maximum(u, d)

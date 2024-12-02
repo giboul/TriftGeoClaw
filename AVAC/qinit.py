@@ -41,48 +41,36 @@ def write_qinit(avid="", plot=False):
         avids = [int(a) for a in avid.split(",")]
     else:
         avids = np.unique(geojson[0].astype(np.int64))
-    # for avid in avids:
-    #     qinit = make_qinit(X, Y, geojson, indices=avid, plot=plot)
-    #     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
-    #     print(f"Saving {filename}...", end=" ", flush=True)
-    #     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
-    #     print("Saved.")
-    #     qinit[qinit <= 0] = float("nan")
-
-    #     if plot:
-    #         ext = xmin, x.max(), ymin, y.max()
-    #         plt.imshow(z, extent=ext)
-    #         plt.imshow(qinit, extent=ext, cmap=plt.cm.Blues)
-    #         bounds = AVAC.get("bounds") or TOPM["bounds"]
-    #         plt.scatter((bounds["xmin"], bounds["xmax"]), (bounds["ymin"], bounds["ymax"]))
     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
-    qinit = make_qinit(X, Y, Z, geojson, indices=avids, plot=plot)
+    qinit = make_qinit(X, Y, Z, geojson, indices=avids)
     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     if plot:
-        # plt.imshow(np.ma.MaskedArray(qinit, mask=qinit<=0), extent=(X.min(), X.max(), Y.min(), Y.max()))
-        im = plt.imshow(qinit, extent=(X.min(), X.max(), Y.min(), Y.max()))
+        ext = X.min(), X.max(), Y.min(), Y.max()
+        plt.figure(layout="tight")
+        plt.imshow(Z, extent=ext)
+        im = plt.imshow(np.ma.MaskedArray(qinit, mask=qinit==0), extent=ext, cmap=plt.cm.Reds)
         plt.colorbar(im)
-        plt.legend()
+        # plt.legend()
         plt.show()
 
 
-def make_qinit(X, Y, Z, geojson, indices, plot=False):
+def make_qinit(X, Y, Z, geojson, indices):
 
     H = np.zeros_like(X, dtype=np.float16)
     print("Loading avalances.csv...", end=" ")
     ix, x_all, y_all = geojson
     print("Loaded.")
     ix = ix.astype(np.uint8)
-    dX = X[1:-1, 2:] - X[1:-1,:-2]
-    dY = Y[2:, 1:-1] - Y[:-2, 1:-1]
-    d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 y, Western Bernese Oberland
-    gradZ = np.zeros((3, Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
-    gradZ[0] = (Z[1:-1, 2:]-Z[1:-1, :-2])/dX
-    gradZ[1] = (Z[2:, 1:-1]-Z[:-2, 1:-1])/dY
-    gradZ[2] = (gradZ[:2]**2).sum(axis=0)
-    dip = np.zeros((Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
-    m = ~np.isclose(gradZ[2], 0)
-    dip[m] = np.arccos(np.linalg.norm(gradZ[:2], axis=0)[m] / np.linalg.norm(gradZ, axis=0)[m])
+    d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 years, Western Bernese Oberland
+    psi = dip(X, Y, Z)
+    _fig, _ax = plt.subplots()
+    _ax.set_axis_off()
+    _im = _ax.imshow(psi)
+    _ax.set_axis_off()
+    # plt.colorbar(_im)
+    _fig.savefig("/home/axel/Downloads/dip.pdf", bbox_inches="tight")
+    plt.show()
+    exit()
 
     for _i, i in enumerate(indices):
         print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
@@ -95,12 +83,24 @@ def make_qinit(X, Y, Z, geojson, indices, plot=False):
         inside = inside.reshape(X.shape)
         inside = isotropic_dilation(inside, 2)
         # H[1:-1, 1:-1][inside] = np.maximum(Z[1:-1, 1:-1][inside] - 1000, 0)*30/100/100
-        psi = dip[inside[1:-1, 1:-1]].mean()
-        H[inside] = 0*d0s[inside[1:-1, 1:-1]].mean() + 0.291/(np.sin(psi)-0.202*np.cos(psi))
-        if plot:
-            plt.plot(x, y, label=i)
+        p = psi[inside[1:-1, 1:-1]].mean()
+        d = d0s[inside[1:-1, 1:-1]].mean()
+        H[inside] = d * 0.291/(np.sin(p)-0.202*np.cos(p))
     print()
     return H
+
+def dip(X, Y, Z):
+    dX = X[1:-1, 2:] - X[1:-1,:-2]
+    dY = Y[2:, 1:-1] - Y[:-2, 1:-1]
+    gradZ = np.zeros((3, Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
+    gradZ[0] = (Z[1:-1, 2:]-Z[1:-1, :-2])/dX
+    gradZ[1] = (Z[2:, 1:-1]-Z[:-2, 1:-1])/dY
+    gradZ[2] = (gradZ[:2]**2).sum(axis=0)
+    dip = np.zeros((Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
+    m = ~np.isclose(gradZ[2], 0)
+    # dip[m] = np.arccos(np.linalg.norm(gradZ[:2], axis=0)[m] / np.linalg.norm(gradZ, axis=0)[m])
+    dip[m] = np.arccos(np.sqrt(gradZ[2])[m] / np.sqrt(gradZ[2]*(1+gradZ[2]))[m])
+    return dip
 
 
 if __name__ == "__main__":

@@ -63,14 +63,14 @@ def make_qinit(X, Y, Z, geojson, indices):
     ix = ix.astype(np.uint8)
     d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 years, Western Bernese Oberland
     psi = dip(X, Y, Z)
-    _fig, _ax = plt.subplots()
-    _ax.set_axis_off()
-    _im = _ax.imshow(psi)
-    _ax.set_axis_off()
-    # plt.colorbar(_im)
-    _fig.savefig("/home/axel/Downloads/dip.pdf", bbox_inches="tight")
-    plt.show()
-    exit()
+    # _fig, _ax = plt.subplots()
+    # _ax.set_axis_off()
+    # _im = _ax.imshow(psi)
+    # _ax.set_axis_off()
+    # # plt.colorbar(_im)
+    # _fig.savefig("/home/axel/Downloads/dip.pdf", bbox_inches="tight")
+    # plt.show()
+    # exit()
 
     for _i, i in enumerate(indices):
         print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")

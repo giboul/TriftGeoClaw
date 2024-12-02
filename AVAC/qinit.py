@@ -49,7 +49,11 @@ def write_qinit(avid="", plot=False):
         plt.figure(layout="tight")
         plt.imshow(Z, extent=ext)
         im = plt.imshow(np.ma.MaskedArray(qinit, mask=qinit==0), extent=ext, cmap=plt.cm.Reds)
-        plt.colorbar(im)
+        plt.xlabel("$x$ [m]")
+        plt.ylabel("$y$ [m]")
+        plt.title("Avalanche panels and depth")
+        c = plt.colorbar(im)
+        c.set_label("Snow fall over 3 days $d_0$ ($T=300y$)")
         # plt.legend()
         plt.show()
 

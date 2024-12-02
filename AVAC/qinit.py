@@ -26,13 +26,21 @@ def write_qinit(avid="", plot=False):
         ny = readline(file, int)
         xmin = readline(file, float)
         ymin = readline(file, float)
-        resolution = readline(file, int)
+        resolution = readline(file, float)
         nodatavalue = readline(file, float)
     print("Loaded.")
     x = xmin + np.arange(nx)*resolution
     y = ymin + np.arange(ny)[::-1]*resolution
     X, Y = np.meshgrid(x, y)
     Z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
+    # _fig, _ax = plt.subplots()
+    # _ax.set_axis_off()
+    # _im = _ax.imshow(dip(X, Y, Z))
+    # _ax.set_axis_off()
+    # # plt.colorbar(_im)
+    # _fig.savefig("/home/giboul/Downloads/dip.pdf", bbox_inches="tight")
+    # plt.show()
+    # exit()
 
     for p in (projdir/"AVAC").glob("qinit*.xyz"):
         p.unlink()
@@ -43,7 +51,7 @@ def write_qinit(avid="", plot=False):
         avids = np.unique(geojson[0].astype(np.int64))
     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
     qinit = make_qinit(X, Y, Z, geojson, indices=avids)
-    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    # np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
     if plot:
         ext = X.min(), X.max(), Y.min(), Y.max()
         plt.figure(layout="tight")
@@ -67,30 +75,22 @@ def make_qinit(X, Y, Z, geojson, indices):
     ix = ix.astype(np.uint8)
     d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 years, Western Bernese Oberland
     psi = dip(X, Y, Z)
-    # _fig, _ax = plt.subplots()
-    # _ax.set_axis_off()
-    # _im = _ax.imshow(psi)
-    # _ax.set_axis_off()
-    # # plt.colorbar(_im)
-    # _fig.savefig("/home/axel/Downloads/dip.pdf", bbox_inches="tight")
-    # plt.show()
-    # exit()
 
-    for _i, i in enumerate(indices):
-        print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
-        if i not in ix:
-            raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
-        x = x_all[i==ix]
-        y = y_all[i==ix]
-        path = mPath(np.column_stack((x, y)))
-        inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
-        inside = inside.reshape(X.shape)
-        inside = isotropic_dilation(inside, 2)
-        # H[1:-1, 1:-1][inside] = np.maximum(Z[1:-1, 1:-1][inside] - 1000, 0)*30/100/100
-        p = psi[inside[1:-1, 1:-1]].mean()
-        d = d0s[inside[1:-1, 1:-1]].mean()
-        H[inside] = d * 0.291/(np.sin(p)-0.202*np.cos(p))
-    print()
+    # for _i, i in enumerate(indices):
+    #     print(f"Setting avalanche {i} ({_i+1}/{len(indices)})", end="\r")
+    #     if i not in ix:
+    #         raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
+    #     x = x_all[i==ix]
+    #     y = y_all[i==ix]
+    #     path = mPath(np.column_stack((x, y)))
+    #     inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
+    #     inside = inside.reshape(X.shape)
+    #     inside = isotropic_dilation(inside, 2)
+    #     # H[1:-1, 1:-1][inside] = np.maximum(Z[1:-1, 1:-1][inside] - 1000, 0)*30/100/100
+    #     p = psi[inside[1:-1, 1:-1]].mean()
+    #     d = d0s[inside[1:-1, 1:-1]].mean()
+    #     H[inside] = d * 0.291/(np.sin(p)-0.202*np.cos(p))
+    # print()
     return H
 
 def dip(X, Y, Z):

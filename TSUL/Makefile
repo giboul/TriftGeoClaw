@@ -41,6 +41,7 @@ EXCLUDE_SOURCES = \
 
 
 MODULES = \
+  ./fgout_module.f90 \
   ./helpers.f90 \
 
 SOURCES = \

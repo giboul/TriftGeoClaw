@@ -16,8 +16,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     use friction_module, only: variable_friction, friction_index
 
     use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
-    use helpers, only : gridinterp, fgoutinterp
-    use fgout_module, only : fgout_grid, FGOUT_fgrids
+    use helpers, only : fgoutinterp, AVAC_fgrid
+    use fgout_module, only : fgout_grid
 
     implicit none
     
@@ -54,24 +54,10 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
-                if (1768<aux(1,i,j)) then
-                    ! TODO avoid 3 different calls to gridinterp
-                    ! PRINT *, q_avac(ti,1,:,1)
-                    ! PRINT *, q_avac(ti,2,1,:)
-                    q(1,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,1,:,:), xc, yc)
-                    q(2,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,2,:,:), xc, yc)
-                    q(3,i,j) = fgoutinterp(FGOUT_fgrids(1), q_avac(ti,3,:,:), xc, yc)
-                    q(1,i,j) = q(1,i,j) * damping
-                    ! q(1:3,i,j) = interp2contours( &
-                    !     xc, yc, &
-                    !     q_avac(1,ti,:,1), q_avac(1,ti,:,2), qt2(:,1:3), &
-                    !     q_avac(2,ti,:,1), q_avac(2,ti,:,2), qt3(:,1:3) &
-                    ! )
-                    ! dist = (q_avac(1,ti,:,1)-xc)**2+(q_avac(1,ti,:,2)-yc)**2
-                    ! k = closest(0.d0, dist) 
-                    ! q(1,i,j) = qt3(k,1)*damping
-                    ! q(2,i,j) = qt3(k,2)
-                    ! q(3,i,j) = qt3(k,3)
+                if (1767<aux(1,i,j)) then
+                    q(1,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,1,:,:), xc, yc) * damping
+                    q(2,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,2,:,:), xc, yc) * damping
+                    q(3,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,3,:,:), xc, yc) * damping
                 end if
             end do
         end do

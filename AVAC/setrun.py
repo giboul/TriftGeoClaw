@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = AVAC["nx"]
-    clawdata.num_cells[1] = AVAC["ny"] 
+    clawdata.num_cells[0] = 100
+    clawdata.num_cells[1] = 70
 
     # ---------------
     # Size of system:
@@ -120,7 +120,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 10
-        clawdata.tfinal = 90
+        clawdata.tfinal = 150
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -319,12 +319,13 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
-    fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
-    fgout.x1 = clawdata.lower[0]
-    fgout.x2 = clawdata.upper[0]
-    fgout.y1 = clawdata.lower[1]
-    fgout.y2 = clawdata.upper[1]
+    fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x[:1])
+    fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y[:1])
+    xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TSUL"/"lake_extent.txt"), 1/5)
+    fgout.x1 = xmin
+    fgout.x2 = xmax
+    fgout.y1 = ymin
+    fgout.y2 = ymax
     fgout.tstart = 0.
     fgout.tend = clawdata.tfinal
     fgout.nout = clawdata.num_output_times
@@ -441,6 +442,16 @@ def setgeo(rundata, avid):
     return rundata
     # end of function setgeo
     # ----------------------
+
+
+def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
+    dx = (x2 - x1) * rel_margin + abs_margin
+    dy = (y2 - y1) * rel_margin + abs_margin
+    xmin = x1 - dx
+    xmax = x2 + dx
+    ymin = y1 - dy
+    ymax = y2 + dy
+    return xmin, xmax, ymin, ymax
 
 
 def main():

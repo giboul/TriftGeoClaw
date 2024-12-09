@@ -11,6 +11,7 @@ from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
+from clawpack.geoclaw.fgout_tools import FGoutGrid
 
 
 projdir = Path(__file__).parents[1]
@@ -20,7 +21,7 @@ with open(projdir / "config.yaml") as file:
     TOPM = config["TOPM"]
     TSUL = config["TSUL"]
 
-def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRunData:
+def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.3) -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -44,16 +45,17 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # Number of space dimensions:
     clawdata.num_dim = num_dim
 
+    # Number of grid cells: Coarsest grid
+    clawdata.num_cells[0] = 50
+    clawdata.num_cells[1] = 90
+
     # Lower and upper edge of computational domain:
-    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
+    margin = 1/min(clawdata.num_cells)
+    xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TSUL"/"lake_extent.txt"), 1/100)
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
     clawdata.upper[1] = ymax
-
-    # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 70
-    clawdata.num_cells[1] = 100
 
     # ---------------
     # Size of system:
@@ -102,7 +104,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     clawdata.output_format = TSUL["out_format"]   # 'ascii' or 'binary' 
     clawdata.output_q_components = "all"   # h, hu, hv, eta
-    clawdata.output_aux_components = 'none'  # eta=h+B is in q
+    # clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
 
     # ---------------------------------------------------
@@ -130,7 +132,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # Desired Courant number if variable dt used, and max to allow without
     # retaking step with a smaller dt:
     clawdata.cfl_desired = 0.75
-    clawdata.cfl_max = 1.0  # Limits size of topography !
+    clawdata.cfl_max = 1.0
 
     # Maximum number of time steps to allow between output times:
     clawdata.steps_max = 5000
@@ -205,7 +207,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     if np.abs(clawdata.checkpt_style) == 2:
         # Specify a list of checkpoint times.  
-        clawdata.checkpt_times = [0.1,0.15]
+        pass
+        # clawdata.checkpt_times = [0.1,0.15]
 
     elif np.abs(clawdata.checkpt_style) == 3:
         # Checkpoint every checkpt_interval timesteps (on Level 1)
@@ -217,12 +220,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # ---------------
     amrdata = rundata.amrdata
     # maximum size of patches in each direction (matters in parallel):
-    amrdata.max1d = 100
+    amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 2, 2]
-    amrdata.refinement_ratios_y = [2, 2, 2]
-    amrdata.refinement_ratios_t = [2, 2, 2]
+    amrdata.refinement_ratios_x = [2, 2]
+    amrdata.refinement_ratios_y = [2, 2]
+    amrdata.refinement_ratios_t = [2, 2]
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 3
@@ -234,15 +237,15 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     # Flag using refinement routine flag2refine rather than richardson error
     amrdata.flag_richardson = False    # use Richardson?
-    amrdata.flag_richardson_tol = 1.0  # Richardson tolerance
+    amrdata.flag_richardson_tol = 0.002  # Richardson tolerance
     amrdata.flag2refine = True
 
     # steps to take on each level L between regriddings of level L+1:
-    amrdata.regrid_interval = 1
+    amrdata.regrid_interval = 3
 
     # width of buffer zone around flagged points:
     # (typically the same as regrid_interval so waves don't escape):
-    amrdata.regrid_buffer_width  = 1
+    amrdata.regrid_buffer_width  = 2
 
     # clustering alg. cutoff for (# flagged pts) / (total # of cells refined)
     # (closer to 1.0 => more small grids may be needed to cover flagged cells)
@@ -265,6 +268,26 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     amrdata.uprint = False      # update/upbnd reporting
     
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
+
+    # fgout_grids = rundata.fgout_data.fgout_grids  # empty list initially
+
+    # fgout = FGoutGrid()
+    # fgout.fgno = 1
+    # fgout.point_style = 2       # will specify a 2d grid of points
+    # fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
+    # fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
+    # fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
+    # fgout.x1 = clawdata.lower[0]
+    # fgout.x2 = clawdata.upper[0]
+    # fgout.y1 = clawdata.lower[1]
+    # fgout.y2 = clawdata.upper[1]
+    # fgout.tstart = 0.
+    # fgout.tend = clawdata.tfinal
+    # fgout.nout = clawdata.num_output_times
+    # for k, v in fgout.__dict__.items():
+    #     print(f"fgout[{k}] = {v}")
+    # fgout_grids.append(fgout)
+
     # --------
     # Regions:
     # --------
@@ -293,12 +316,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')
     probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
-    probdata.add_param('fgout_mx', AVAC["nx"]*np.prod(AVAC["amr_ratios"]["x"]), "fgout x resolution")
-    probdata.add_param('fgout_my', AVAC["ny"]*np.prod(AVAC["amr_ratios"]["y"]), "fgout y resolution")
-    probdata.add_param("x1", (AVAC.get("bounds") or TSUL["bounds"])["xmin"], "")
-    probdata.add_param("x2", (AVAC.get("bounds") or TSUL["bounds"])["xmax"], "")
-    probdata.add_param("y1", (AVAC.get("bounds") or TSUL["bounds"])["ymin"], "")
-    probdata.add_param("y2", (AVAC.get("bounds") or TSUL["bounds"])["ymax"], "")
+    probdata.add_param('damping', damping,  'rho_snow/rho_water with safety')
+    # bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
+    # probdata.add_param("x1", bounds["xmin"], "")
+    # probdata.add_param("x2", bounds["xmax"], "")
+    # probdata.add_param("y1", bounds["ymin"], "")
+    # probdata.add_param("y2", bounds["ymax"], "")
 
     return rundata
 
@@ -385,6 +408,7 @@ def main():
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('avid', default='None', nargs='?')
     parser.add_argument('--bouss', action='store_true')
+    parser.add_argument('--damping', default=0.3, type=float, nargs='?')
     args = parser.parse_args()
 
     data = Path(".data")
@@ -394,8 +418,17 @@ def main():
     data.touch()
 
     if TSUL["inflow"] == "bc":
-        Popen(["python", projdir/"TSUL"/"bc_inflows", args.avid])
+        Popen(["python", projdir/"TSUL"/"bc_inflows.py", args.avid])
 
+
+def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
+    dx = (x2 - x1) * rel_margin + abs_margin
+    dy = (y2 - y1) * rel_margin + abs_margin
+    xmin = x1 - dx
+    xmax = x2 + dx
+    ymin = y1 - dy
+    ymax = y2 + dy
+    return xmin, xmax, ymin, ymax
 
 if __name__ == '__main__':
     main()

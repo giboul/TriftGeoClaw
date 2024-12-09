@@ -58,6 +58,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
+        plt.plot(*np.loadtxt(projdir/"TOPM"/"contour1.xy").T)
 
     plotaxes.afteraxes = fixup
 

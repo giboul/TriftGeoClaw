@@ -3,12 +3,12 @@ subroutine setprob
     implicit none
     save
 
-    call read_data(avid, inflow_mode)
-    call read_times(times)
+    call read_data()
+    call read_times()
     if (trim(inflow_mode) == "bc") then
-        call init_bc(q_avac, size(times))
+        call init_bc()
     else if (trim(inflow_mode) == "src") then
-        call init_src_fgout_bin(avid, size(times), q_avac, FGOUT_fgrids, FGOUT_num_grids)
+        call init_src_fgout_bin()
     end if
 
 end subroutine setprob

@@ -139,8 +139,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = 1, nxl ! Avalanche
-                    val(1:3,i,j) = &
-                        interp1d2d(yc,qt(1,:,2),qt(1,:,3:5))
+                    val(1:3,i,j) = interp1d2d(yc,qt(1,:,2),qt(1,:,3:5)) * damping
                     ! i_xy = closest_sup(yc, qt(1,:,2))
                     ! val(1, i, j) = qt(1,i_xy,3) * damping
                     ! val(2, i, j) = qt(1,i_xy,4)
@@ -199,8 +198,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = ibeg, nrow ! Avalanche
-                    val(1:3,i,j) = &
-                        interp1d2d(yc,qt(2,:,2),qt(2,:,3:5))
+                    val(1:3,i,j) = interp1d2d(yc,qt(2,:,2),qt(2,:,3:5)) * damping
                     ! i_xy = closest_sup(yc, q_avac(2,it,:,2))
                     ! val(1, i, j) = q_avac(2,it,i_xy,3) * damping
                     ! val(2, i, j) = q_avac(2,it,i_xy,4)
@@ -259,8 +257,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = 1, nyb ! Avalanche
-                    val(1:3,i,j) = &
-                        interp1d2d(xc,qt(3,:,1),qt(3,:,3:5))
+                    val(1:3,i,j) = interp1d2d(xc,qt(3,:,1),qt(3,:,3:5)) * damping
                     ! i_xy = closest_sup(xc, q_avac(3,it,:,1))
                     ! val(1, i, j) = q_avac(3,it,i_xy,3) * damping
                     ! val(2, i, j) = q_avac(3,it,i_xy,4)
@@ -320,8 +317,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = jbeg, ncol ! Avalanche
-                    val(1:3,i,j) = &
-                        interp1d2d(xc,qt(4,:,1),qt(4,:,3:5))
+                    val(1:3,i,j) = interp1d2d(xc,qt(4,:,1),qt(4,:,3:5)) * damping
                     ! i_xy = closest_sup(xc, q_avac(4,it,:,1))
                     ! val(1, i, j) = q_avac(4,it,i_xy,3) * damping
                     ! val(2, i, j) = q_avac(4,it,i_xy,4)

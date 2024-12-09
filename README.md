@@ -1,6 +1,6 @@
 <img src="drawing.png"/>
 
-# TriftGeoclaw
+# TriftGeoclaw [IN PROGRESS]
 This repository is an attempt to quantify the potential of impulse waves induced by snow avalanches in the future [Trift reservoir](https://www.researchgate.net/publication/313646761_L'amenagement_hydroelectrique_de_Trift) (Gadmen, Bern, Switerland).
 
 This work is divided in two parts which are both base on David George's [Geoclaw](https://www.clawpack.org/geoclaw) module from Randall J. Leveque's [Clawpack](https://www.clawpack.org/).
@@ -23,10 +23,12 @@ Each avalanche can be run individually with the command `make run avid=<avalanch
 <img src="AVAC/movie5.gif"/>
 <img src="AVAC/movie.gif"/>
 
+<!--
 ## Measurement of the flows
 The `clawpack.visclaw.gridtools.grid_output_2d` comes in handy here, it allows to extract all information passing though a curve. Thanks to this function, the momentum flux and the depth are quickly extracted and written to files in the `_cut_output` directory.
 
 <img src="AVAC/cut_movie.gif"/>
+-->
 
 
 # 2. Lake tsunami modelling: [TSUL](https://github.com/giboul/TriftGeoclaw/blob/main/TSUL/README.md)

@@ -7,7 +7,7 @@ from yaml import safe_load
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
-from skimage.morphology import flood, isotropic_dilation
+from skimage.morphology import flood, isotropic_dilation, isotropic_erosion
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
@@ -47,8 +47,8 @@ def write_topo(plot=False):
 
     print(f"\tINFO: Downscaling to resolution = {TOPM['resolution']}")
     x = np.arange(xmin, xmax+TOPM['resolution'], step=TOPM['resolution'])
-    y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])
-    Z = grid_interp(xtif, ytif, Ztif, x, y)
+    y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])[::-1]
+    Z = grid_interp(xtif, ytif, Ztif, x, y[::-1])
     X, Y = np.meshgrid(x, y)
 
     print("\tINFO: Inserting dam...")
@@ -67,7 +67,7 @@ def write_topo(plot=False):
     ))
     np.savetxt(path, Z.flatten(), header=asc_header, comments="")
     print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
-    
+ 
     print("\tINFO: writing dam coordinates")
     xdam = np.linspace(X[mask].min(), X[mask].max(), 100)
     ydam = (dam_downstream(xdam)+dam_upstream(xdam))/2
@@ -77,13 +77,32 @@ def write_topo(plot=False):
     rmtree(tempdir)
 
     y = y[::-1]
-    if 'flood_seed' in TOPM:
+    if 'flood_seed' in TOPM and False:
         seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
-                np.abs(y-TOPM['flood_seed'][1]).argmin())
+                np.abs(y[::-1]-TOPM['flood_seed'][1]).argmin())
+        r = 3  # TODO
     else:
-        seed, TOPM['lake_alt'], r = pick_seed(Z, x, y, TOPM['resolution'], TOPM['lake_alt'])
+        seed, TOPM['lake_alt'], r = pick_seed(Z, x, y[::-1], TOPM['resolution'], TOPM['lake_alt'])
+    # Fill topo
+    Z_lake = Z.copy()
+    flooded = fill_lake(Z_lake, seed[::-1], TOPM["lake_alt"])
+    dilated = isotropic_dilation(flooded, r)
+    Z_lake[dilated] = TOPM["lake_alt"]
+    Z_lake[~dilated] = Z.min()
 
-    contour1 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T)
+    # Save extents
+    extent = (
+        X[flooded].min(), X[flooded].max(),
+        Y[flooded].min(), Y[flooded].max()
+    )
+    np.savetxt(projdir/"TSUL"/"lake_extent.txt", extent)
+
+    # Write qinit
+    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((
+        X.flatten(), Y.flatten(), Z_lake.flatten()
+    )))
+
+    contour1 = contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
 
@@ -112,7 +131,48 @@ def write_topo(plot=False):
         plt.plot(xdam, dam_upstream(xdam), label="Dam upper line")
         plt.plot(xdam, dam_downstream(xdam), label="Dam lower line")
         plt.legend()
+        plt.show(block=False)
+        plt.figure()
+        plt.imshow(Z_lake, extent=(x.min(), x.max(), y.min(), y.max()))
+        plt.scatter(extent[:2], extent[2:], c='r')
         plt.show()
+
+def write_qinit(filename = projdir / TOPM["bathymetry"], flood_seed=None):
+    # TODO remove
+    def before_space(str: str):
+        return str[:str.index(" ")]
+    # Load bathymetry
+    with open(filename, "r") as file:
+        nx = int(before_space(file.readline()))
+        ny = int(before_space(file.readline()))
+        xmin = float(before_space(file.readline()))
+        ymin = float(before_space(file.readline()))
+        res = float(before_space(file.readline()))
+        ndv = float(before_space(file.readline()))
+
+    x = xmin + res*np.arange(nx)
+    y = ymin + res*np.arange(ny)[::-1]
+    z = np.loadtxt(filename, skiprows=6)
+
+    # Fill topo
+    z_lake = z.reshape(ny, nx)
+    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, TOPM["lake_alt"])
+    flooded = fill_lake(z_lake, (seed_iy, seed_ix), TOPM["lake_alt"])
+    dilated = isotropic_dilation(flooded, radius)
+    z_lake[dilated] = TOPM["lake_alt"]
+
+    # Save extents
+    x, y = np.meshgrid(x, y)
+    np.savetxt(projdir/"TSUL"/"lake_extent.txt", (
+        x[flooded].min(), x[flooded].max(),
+        y[flooded].min(), y[flooded].max()
+    ))
+    x = x.flatten()
+    y = y.flatten()
+    z_lake = z_lake.flatten()
+
+    # Write qinit
+    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((x, y, z_lake)))
 
 def contour(mask):
     return find_contours(mask, 0.5)[0]
@@ -151,7 +211,6 @@ def grid_interp(xt, yt, Zt, x, y):
 def dam_mask(x, y, z):
     dam_y1 = dam_upstream(x)
     dam_y2 = dam_downstream(x)
-    y = y[::-1]
     return (dam_y1 <= y) & (y <= dam_y2) & (z < TOPM['dam_alt'])
 
 def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000, eps=1e-5):
@@ -162,7 +221,7 @@ def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000, 
     # yd[(x < x0) | (x > x1) | (yd > ymax)] = float("inf")
     return yd
 
-def dam_downstream(x, thk=20):
+def dam_downstream(x, thk=30):
     d = dam_upstream(x)
     u = dam_upstream(x, offset=thk)
     return np.maximum(u, d)
@@ -189,7 +248,7 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
     def redraw(ignore_pause=False):
         if data["status"] == "pause" and ignore_pause is False:
             return None
-        fig.canvas.manager.set_window_title(f"Flooding...")
+        fig.canvas.manager.set_window_title("Flooding...")
         flooded = fill_lake(z_im.copy(), (data["y"], data["x"]), float(data.get("alt") or 0))
         dilated = isotropic_dilation(flooded, data["r"])
         flooded = np.ma.MaskedArray(z_im, ~flooded)

@@ -332,7 +332,7 @@ contains
         IF (closest_inf < 1) THEN
             closest_inf = MINLOC(array, DIM=1)
         END IF
-        closest_inf = MIN(SIZE(array)-1, closest_inf)
+        ! closest_inf = MIN(SIZE(array)-1, closest_inf)
 
     END FUNCTION closest_inf
 
@@ -346,7 +346,7 @@ contains
         IF (closest_sup < 1) THEN
             closest_sup = MINLOC(array, DIM=1)
         ELSE IF (closest_sup > size(array)) THEN
-            closest_sup = MAXLOC(array, DIM=1)
+            closest_sup = MAXLOC(array, DIM=1)! TODO remove
         END IF
 
     END FUNCTION closest_sup

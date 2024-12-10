@@ -319,9 +319,9 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x[:1])
-    fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y[:1])
-    xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TSUL"/"lake_extent.txt"), 1/5)
+    fgout.nx = 200  # clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x[:1])
+    fgout.ny = 150  # clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y[:1])
+    xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TOPM"/"lake_extent.txt"), 1/5)
     fgout.x1 = xmin
     fgout.x2 = xmax
     fgout.y1 = ymin

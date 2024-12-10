@@ -8,6 +8,7 @@ module helpers
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping
+    real(kind=8) :: lake_alt
     character(len=4) :: avid
     character(len=255) :: inflow_mode
     type(fgout_grid) :: AVAC_fgrid
@@ -26,6 +27,7 @@ contains
             READ(unit,*) avid
             READ(unit,*) inflow_mode
             READ(unit,*) damping
+            READ(unit,*) lake_alt
         CLOSE(unit)
 
         IF (TRIM(inflow_mode) == "None") then
@@ -297,7 +299,7 @@ contains
                 num_cells = max(num_cells, n)
             end do
         end do
-    
+ 
         allocate(q_avac(4, size(times), num_cells, 5))
         print "(A,I10)", "size(q_avac)    = ", size(q_avac)
         print "(A,I10)", "size(q_avac, 1) = ", size(q_avac, 1)
@@ -325,28 +327,27 @@ contains
 
     INTEGER FUNCTION closest_inf(value, array)
 
-        REAL(KIND=8), INTENT(IN) :: value
         REAL(KIND=8), DIMENSION(:), INTENT(IN) :: array
+        REAL(KIND=8), INTENT(IN) :: value
 
-        closest_inf = MINLOC(ABS(array-value), MASK=array<=value, DIM=1)
-        IF (closest_inf < 1) THEN
+        IF (ALL(value<array)) THEN
             closest_inf = MINLOC(array, DIM=1)
+        ELSE
+            closest_inf = MINLOC(ABS(array-value), MASK=array<=value, DIM=1)
         END IF
-        ! closest_inf = MIN(SIZE(array)-1, closest_inf)
 
     END FUNCTION closest_inf
 
 
     INTEGER FUNCTION closest_sup(value, array)
 
-        REAL(kind=8), INTENT(IN) :: value
         REAL(kind=8), dimension(:), INTENT(IN) :: array
+        REAL(kind=8), INTENT(IN) :: value
 
-        closest_sup = MINLOC(ABS(array-value), mask=array>value, DIM=1)
-        IF (closest_sup < 1) THEN
-            closest_sup = MINLOC(array, DIM=1)
-        ELSE IF (closest_sup > size(array)) THEN
-            closest_sup = MAXLOC(array, DIM=1)! TODO remove
+        IF (ALL(array<=value)) THEN
+            closest_sup = MAXLOC(array, DIM=1)
+        ELSE
+            closest_sup = MINLOC(ABS(array-value), mask=array>value, DIM=1)
         END IF
 
     END FUNCTION closest_sup
@@ -432,6 +433,9 @@ contains
             OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
                 READ(2) q_avac(i,:,:,:) ! ti,qi,xi,yj
             CLOSE(2)
+            IF (ANY(ISNAN(q_avac(i,:,:,:))))  THEN
+                PRINT *, q_avac(i,:,:,:)
+            END IF
         END DO
 
     END SUBROUTINE init_src_fgout_bin
@@ -491,10 +495,10 @@ contains
 ! 
 !     end function gridinterp
 
-    real(kind=8) function fgoutinterp(fg, q, xnew, ynew)
+    REAL(KIND=8) FUNCTION fgoutinterp(fg, q, xnew, ynew)
 
-        real(kind=8), intent(in) :: q(:,:), xnew, ynew
-        type(fgout_grid), intent(in) :: fg
+        REAL(KIND=8), INTENT(IN) :: q(:,:), xnew, ynew
+        TYPE(fgout_grid), INTENT(IN) :: fg
         REAL(KIND=8) :: x, y, xw, xe, ys, yn
         INTEGER :: w, s
 
@@ -507,6 +511,7 @@ contains
         ys = fg%y_low + s*(fg%y_hi-fg%y_low)/fg%my
         xe = xw + (fg%x_hi-fg%x_low)/fg%mx
         yn = ys + (fg%y_hi-fg%y_low)/fg%my
+
         fgoutinterp = (&
             + (x-xw) * (y-ys) * q(w+1,s+1) &
             + (x-xw) * (yn-y) * q(w+1,s) &
@@ -514,6 +519,6 @@ contains
             + (xe-x) * (yn-y) * q(w,s) &
         ) / ((xe-xw) * (yn-ys))
 
-    end function fgoutinterp
+    END FUNCTION fgoutinterp
 
 end module helpers

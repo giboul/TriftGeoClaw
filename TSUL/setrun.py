@@ -51,11 +51,13 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
 
     # Lower and upper edge of computational domain:
     margin = 1/min(clawdata.num_cells)
-    xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TSUL"/"lake_extent.txt"), 1/100)
+    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
     clawdata.upper[1] = ymax
+    print(f"#### {clawdata.lower}")
+    print(f"#### {clawdata.upper}")
 
     # ---------------
     # Size of system:
@@ -317,6 +319,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     probdata.add_param('avid', avid,  'Avalanche ID')
     probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
     probdata.add_param('damping', damping,  'rho_snow/rho_water with safety')
+    probdata.add_param('lake_alt', TOPM["lake_alt"],  'Lake altitude')
     # bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
     # probdata.add_param("x1", bounds["xmin"], "")
     # probdata.add_param("x2", bounds["xmax"], "")

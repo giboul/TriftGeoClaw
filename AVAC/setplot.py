@@ -66,9 +66,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
     plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = plt.cm.Blues_r # geoplot.tsunami_colormap
-    plotitem.pcolor_cmin = 0.
-    plotitem.pcolor_cmax = 0.01
+    plotitem.plot_var = 2
+    plotitem.pcolor_cmap = plt.cm.Blues#_r # geoplot.tsunami_colormap
+    plotitem.pcolor_cmin = -10
+    plotitem.pcolor_cmax = 10
     # plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,0]
     # plotitem.patchedges_show = 1

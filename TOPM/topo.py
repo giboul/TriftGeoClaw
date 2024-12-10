@@ -7,6 +7,7 @@ from yaml import safe_load
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.widgets import TextBox
 from skimage.morphology import flood, isotropic_dilation, isotropic_erosion
 from skimage.measure import find_contours
 from tifffile import TiffFile
@@ -90,17 +91,11 @@ def write_topo(plot=False):
     Z_lake[dilated] = TOPM["lake_alt"]
     Z_lake[~dilated] = Z.min()
 
-    # Save extents
-    extent = (
-        X[flooded].min(), X[flooded].max(),
-        Y[flooded].min(), Y[flooded].max()
-    )
-    np.savetxt(projdir/"TSUL"/"lake_extent.txt", extent)
-
     # Write qinit
     np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((
         X.flatten(), Y.flatten(), Z_lake.flatten()
     )))
+
 
     contour1 = contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
@@ -110,9 +105,19 @@ def write_topo(plot=False):
     contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
 
-    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+100).T)
+    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+40).T)
     contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
+
+    # Save extents
+    extent = expand_bounds(
+        X[flooded].min(), X[flooded].max(),
+        Y[flooded].min(), Y[flooded].max(),
+        rel_margin=1/5,
+        abs_margin=10
+    )
+
+    np.savetxt(projdir/"TOPM"/"lake_extent.txt", extent)
 
     avacs = read_geojson(projdir / TOPM["avalanches"])
     np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
@@ -137,43 +142,6 @@ def write_topo(plot=False):
         plt.scatter(extent[:2], extent[2:], c='r')
         plt.show()
 
-def write_qinit(filename = projdir / TOPM["bathymetry"], flood_seed=None):
-    # TODO remove
-    def before_space(str: str):
-        return str[:str.index(" ")]
-    # Load bathymetry
-    with open(filename, "r") as file:
-        nx = int(before_space(file.readline()))
-        ny = int(before_space(file.readline()))
-        xmin = float(before_space(file.readline()))
-        ymin = float(before_space(file.readline()))
-        res = float(before_space(file.readline()))
-        ndv = float(before_space(file.readline()))
-
-    x = xmin + res*np.arange(nx)
-    y = ymin + res*np.arange(ny)[::-1]
-    z = np.loadtxt(filename, skiprows=6)
-
-    # Fill topo
-    z_lake = z.reshape(ny, nx)
-    seed_ix, seed_iy, radius = pick_seed(z_lake.copy(), x, y, res, TOPM["lake_alt"])
-    flooded = fill_lake(z_lake, (seed_iy, seed_ix), TOPM["lake_alt"])
-    dilated = isotropic_dilation(flooded, radius)
-    z_lake[dilated] = TOPM["lake_alt"]
-
-    # Save extents
-    x, y = np.meshgrid(x, y)
-    np.savetxt(projdir/"TSUL"/"lake_extent.txt", (
-        x[flooded].min(), x[flooded].max(),
-        y[flooded].min(), y[flooded].max()
-    ))
-    x = x.flatten()
-    y = y.flatten()
-    z_lake = z_lake.flatten()
-
-    # Write qinit
-    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((x, y, z_lake)))
-
 def contour(mask):
     return find_contours(mask, 0.5)[0]
 
@@ -183,12 +151,14 @@ def scale_contour(x, y, nx, ny, xmin, xmax, ymin, ymax):
     y = ymin + (ymax-y)  # Reverse y
     return np.column_stack((x, y))
 
-def expand_bounds(xmin, xmax, ymin, ymax, margin=5*TOPM['resolution']):
-    _xmin = xmin - margin
-    _ymin = ymin - margin
-    _xmax = xmax + margin
-    _ymax = ymax + margin
-    return _xmin, _xmax, _ymin, _ymax
+def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
+    dx = (x2 - x1) * rel_margin + abs_margin
+    dy = (y2 - y1) * rel_margin + abs_margin
+    xmin = x1 - dx
+    xmax = x2 + dx
+    ymin = y1 - dy
+    ymax = y2 + dy
+    return xmin, xmax, ymin, ymax
 
 def grid_interp(xt, yt, Zt, x, y):
     x = np.clip(x, xt.min(), xt.max())
@@ -229,7 +199,9 @@ def dam_downstream(x, thk=30):
 def pick_seed(z_im, x, y, res=0, lake_alt=0):
 
     extent = x.min(), x.max(), y.min(), y.max()
-    fig, ax = plt.subplots()
+    fig, (axbox, ax) = plt.subplots(nrows=2, gridspec_kw=dict(height_ratios=(1, 5)), layout="tight")
+    text_box = TextBox(axbox, "Lake elevation: ", textalignment="center")
+    text_box.set_val(lake_alt)
     imb = ax.imshow(z_im, extent=extent)
     imd = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Reds")
     imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues")
@@ -244,6 +216,13 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
     data = dict(alt=str(lake_alt), x=0, y=0, r=0, status="waiting")
     keys = dict(up=1, right=1, down=-1, left=-1)
     ax.set_title(title % (data["alt"], data["r"]))
+
+    def on_submit(expression):
+        try:
+            data["alt"] = float(expression)
+        except Exception as e:
+            print(e)
+    text_box.on_submit(on_submit)
 
     def redraw(ignore_pause=False):
         if data["status"] == "pause" and ignore_pause is False:
@@ -261,10 +240,6 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
         fig.canvas.manager.set_window_title(f"Status: {data['status']}")
 
     def key_events(event):
-        if event.key.isnumeric() or event.key == ".":
-            data["alt"] += event.key
-        elif event.key == "backspace":
-            data["alt"] = data["alt"][:-1]
         if event.key in keys:
             data["r"] += keys[event.key]
             redraw(ignore_pause=False)

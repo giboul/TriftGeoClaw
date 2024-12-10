@@ -24,7 +24,7 @@ outTSUL = projdir/"TSUL"/f"_output{args.avid}"
 outAVAC = projdir/"AVAC"/f"_output{args.avid}"
 ntimes = len(list(outAVAC.glob("fort.q*")))
 
-xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TSUL"/"lake_extent.txt")
+xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
 boundaries = ("bottom", "right", "top", "left")
 n = 100
 x = np.hstack((

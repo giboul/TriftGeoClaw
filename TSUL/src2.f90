@@ -16,7 +16,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     use friction_module, only: variable_friction, friction_index
 
     use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
-    use helpers, only : fgoutinterp, AVAC_fgrid
+    use helpers, only : fgoutinterp, AVAC_fgrid, lake_alt
     use fgout_module, only : fgout_grid
 
     implicit none
@@ -54,10 +54,14 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
-                if (1767<aux(1,i,j)) then
+                if (lake_alt<aux(1,i,j)) then
                     q(1,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,1,:,:), xc, yc) * damping
                     q(2,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,2,:,:), xc, yc) * damping
                     q(3,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,3,:,:), xc, yc) * damping
+                    ! print *, q(1,i,j), MAXVAL(q_avac(ti,1,:,:))
+                    ! print *, q(2,i,j), MAXVAL(q_avac(ti,2,:,:))
+                    ! print *, q(3,i,j), MAXVAL(q_avac(ti,3,:,:))
+                    ! print *,"###########"
                 end if
             end do
         end do

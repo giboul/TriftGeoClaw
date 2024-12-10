@@ -1,4 +1,5 @@
 from pathlib import Path
+from argparse import ArgumentParser
 from yaml import safe_load
 import numpy as np
 from matplotlib import pyplot as plt
@@ -7,6 +8,10 @@ from clawpack.visclaw import gridtools
 from clawpack.pyclaw import solution
 
 
+parser = ArgumentParser()
+parser.add_argument("avid", type=str, nargs="?", default="")
+avid = parser.parse_args().avid
+
 projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
@@ -14,10 +19,10 @@ with open(projdir / "config.yaml") as file:
     TOPM = config["TOPM"]
     TSUL = config["TSUL"]
 
-contour = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
+contour = np.loadtxt(projdir / "TOPM" / "contour2.xy").T
 contour_lake = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
 
-outdir = "_output5"
+outdir = f"_output{avid}"
 
 files = sorted(list(Path(projdir/"AVAC"/outdir).glob("fort.t*")))
 timesAVAC = np.zeros(len(files), np.float64)
@@ -51,7 +56,7 @@ dy = (ymax-ymin)/numy
 dx = (x[2:] - x[:-2])/2
 dy = (y[2:] - y[:-2])/2
 
-def read_solution(i, outdir=projdir/"TSUL"/outdir):
+def read_TSUL(i, outdir=projdir/"TSUL"/outdir):
 
     frame = solution.Solution(i, path=outdir, file_format=TSUL["out_format"])
     q = gridtools.grid_output_2d(frame, lambda x: x, X, Y, levels='all',return_ma=True)
@@ -109,7 +114,7 @@ def divide(a, b, fill=0.):
 
 
 nsols = len(list(Path(projdir/"TSUL"/outdir).glob("fort.t*")))
-solutions = [read_solution(i) for i in range(nsols)]
+solutions = [read_TSUL(i) for i in range(nsols)]
 
 g = 9.81
 rhow = 1000
@@ -160,7 +165,7 @@ for i, (q, t) in enumerate(zip(solutions, times)):
     v = divide(hv, h)
     un = u*nx+v*ny
     u2 = u**2+v**2
-    ax2.plot(un, label="TSUL")
+    ax2.plot(un, ls="-", marker='o', ms=2, mfc="w", label="TSUL")
     Etav[i] = 1/2*rhow*intdl(h*g*eta*un + h*u2*un)
     # Avalanche AVAC
     h, hu, hv, s = interp_AVAC_contour(t, xc, yc)
@@ -169,7 +174,7 @@ for i, (q, t) in enumerate(zip(solutions, times)):
     v = divide(hv, h)
     un = u*nx+v*ny
     u2 = u**2+v**2
-    ax2.plot(un, label="AVAC")
+    ax2.plot(un, ls="-", marker='o', ms=2, mfc="w", label="AVAC")
     Eavc[i] = 1/2*rhos*intdl(h*g*eta*un + h*u2*un)
     ax2.legend()
     plt.colorbar(ax1.scatter(xc, yc, c=u2))

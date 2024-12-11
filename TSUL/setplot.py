@@ -71,8 +71,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmin = -10 #topoconfig["lake_alt"]-2
     plotitem.pcolor_cmax = 10 #topoconfig["lake_alt"]+2
     plotitem.add_colorbar = True
-    # plotitem.amr_celledges_show = [0,0,0]
-    # plotitem.patchedges_show = 0
+    # plotitem.amr_celledges_show = [1,1,1]
+    plotitem.patchedges_show = 1
 
     # Land
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')

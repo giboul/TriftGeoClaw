@@ -17,4 +17,4 @@ then
 fi
 
 cd ..
-wait
+python energy.py $avid

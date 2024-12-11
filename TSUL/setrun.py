@@ -46,8 +46,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     clawdata.num_dim = num_dim
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 50
-    clawdata.num_cells[1] = 90
+    clawdata.num_cells[0] = 20
+    clawdata.num_cells[1] = 30
 
     # Lower and upper edge of computational domain:
     margin = 1/min(clawdata.num_cells)
@@ -56,8 +56,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
     clawdata.upper[1] = ymax
-    print(f"#### {clawdata.lower}")
-    print(f"#### {clawdata.upper}")
 
     # ---------------
     # Size of system:
@@ -67,7 +65,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # Number of auxiliary variables in the aux array (initialized in setaux)
     clawdata.num_aux = 1
     # Index of aux array corresponding to capacity function, if there is one:
-    clawdata.capa_index = 0
+    clawdata.capa_index = 0  # TODO: Add comment to error 'mcapa should be nonzero'
 
     # -------------
     # Initial time:
@@ -91,7 +89,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 10
-        clawdata.tfinal = 150
+        clawdata.tfinal = 300
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -225,9 +223,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 2]
-    amrdata.refinement_ratios_y = [2, 2]
-    amrdata.refinement_ratios_t = [2, 2]
+    amrdata.refinement_ratios_x = [5, 3, 4]
+    amrdata.refinement_ratios_y = [5, 3, 4]
+    amrdata.refinement_ratios_t = [5, 3, 4]
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 3

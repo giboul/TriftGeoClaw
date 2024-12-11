@@ -120,7 +120,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 10
-        clawdata.tfinal = 150
+        clawdata.tfinal = 300
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -263,12 +263,12 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata.max1d = 60
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = AVAC["amr_ratios"]['max_level']
+    amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = AVAC["amr_ratios"]["x"]
-    amrdata.refinement_ratios_y = AVAC["amr_ratios"]["y"]
-    amrdata.refinement_ratios_t = AVAC["amr_ratios"]["t"]
+    amrdata.refinement_ratios_x = [10, 4, 2]
+    amrdata.refinement_ratios_y = [10, 4, 2]
+    amrdata.refinement_ratios_t = [10, 4, 2]
 
 
     # Specify type of each aux variable in amrdata.auxtype.

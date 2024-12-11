@@ -495,29 +495,31 @@ contains
 ! 
 !     end function gridinterp
 
-    REAL(KIND=8) FUNCTION fgoutinterp(fg, q, xnew, ynew)
+    REAL(KIND=8) FUNCTION fgoutinterp(fg, q, x, y)
 
-        REAL(KIND=8), INTENT(IN) :: q(:,:), xnew, ynew
+        REAL(KIND=8), INTENT(IN) :: q(:,:), x, y
         TYPE(fgout_grid), INTENT(IN) :: fg
-        REAL(KIND=8) :: x, y, xw, xe, ys, yn
+        REAL(KIND=8) :: xw, xe, ys, yn
         INTEGER :: w, s
 
-        x = MAX(fg%x_low,MIN(fg%x_hi,xnew))
-        y = MAX(fg%y_low,MIN(fg%y_hi,ynew))
+        IF (fg%x_hi<x .or. x<fg%x_low .or. fg%y_hi<y .or. y<fg%y_low) THEN
+            fgoutinterp = 0.d0
+        ELSE
 
-        w = INT((x-fg%x_low)/(fg%x_hi-fg%x_low)*fg%mx)
-        s = INT((y-fg%y_low)/(fg%y_hi-fg%y_low)*fg%my)
-        xw = fg%x_low + w*(fg%x_hi-fg%x_low)/fg%mx
-        ys = fg%y_low + s*(fg%y_hi-fg%y_low)/fg%my
-        xe = xw + (fg%x_hi-fg%x_low)/fg%mx
-        yn = ys + (fg%y_hi-fg%y_low)/fg%my
+            w = MIN(fg%mx-1, 1+INT((x-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
+            s = MIN(fg%my-1, 1+INT((y-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
+            xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
+            ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
+            xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)
+            yn = ys + (fg%y_hi-fg%y_low)/(fg%my-1)
 
-        fgoutinterp = (&
-            + (x-xw) * (y-ys) * q(w+1,s+1) &
-            + (x-xw) * (yn-y) * q(w+1,s) &
-            + (xe-x) * (y-ys) * q(w,s+1) &
-            + (xe-x) * (yn-y) * q(w,s) &
-        ) / ((xe-xw) * (yn-ys))
+            fgoutinterp = (&
+                + (x-xw) * (y-ys) * q(w+1,s+1) &
+                + (x-xw) * (yn-y) * q(w+1,s) &
+                + (xe-x) * (y-ys) * q(w,s+1) &
+                + (xe-x) * (yn-y) * q(w,s) &
+            ) / ((xe-xw) * (yn-ys))
+        END IF
 
     END FUNCTION fgoutinterp
 

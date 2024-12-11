@@ -18,12 +18,6 @@ AVAC:
   avalanches: TOPM/avalanches.csv
   out_format: binary
 
-  amr_ratios:
-    x: [3, 3, 4]
-    y: [3, 3, 4]
-    t: [3, 3, 4]
-    max_level: 3
-
   topo: *topofile
 
 TSUL:
@@ -36,4 +30,4 @@ TSUL:
   topo: *topofile
   out_format: binary
 
-  inflow: "src"  # "bc" or "src"
+  inflow: "bc"  # "bc" or "src"

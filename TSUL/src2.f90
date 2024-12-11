@@ -54,7 +54,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
-                if (lake_alt<aux(1,i,j)) then
+                if (lake_alt+2<aux(1,i,j)) then
                     q(1,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,1,:,:), xc, yc) * damping
                     q(2,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,2,:,:), xc, yc) * damping
                     q(3,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,3,:,:), xc, yc) * damping

@@ -17,4 +17,7 @@ then
 fi
 
 cd ..
-python energy.py $avid
+if [[ $2 == "-p" ]]
+then
+    python energy.py $avid
+fi

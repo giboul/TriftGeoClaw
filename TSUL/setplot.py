@@ -58,6 +58,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         # plt.title("")
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
+        plt.plot(*np.loadtxt(projdir/"TOPM"/"contour2.xy").T)
 
     plotaxes.afteraxes = fixup
 

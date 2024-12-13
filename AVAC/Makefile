@@ -18,8 +18,8 @@ OUTDIR = _output               # Directory for output
 SETPLOT_FILE = setplot.py      # File containing function to set plots
 PLOTDIR = _plots               # Directory for plots
 
-FFLAGS ?= -O2 -fopenmp
-OMP_NUM_THREADS ?= 16
+FFLAGS = -O2 -fopenmp
+OMP_NUM_THREADS = 16
 
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 

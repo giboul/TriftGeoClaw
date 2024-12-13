@@ -117,11 +117,14 @@ def interp_contour(t, times, x, y, outdir=projdir/"AVAC"/outdir, file_format=AVA
     qi = q1 + (q2 - q1) * (t - times[it])/(times[it+1] - times[it])
     return qi
 
+h0, _, _, s0 = read_lake(0)
+s0 = s0 - TOPM["lake_alt"]
+
 def lake_energy_volume(q, rho):
     h, hu, hv, s = q
     s = s - TOPM["lake_alt"]
     hu2 = divide(hu**2 + hv**2, h)
-    pot = 1/2 * rhow * g * np.where(lake, (s-h)**2, 0.)
+    pot = 1/2 * rhow * g * np.where(lake, (s-s0)**2, 0.)
     kin = 1/2 * rhow * hu2
     print(f"{pot.min(), pot.max() = }")
     return intdS(pot + kin), intdS(np.where(lake, h, 0.))

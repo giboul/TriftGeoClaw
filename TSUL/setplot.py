@@ -16,8 +16,9 @@ from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
-    topoconfig = config["TOPM"]
-    config = config["TSUL"]
+    TOPM = config["TOPM"]
+    TSUL = config["TSUL"]
+    AVAC = config["AVAC"]
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 
@@ -30,7 +31,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = config["out_format"]  # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = TSUL["out_format"]  # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -58,7 +59,11 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         # plt.title("")
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        plt.plot(*np.loadtxt(projdir/"TOPM"/"contour2.xy").T)
+        bounds = TOPM["bounds"] | AVAC.get("bounds", dict()) | TSUL.get("bounds", dict()) 
+        xc, yc = np.loadtxt(projdir/"TOPM"/"contour2.xy").T
+        xc = np.maximum(bounds["xmin"], np.minimum(bounds["xmax"], xc))
+        yc = np.maximum(bounds["ymin"], np.minimum(bounds["ymax"], yc))
+        plt.plot(xc, yc)
 
     plotaxes.afteraxes = fixup
 
@@ -79,8 +84,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
     plotitem.pcolor_cmap = plt.cm.viridis
-    plotitem.pcolor_cmin = topoconfig["lake_alt"] - 120
-    plotitem.pcolor_cmax = topoconfig["lake_alt"] + 380
+    plotitem.pcolor_cmin = TOPM["lake_alt"] - 120
+    plotitem.pcolor_cmax = TOPM["lake_alt"] + 380
     plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = [0,0,0]
     # plotitem.patchedges_show = 1

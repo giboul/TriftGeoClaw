@@ -11,6 +11,7 @@ cut.*
 *.tif
 timing.*
 *.png
+*.pdf
 **/.*
 xgeoclaw
 *.geojson

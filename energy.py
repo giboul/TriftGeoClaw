@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 from matplotlib.path import Path as mPath
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
+from skimage.morphology import isotropic_erosion
+plt.style.use("bmh")
 
 
 projdir = Path(__file__).parent
@@ -48,6 +50,7 @@ def read_clawdata(path):
     return clawdata
 
 outdir = Path(f"_output{parse_args().avid}")
+print(f"{outdir = }")
 
 AVACdata = read_clawdata(projdir / "AVAC" / outdir / "claw.data")
 AVACtimes = np.linspace(AVACdata["t0"], AVACdata["tfinal"], AVACdata["num_output_times"], endpoint=True)
@@ -63,6 +66,12 @@ xmin, ymin = TSULdata["lower"]
 xmax, ymax = TSULdata["upper"]
 numx, numy = TSULdata["num_cells"]
 times = np.loadtxt(projdir / "TSUL" / outdir / "times.txt")
+files = list(sorted(outdir.glob("fort.t*")))
+times = np.empty(len(files), dtype=np.float64)
+for i, path in enumerate(files):
+    with open(path) as file:
+        line = file.readline()
+        times[i] = float(line[:len(line)-line[::-1].find(" ")])
 
 x = np.linspace(xmin, xmax, numx)
 y = np.linspace(ymin, ymax, numy)
@@ -74,6 +83,7 @@ dy = (ymax-ymin)/(numy-1)
 # contour1 = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
 contour2 = np.loadtxt(projdir / "TOPM" / "contour2.xy").T
 lake = mPath(contour2.T).contains_points(np.column_stack((X.flatten(), Y.flatten()))).reshape(X.shape)
+lake = isotropic_erosion(lake, 1)
 xc, yc = contour2
 inside = (extent[0] <= xc) & (xc <= extent[1]) & (extent[2] <= yc) & (yc <= extent[3])
 xc = xc[inside]
@@ -108,6 +118,7 @@ def read_lake(i, outdir=projdir/"TSUL"/outdir, file_format=TSUL["out_format"]):
 
 def read_contour(i, x, y, outdir=projdir/"TSUL"/outdir, file_format=TSUL["out_format"]):
     frame_sol = Solution(int(i), path=outdir, file_format=file_format)
+    print(f"\t{outdir}: {i = } {frame_sol.t = }")
     return grid_output_2d(frame_sol, lambda q: q, x, y, levels = "all", return_ma=True)
 
 def interp_contour(t, times, x, y, outdir=projdir/"AVAC"/outdir, file_format=AVAC["out_format"]):
@@ -117,49 +128,63 @@ def interp_contour(t, times, x, y, outdir=projdir/"AVAC"/outdir, file_format=AVA
     qi = q1 + (q2 - q1) * (t - times[it])/(times[it+1] - times[it])
     return qi
 
-h0, _, _, s0 = read_lake(0)
-s0 = s0 - TOPM["lake_alt"]
+h0, u0, v0, s0 = read_lake(0)
 
 def lake_energy_volume(q, rho):
     h, hu, hv, s = q
-    s = s - TOPM["lake_alt"]
     hu2 = divide(hu**2 + hv**2, h)
     pot = 1/2 * rhow * g * np.where(lake, (s-s0)**2, 0.)
-    kin = 1/2 * rhow * hu2
-    print(f"{pot.min(), pot.max() = }")
+    kin = 1/2 * rhow * np.where(lake, hu2, 0.)
     return intdS(pot + kin), intdS(np.where(lake, h, 0.))
 
 def avalanche_energy_volume(q, rho):
     h, hu, hv, s = q
-    s = s - TOPM["lake_alt"]
+    # f, a = plt.subplots()
+    # f.canvas.mpl_connect("key_press_event", lambda e: exit() if e.key=="e" else None)
+    # a.set_title(rho)
+    # a.plot(h)
+    # a.plot(hu)
+    # a.plot(hv)
+    # plt.show()
     hun = hu*nx + hv*ny
-    un = divide(hun, h)
     u2 = divide(hu**2 + hv**2, h**2)
-    pot = 1/2 * rho * g * (s**2-(s-h)**2) * un
+    pot = 1/2 * rho * g * (s-TOPM["lake_alt"]) * hun
     kin = 1/2 * rho * u2 * hun
     return intdl(pot + kin), intdl(hun)
 
 for i, t in enumerate(times):
+    print("###", i, t)
     Eavac[i], Vavac[i] = avalanche_energy_volume(interp_contour(t, AVACtimes, xc, yc), rhos)
     Etsul[i], Vtsul[i] = avalanche_energy_volume(read_contour(i, xc, yc), rhow)
     Elake[i], Vlake[i] = lake_energy_volume(read_lake(i), rhow)
 
 tm, Eavac = trapint(times, Eavac)
 tm, Etsul = trapint(times, Etsul)
-print(Elake[0])
 Eavac += Elake[0]
 Etsul += Elake[0]
 
-fig, (ax, ax2, ax3) = plt.subplots(ncols=3)
-ax.plot(tm, Etsul, '-o', label=r"$E_\text{TSUL}$")
-ax.plot(tm, Eavac, '-o', label=r"$E_\text{AVAC}$")
-ax.plot(times, Elake, '-o', mfc='w', label=r"$\Delta E_\text{lake}$")
+fig, (ax, ax2, ax3) = plt.subplots(ncols=3, layout="tight")
+lavac, = ax.plot(tm, Eavac, '-.o', label=r"$\mathcal{E_A}$ (AVAC)", ms=3, mfc='w')
+ltsul, = ax.plot(tm, Etsul,  '-o', label=r"$\mathcal{E_A}$ (TSUL)", ms=3, mfc='w')
+llake, = ax.plot(times, Elake, '-o', label=r"$\mathcal{\Delta E_L}$ (TSUL)", ms=3, mfc='w')
+
+Elake = (Elake[1:] + Elake[:-1])/2
+Vlake = (Vlake[1:] + Vlake[:-1])/2
+
 ax.legend()
-ax2.plot(tm, rhow*Vlake[0]+rhow*trapint(times, Vtsul)[1], "-o")
-ax2.plot(tm, rhow*Vlake[0]+rhos*trapint(times, Vavac)[1], "-o")
-ax2.plot(times, rhow*Vlake, "-.")
-ax2.yaxis.tick_right()
-ax3.axline((0, 0), slope=1, ls='-.', c="gray")
-ax3.plot(Etsul, Elake[1:])
-ax3.plot(Eavac, Elake[1:])
+ax.set_xlabel("$t$ [s]")
+ax.set_ylabel(r"$\mathcal{E}$ [J]")
+ax2.plot(tm, rhos*trapint(times, Vavac)[1], ls=lavac.get_linestyle(), c=lavac.get_color(), label=r"$V_\mathcal{A}$ (AVAC)")
+ax2.plot(tm, rhow*trapint(times, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsul.get_color(), label=r"$V_\mathcal{A}$ (TSUL)")
+ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta V_\mathcal{L}$ (TSUL)")
+ax2.legend()
+# ax2.yaxis.tick_right()
+ax2.set_xlabel("$t$ [s]")
+ax2.set_ylabel(r"$V_\mathcal{L}$ [m$^\mathregular{3}$]")
+ax3.plot(Eavac, Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
+ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
+ax3.axline((0, 0), slope=1, ls='-.', c="gray", label=r"$\mathcal{E_A=\Delta E_L}$")
+ax3.set_xlabel(r"$\mathcal{E_L}$ [J]")
+ax3.set_ylabel(r"$\mathcal{E_A}$ [J]")
+ax3.legend()
 plt.show()

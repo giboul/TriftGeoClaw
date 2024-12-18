@@ -1,10 +1,11 @@
 TOPM:
   topography: swissALTI3D_merged.tif
   bathymetry: &topofile TOPM/bathymetry.asc
-  avalanches: avalanches.geojson
-  lake_alt: 1767
-  dam_alt: 1779
+  lake_alt: 1775
+  dam_alt: 1785
   resolution: 10
+
+  overhang: 20
 
   bounds:
     xmin: 2666500.
@@ -16,6 +17,7 @@ TOPM:
 
 AVAC:
   avalanches: TOPM/avalanches.csv
+  friction: friction.csv
   out_format: binary
 
   topo: *topofile
@@ -30,4 +32,4 @@ TSUL:
   topo: *topofile
   out_format: binary
 
-  inflow: "src"  # "bc" or "src"
+  inflow: "bc"  # "bc" or "src"

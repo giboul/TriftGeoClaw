@@ -15,7 +15,8 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use friction_module, only: variable_friction, friction_index
 
-    use helpers, only : q_avac, closest, closest_inf, times, damping, inflow_mode
+    use helpers, only : q_avac, closest, closest_inf, times, damping, &
+                        inflow_mode, interp1d4d, overhang
     use helpers, only : fgoutinterp, AVAC_fgrid, lake_alt
     use fgout_module, only : fgout_grid
 
@@ -38,7 +39,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8) :: tau, wind_speed, theta, phi, psi, P_gradient(2), S(2)
     real(kind=8) :: Ddt, sloc(2)
     real(kind=8) :: tanyR, huv, huu, hvv
-    real(kind=8), ALLOCATABLE :: dist(:), qt2(:,:), qt3(:,:)
+    real(kind=8):: qt(size(q_avac,2),size(q_avac,3),size(q_avac,4))
 
     ! Algorithm parameters
 
@@ -50,14 +51,16 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     ! AVAC inflows
     if (trim(inflow_mode) == "src") then
         ti = closest_inf(t, times)
+        ! PRINT *, SUM(q_avac)
+        qt = interp1d4d(t, times, q_avac)
         do j = 1, my
             yc = ylower + (j - 0.5d0) * dy
             do i = 1, mx
                 xc = xlower + (i - 0.5d0) * dx
-                if (lake_alt+2<aux(1,i,j)) then
-                    q(1,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,1,:,:), xc, yc) * damping
-                    q(2,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,2,:,:), xc, yc) * damping
-                    q(3,i,j) = fgoutinterp(AVAC_fgrid, q_avac(ti,3,:,:), xc, yc) * damping
+                if (lake_alt+overhang<aux(1,i,j)) then
+                    q(1,i,j) = fgoutinterp(AVAC_fgrid, qt(1,:,:), xc, yc) * damping
+                    q(2,i,j) = fgoutinterp(AVAC_fgrid, qt(2,:,:), xc, yc) * damping
+                    q(3,i,j) = fgoutinterp(AVAC_fgrid, qt(3,:,:), xc, yc) * damping
                     ! print *, q(1,i,j), MAXVAL(q_avac(ti,1,:,:))
                     ! print *, q(2,i,j), MAXVAL(q_avac(ti,2,:,:))
                     ! print *, q(3,i,j), MAXVAL(q_avac(ti,3,:,:))

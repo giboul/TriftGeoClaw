@@ -266,9 +266,9 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [10, 4, 2]
-    amrdata.refinement_ratios_y = [10, 4, 2]
-    amrdata.refinement_ratios_t = [10, 4, 2]
+    amrdata.refinement_ratios_x = [12, 4, 2]
+    amrdata.refinement_ratios_y = [12, 4, 2]
+    amrdata.refinement_ratios_t = [12, 4, 2]
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -364,11 +364,16 @@ def setrun(claw_pkg='geoclaw', avid=""):
     probdata.add_param("y1", fgout.y1, "")
     probdata.add_param("y2", fgout.y2, "")
 
+    friction = np.loadtxt(projdir / AVAC["friction"], skiprows=1)
+    if avid == "":
+        mu, xi, u_ = friction[:, 1:].mean(axis=0)
+    else:
+        mu, xi, u_ = friction[(friction[:, 0]==int(avid)).argmax(), 1:]
     voellmydata = rundata.new_UserData(name='probdata',fname='voellmy.data')
     voellmydata.add_param("snow_density", 300.0, "")
-    voellmydata.add_param("xi", 560, "Voellmy: geometrical resistance")
-    voellmydata.add_param("mu", 0.2, "Voellmy: friction coefficient ~snow viscosity")
-    voellmydata.add_param("u_", 300.0, "Velocity threshold")
+    voellmydata.add_param("xi", xi, "Voellmy: geometrical resistance")
+    voellmydata.add_param("mu", mu, "Voellmy: friction coefficient ~snow viscosity")
+    voellmydata.add_param("u_", u_, "Velocity threshold")
     voellmydata.add_param("beta_slope", 300.0, "Threshold bed slope")
     voellmydata.add_param("coulomb", 0, "Wether to use the Coulomb model")
 

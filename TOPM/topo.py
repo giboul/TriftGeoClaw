@@ -101,7 +101,7 @@ def write_topo(plot=False):
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
 
-    contour2 = contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']+20).T, 1))
+    contour2 = contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']+TOPM["overhang"]).T, 1))
     contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
 

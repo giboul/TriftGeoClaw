@@ -60,9 +60,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         bounds = TOPM["bounds"] | AVAC.get("bounds", dict()) | TSUL.get("bounds", dict()) 
+        xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt").T
         xc, yc = np.loadtxt(projdir/"TOPM"/"contour2.xy").T
-        xc = np.maximum(bounds["xmin"], np.minimum(bounds["xmax"], xc))
-        yc = np.maximum(bounds["ymin"], np.minimum(bounds["ymax"], yc))
+        xc = np.maximum(xmin, np.minimum(xmax, xc))
+        yc = np.maximum(ymin, np.minimum(ymax, yc))
         plt.plot(xc, yc)
 
     plotaxes.afteraxes = fixup

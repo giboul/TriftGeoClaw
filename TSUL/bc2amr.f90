@@ -109,7 +109,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     integer :: i, j, i_xy, it, ibeg, jbeg, nxl, nxr, nyb, nyt
     real(kind=8) :: hxmarg, hymarg, xc, yc
     real(kind=8), &
-    dimension(size(q_avac,1),size(q_avac,3),size(q_avac,4)) :: qt
+    dimension(size(q_avac,2),size(q_avac,3),size(q_avac,4)) :: qt
 
     ! it = closest(time, times)
     if (inflow_mode=="bc") then

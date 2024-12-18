@@ -318,6 +318,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
     probdata.add_param('damping', damping,  'rho_snow/rho_water with safety')
     probdata.add_param('lake_alt', TOPM["lake_alt"],  'Lake altitude')
+    probdata.add_param('overhang', TOPM.get("overhang", 0.),  'Overhang of the contour over the lake')
     # bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
     # probdata.add_param("x1", bounds["xmin"], "")
     # probdata.add_param("x2", bounds["xmax"], "")

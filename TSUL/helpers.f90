@@ -7,7 +7,7 @@ module helpers
 
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
-    real(kind=8) :: damping
+    real(kind=8) :: damping, overhang
     real(kind=8) :: lake_alt
     character(len=4) :: avid
     character(len=255) :: inflow_mode
@@ -28,6 +28,7 @@ contains
             READ(unit,*) inflow_mode
             READ(unit,*) damping
             READ(unit,*) lake_alt
+            READ(unit,*) overhang
         CLOSE(unit)
 
         IF (TRIM(inflow_mode) == "None") then
@@ -214,61 +215,6 @@ contains
     END SUBROUTINE det
 
 
-    subroutine init_src()
-
-        character(len=255) :: fname
-        real(kind=8) :: x, y, h, hu, hv
-        integer :: unit, io, i, n, c
-        integer :: num_cells
-    
-        num_cells = 0
-        do c = 2, 3
-            do i = 1, size(times)
-                n = 0
-                write(fname,"(A,I0.1,A,I0.4, A4)") "cut",c,"_",i-1,".npy"
-                print "(A,A)", "Reading ", trim(fname)
-                open(unit, file=fname, status="old")
-                    do
-                        read(unit,*,iostat=io)
-                        if (io /= 0) then
-                            exit
-                        end if
-                        n = n + 1
-                    end do
-                close(unit)
-                num_cells = max(num_cells, n)
-            end do
-        end do
- 
-        allocate(q_avac(2, size(times), num_cells, 5))
-        print "(A,I10)", "size(q_avac)    = ", size(q_avac)
-        print "(A,I10)", "size(q_avac, 1) = ", size(q_avac, 1)
-        print "(A,I10)", "size(q_avac, 2) = ", size(q_avac, 2)
-        print "(A,I10)", "size(q_avac, 3) = ", size(q_avac, 3)
-        print "(A,I10)", "size(q_avac, 3) = ", size(q_avac, 4)
-   
-        do c = 2, 3
-            do i = 1, size(times)
-                write(fname,"(A,I0.1,A,I0.4, A4)") "cut",c,"_",i-1,".npy"
-                open(unit, file=fname, status="old")
-                do n = 1, num_cells
-                    read(unit,*, iostat=io) x, y, h, hu, hv
-                    if (io == 0) then
-                        q_avac(c-1, i, n, 1) = x
-                        q_avac(c-1, i, n, 2) = y
-                        q_avac(c-1, i, n, 3) = h
-                        q_avac(c-1, i, n, 4) = hu
-                        q_avac(c-1, i, n, 5) = hv
-                    else
-                        q_avac(c-1, i, n, :) = ieee_value(x, ieee_positive_inf)
-                    end if
-                end do
-                close(unit)
-            end do
-        end do
-    end subroutine init_src
-
-
     subroutine init_bc()
 
         character(len=6), dimension(4) :: sides
@@ -300,7 +246,7 @@ contains
             end do
         end do
  
-        allocate(q_avac(4, size(times), num_cells, 5))
+        allocate(q_avac(size(times), 4, num_cells, 5))
         print "(A,I10)", "size(q_avac)    = ", size(q_avac)
         print "(A,I10)", "size(q_avac, 1) = ", size(q_avac, 1)
         print "(A,I10)", "size(q_avac, 2) = ", size(q_avac, 2)
@@ -313,11 +259,11 @@ contains
                 open(unit, file=fname, status="old")
                 do n = 1, num_cells
                     read(unit,*, iostat=io) x, y, h, hu, hv
-                    q_avac(mthbc, i, n, 1) = x
-                    q_avac(mthbc, i, n, 2) = y
-                    q_avac(mthbc, i, n, 3) = h
-                    q_avac(mthbc, i, n, 4) = hu
-                    q_avac(mthbc, i, n, 5) = hv
+                    q_avac(i, mthbc, n, 1) = x
+                    q_avac(i, mthbc, n, 2) = y
+                    q_avac(i, mthbc, n, 3) = h
+                    q_avac(i, mthbc, n, 4) = hu
+                    q_avac(i, mthbc, n, 5) = hv
                 end do
                 close(unit)
             end do
@@ -357,20 +303,22 @@ contains
 
         REAL(kind=8), INTENT(IN) :: t, ts(:), q(:,:,:,:)
         REAL(kind=8), & 
-        dimension(SIZE(q,1),SIZE(q,3),SIZE(q,4)) :: interp1d4d
+        dimension(SIZE(q,2),SIZE(q,3),SIZE(q,4)) :: interp1d4d
         INTEGER :: i, s
 
         i = closest_inf(t, ts)
         s = closest_sup(t, ts)
+        ! PRINT *, "INTERP1D4D"
         IF (ts(s)<t) THEN
-            interp1d4d = q(:,i,:,:)*0
+            interp1d4d = q(i,:,:,:)*0
         ELSE IF (t<ts(i)) THEN
-            interp1d4d = q(:,s,:,:)*0
+            interp1d4d = q(s,:,:,:)*0
         ELSE
-            interp1d4d = q(:,i,:,:) + &
-                        (q(:,s,:,:) - q(:,i,:,:)) * &
+            interp1d4d = q(i,:,:,:) + &
+                        (q(s,:,:,:) - q(i,:,:,:)) * &
                         (t - ts(i)) / (ts(s) - ts(i))
         END IF
+        ! PRINT "(F6.1,F6.1,F6.1)", SUM(q(i,:,:,:)), SUM(interp1d4d), SUM(q(s,:,:,:))
 
     END FUNCTION interp1d4d
 

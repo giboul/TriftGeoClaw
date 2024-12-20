@@ -58,7 +58,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        plt.plot(*np.loadtxt(projdir/"TOPM"/"contour1.xy").T)
+        # plt.plot(*np.loadtxt(projdir/"TOPM"/"contour1.xy").T)
 
     plotaxes.afteraxes = fixup
 
@@ -66,11 +66,11 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.surface
     plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.plot_var = 2
-    plotitem.pcolor_cmap = plt.cm.Blues#_r # geoplot.tsunami_colormap
-    plotitem.pcolor_cmin = -10
-    plotitem.pcolor_cmax = 10
-    # plotitem.add_colorbar = True
+    plotitem.plot_var = 0
+    plotitem.pcolor_cmap = plt.cm.RdBu_r# plt.cm.Blues_r # geoplot.tsunami_colormap
+    plotitem.pcolor_cmin = 0
+    plotitem.pcolor_cmax = 4
+    plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,0]
     # plotitem.patchedges_show = 1
 

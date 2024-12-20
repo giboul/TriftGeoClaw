@@ -269,25 +269,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
-    # fgout_grids = rundata.fgout_data.fgout_grids  # empty list initially
-
-    # fgout = FGoutGrid()
-    # fgout.fgno = 1
-    # fgout.point_style = 2       # will specify a 2d grid of points
-    # fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    # fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
-    # fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
-    # fgout.x1 = clawdata.lower[0]
-    # fgout.x2 = clawdata.upper[0]
-    # fgout.y1 = clawdata.lower[1]
-    # fgout.y2 = clawdata.upper[1]
-    # fgout.tstart = 0.
-    # fgout.tend = clawdata.tfinal
-    # fgout.nout = clawdata.num_output_times
-    # for k, v in fgout.__dict__.items():
-    #     print(f"fgout[{k}] = {v}")
-    # fgout_grids.append(fgout)
-
     # --------
     # Regions:
     # --------
@@ -388,6 +369,25 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)
     # fixed_grid_data script doesn't exist anymore...
+
+    # fgout_grids = rundata.fgout_data.fgout_grids  # empty list initially
+
+    # fgout = FGoutGrid()
+    # fgout.fgno = 1
+    # fgout.point_style = 2       # will specify a 2d grid of points
+    # fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
+    # fgout.nx = clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x)
+    # fgout.ny = clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y)
+    # fgout.x1 = clawdata.lower[0]
+    # fgout.x2 = clawdata.upper[0]
+    # fgout.y1 = clawdata.lower[1]
+    # fgout.y2 = clawdata.upper[1]
+    # fgout.tstart = 0.
+    # fgout.tend = clawdata.tfinal
+    # fgout.nout = clawdata.num_output_times
+    # for k, v in fgout.__dict__.items():
+    #     print(f"fgout[{k}] = {v}")
+    # fgout_grids.append(fgout)
  
     if bouss is True:
         print("Adding BoussData")

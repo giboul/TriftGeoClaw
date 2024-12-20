@@ -16,7 +16,6 @@ TOPM:
   flood_seed: [2.67026e+6, 1.171490e+6]
 
 AVAC:
-  avalanches: TOPM/avalanches.csv
   friction: friction.csv
   out_format: binary
 

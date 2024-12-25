@@ -1,9 +1,11 @@
 TOPM:
   topography: swissALTI3D_merged.tif
   bathymetry: &topofile TOPM/bathymetry.asc
-  lake_alt: 1775
-  dam_alt: 1785
-  resolution: 10
+  avalanches: avalanches.geojson
+  lake_alt: 1767
+  dam_alt: 1771.2
+  resolution: 0.5
+  smooth_radius: 5
 
   overhang: 20
 

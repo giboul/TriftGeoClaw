@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 100
-    clawdata.num_cells[1] = 70
+    clawdata.num_cells[0] = 200
+    clawdata.num_cells[1] = 100
 
     # ---------------
     # Size of system:
@@ -266,9 +266,9 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [12, 2, 2]
-    amrdata.refinement_ratios_y = [12, 2, 2]
-    amrdata.refinement_ratios_t = [12, 2, 2]
+    amrdata.refinement_ratios_x = [2, 4, 8]
+    amrdata.refinement_ratios_y = [2, 4, 8]
+    amrdata.refinement_ratios_t = [2, 4, 8]
 
 
     # Specify type of each aux variable in amrdata.auxtype.

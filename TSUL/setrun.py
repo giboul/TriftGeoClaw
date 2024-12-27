@@ -113,7 +113,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 0
+    clawdata.verbosity = 3
 
     # --------------
     # Time stepping:
@@ -223,12 +223,12 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [5, 3, 4]
-    amrdata.refinement_ratios_y = [5, 3, 4]
-    amrdata.refinement_ratios_t = [5, 3, 4]
+    amrdata.refinement_ratios_x = [5, 3, 2]
+    amrdata.refinement_ratios_y = [5, 3, 2]
+    amrdata.refinement_ratios_t = [5, 3, 2]
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 4
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:
@@ -275,11 +275,11 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    # rundata.regiondata.regions.append([
-    #     3, 3, clawdata.t0, tf/5,
-    #     0, 0.3,
-    #     1.2, 1.4
-    # ])
+    rundata.regiondata.regions.append([
+        3, 4, clawdata.t0, clawdata.tfinal/5,
+        2.67e6, 2.67e6+400,
+        1.171e6+650, 1.171e6+950
+    ])
     # rundata.regiondata.regions.append([3, 3, 8000., 26000., -90,-80,-30,-15])
     # -------
     # Gauges:

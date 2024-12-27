@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.widgets import TextBox
-from skimage.morphology import flood, isotropic_dilation, isotropic_erosion
+from skimage.morphology import flood, isotropic_dilation, isotropic_erosion, disk
 from skimage.measure import find_contours
 from tifffile import TiffFile
 
@@ -26,36 +26,73 @@ def write_topo(plot=False):
 
     print(f"\tINFO: Opening {path}... ")
     with TiffFile(path) as tif:
-        Ztif = tif.asarray()
+        Z = tif.asarray()
         nx = tif.pages[0].tags["ImageWidth"].value
         ny = tif.pages[0].tags["ImageLength"].value
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
-    xtif = xmin + (np.arange(nx) + 0.5)*x_res
-    ytif = ymax - (np.arange(ny) + 0.5)*y_res
+        tifres = tif.pages[0].tags["ModelPixelScaleTag"].value[0]
+        # for k, v in tif.pages[0].tags.items():
+        #     print(f"\t\t{k}: {v}")
+    x = xmin + (np.arange(nx) + 0.5)*x_res
+    y = ymax - (np.arange(ny) + 0.5)*y_res
 
     xmin = TOPM['bounds']['xmin']
     xmax = TOPM['bounds']['xmax']
     ymin = TOPM['bounds']['ymin']
     ymax = TOPM['bounds']['ymax']
     print(f"\tINFO: Cropping to {xmin, ymin, xmax, ymax = }")
-    xmask = (xmin <= xtif) & (xtif <= xmax)
-    ymask = (ymin <= ytif) & (ytif <= ymax)
-    xtif = xtif[xmask]
-    ytif = ytif[ymask][::-1]
-    Ztif = Ztif[ymask, :][:, xmask]
+    xmask = (xmin <= x) & (x <= xmax)
+    ymask = (ymin <= y) & (y <= ymax)
+    x = x[xmask]
+    y = y[ymask][::-1]
+    Z = Z[ymask, :][:, xmask]
+    # plt.imshow(Z)
+    # plt.show()
 
     print(f"\tINFO: Downscaling to resolution = {TOPM['resolution']}")
-    x = np.arange(xmin, xmax+TOPM['resolution'], step=TOPM['resolution'])
-    y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])[::-1]
-    Z = grid_interp(xtif, ytif, Ztif, x, y[::-1])
-    X, Y = np.meshgrid(x, y)
+    if np.isclose(TOPM["resolution"], tifres):
+        print("\tINFO: Resolution is already as desired.")
+        y = y[::-1]
+    else:
+        x = np.arange(xmin, xmax+TOPM['resolution'], step=TOPM['resolution'])
+        y = np.arange(ymin, ymax+TOPM['resolution'], step=TOPM['resolution'])[::-1]
+        Z = grid_interp(x[0], y[-1], Z.shape[1], Z.shape[0], x_res, Z, x, y[::-1])
+    # plt.imshow(Z)
+    # plt.show()
+    natpath = path.parent / 'natural_bathymetry.asc'
+    print(f"\tINFO: Saving {natpath} (no dam nor smoothing)... ")
+    asc_header = "\n".join((
+        f"{x.size} ncols",
+        f"{y.size} nrows",
+        f"{x.min()} xllcenter",
+        f"{y.min()} yllcenter",
+        f"{TOPM['resolution']} cellsize",
+        f"{999999} nodata_value"
+    ))
+    np.savetxt(natpath, Z.flatten(), header=asc_header, comments="")
+    print(f"\tINFO: File size is {natpath.stat().st_size:.2g} bytes.")
+
+    print(f"\tINFO: Smoothing topo...")
+    smooth_radius = max(1, int(TOPM.get("smooth_radius", 5) / TOPM["resolution"]))
+    kernel = disk(smooth_radius)
+    kernel = kernel / kernel.sum()
+    Z = conv2d(Z, kernel)
+    Z = pad_to_shape(Z, (y.size, x.size))
+    # plt.imshow(Z)
+    # plt.show()
 
     print("\tINFO: Inserting dam...")
+    X, Y = np.meshgrid(x, y)
+    X = X.astype(np.float32)
+    Y = Y.astype(np.float32)
+    Z = Z.astype(np.float16)
     mask = dam_mask(X, Y, Z)
     Z[mask] = TOPM['dam_alt']
     path = projdir / TOPM["bathymetry"]
+    # plt.imshow(Z)
+    # plt.show()
 
     print(f"\tINFO: Saving {path}... ")
     asc_header = "\n".join((
@@ -77,8 +114,9 @@ def write_topo(plot=False):
 
     rmtree(tempdir)
 
+    print("\tINFO: Flooding lake")
     y = y[::-1]
-    if 'flood_seed' in TOPM and False:
+    if 'flood_seed' in TOPM:
         seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
                 np.abs(y[::-1]-TOPM['flood_seed'][1]).argmin())
         r = 3  # TODO
@@ -90,13 +128,17 @@ def write_topo(plot=False):
     dilated = isotropic_dilation(flooded, r)
     Z_lake[dilated] = TOPM["lake_alt"]
     Z_lake[~dilated] = Z.min()
+    # plt.imshow(Z_lake)
+    # plt.show()
 
+    print("\tINFO: writing qinit")
     # Write qinit
     np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((
         X.flatten(), Y.flatten(), Z_lake.flatten()
     )))
 
 
+    print("\tINFO: writing contours")
     contour1 = contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
@@ -160,34 +202,34 @@ def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
     ymax = y2 + dy
     return xmin, xmax, ymin, ymax
 
-def grid_interp(xt, yt, Zt, x, y):
-    x = np.clip(x, xt.min(), xt.max())
-    y = np.clip(y, yt.min(), yt.max())
-    ix = np.clip(np.searchsorted(xt, x)-1, 0, xt.size-2)
-    iy = np.clip(np.searchsorted(yt, y)-1, 0, yt.size-2)
-    iyz = yt.size-2-iy
-    x1 = xt[ix]
-    x2 = xt[ix+1]
-    y1 = yt[iy]
-    y2 = yt[iy+1]
-    Z = ((
-        + (x2-x)*((y2-y)*Zt[iyz+1, :][:, ix  ].T).T
-        + (x2-x)*((y-y1)*Zt[iyz,   :][:, ix  ].T).T
-        + (x-x1)*((y2-y)*Zt[iyz+1, :][:, ix+1].T).T
-        + (x-x1)*((y-y1)*Zt[iyz,   :][:, ix+1].T).T
-    ).T/(y2-y1)).T/(x2-x1)
-    return Z[::-1, :]
 
-def dam_mask(x, y, z):
-    dam_y1 = dam_upstream(x)
-    dam_y2 = dam_downstream(x)
-    return (dam_y1 <= y) & (y <= dam_y2) & (z < TOPM['dam_alt'])
+def grid_interp(xll, yll, nx, ny, cs, Zt, x, y):
+    xur = xll + nx*cs
+    yur = yll + ny*cs
+    w = np.clip(0, nx-2, ((x-xll)/(xur-xll)*(nx-1)).astype(np.int64))
+    s = np.clip(0, ny-2, ((y-yll)/(yur-yll)*(ny-1)).astype(np.int64))
+    xw = xll + (xur-xll)*w/(nx-1)
+    ys = yll + (yur-yll)*s/(ny-1)
+    xe = xw + (xur-xll)/(nx-1)
+    yn = ys + (yur-yll)/(ny-1)
+    Z = (
+        + (x-xw)*((y-ys)*Zt[:, w+1][s+1, :].T).T
+        + (x-xw)*((yn-y)*Zt[:, w+1][s  , :].T).T
+        + (xe-x)*((y-ys)*Zt[:, w  ][s+1, :].T).T
+        + (xe-x)*((yn-y)*Zt[:, w  ][s  , :].T).T
+    ) / cs**2
+    return Z
 
-def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, ymax=1172000, eps=1e-5):
+def dam_mask(x, y, z, ymin=1.171e6+650, ymax=1172000):
+    mask = (dam_upstream(x) <= y)
+    mask = mask & (y <= dam_downstream(x))
+    mask = mask & (ymin < y) & (y < ymax)
+    return (mask & (z < TOPM['dam_alt']))
+
+def dam_upstream(x, offset=0, y0=1171960, x0=2669850, x1=2670561, eps=1e-5):
     x = x + offset
     # np.divide(500, x-x1, out=np.zeros_like(x), where=~np.isclose(x, x1))
     yd = y0 - 0.3*(x-x0) - np.divide(50000, x-x1, out=np.full_like(x, np.inf, dtype=np.float64), where=(x0<x)&(x+1e-8<x1)) - 300 + offset
-    # yd[yd > ymax] = np.inf
     # yd[(x < x0) | (x > x1) | (yd > ymax)] = float("inf")
     return yd
 
@@ -248,9 +290,11 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
         elif event.key == " ":
             if data["status"] == "pause":
                 data["status"] = "waiting"
+                fig.canvas.manager.set_window_title(f"Status: {data['status']}")
+                redraw()
             else:
                 data["status"] = "pause"
-            fig.canvas.manager.set_window_title(f"Status: {data['status']}")
+                fig.canvas.manager.set_window_title(f"Status: {data['status']}")
         ax.set_title(title % (data["alt"], data["r"]))
         fig.canvas.draw()
     fig.canvas.mpl_connect("key_press_event", key_events)
@@ -273,6 +317,28 @@ def fill_lake(topo, seed, max_level=0):
     flooded[*seed] = initial_value
     topo[flooded] = max_level
     return flooded
+
+def norm2_kernel(radius: int):
+    x, y = np.meshgrid(np.arange(2*radius), np.arange(2*radius))
+    k = np.sqrt((x-radius)**2 + (y-radius)**2)
+    return k
+
+def conv2d(Z, k):
+    k = np.array(k)
+    if k.size == 0:
+        return Z
+    k = k / np.sum(k)
+    s = k.shape + tuple(np.subtract(Z.shape, k.shape) + 1)
+    strd = np.lib.stride_tricks.as_strided
+    subM = strd(Z, shape = s, strides = Z.strides * 2)
+    return np.einsum('ij,ijkl->kl', k, subM)
+
+def pad_to_shape(Z, shape):
+    y_pad, x_pad = np.subtract(shape, Z.shape)
+    return np.pad(Z,(
+        (y_pad//2, y_pad//2 + y_pad%2), 
+        (x_pad//2, x_pad//2 + x_pad%2)
+    ), mode = 'edge')
 
 def read_geojson(path):
     with open(path, "r") as file:

@@ -7,8 +7,6 @@ import numpy as np
 from matplotlib.path import Path as mPath
 from matplotlib import pyplot as plt
 from skimage.morphology import isotropic_dilation
-# import cython
-# from time import perf_counter as pc
 
 
 projdir = Path(__file__).parents[1]
@@ -19,8 +17,8 @@ with open(projdir / "config.yaml") as file:
 
 def write_qinit(avid="", plot=False):
 
-    path = projdir / TOPM["bathymetry"]
-    print(f"INFO: Opening {path}... ", end="")
+    path = (projdir / TOPM["topography"]).parent / "natural_bathymetry.asc"
+    print(f"\tINFO: Opening {path}... ", end="", flush=True)
     def readline(f, t):
         s = f.readline()
         return t(s[:s.find(" ")])
@@ -31,11 +29,10 @@ def write_qinit(avid="", plot=False):
         ymin = readline(file, float)
         resolution = readline(file, float)
         nodatavalue = readline(file, float)
-    print("Loaded.")
     x = xmin + np.arange(nx)*resolution
     y = ymin + np.arange(ny)[::-1]*resolution
-    X, Y = np.meshgrid(x, y)
     Z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
+    print("Loaded.", flush=True)
 
     for p in (projdir/"AVAC").glob("qinit*.xyz"):
         p.unlink()
@@ -43,26 +40,24 @@ def write_qinit(avid="", plot=False):
     if avid:
         avids = [int(a) for a in avid.split(",")]
     else:
-        avids = np.unique(geojson[0].astype(np.int64))
+        avids = np.unique(geojson[0].astype(np.uint8))
     filename = projdir/"AVAC"/f"qinit{avid}.xyz"
-    qinit = make_qinit(X, Y, Z, geojson, indices=avids)
-    print(f"Saving {filename}", end="... ")
-    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
-    print("Saved.")
+    qinit = make_qinit(x, y, Z, geojson, indices=avids)
     if plot:
-        ext = X.min(), X.max(), Y.min(), Y.max()
+        ext = x.min(), x.max(), y.min(), y.max()
         plt.figure(layout="tight")
         plt.imshow(Z, extent=ext)
-        for ix in avids:
-            x, y = geojson[:, geojson[0, :] == ix][1:, :].mean(axis=1)
-            iy, ix = np.unravel_index(((X-x)**2+(Y-y)**2).argmin(), shape=Z.shape)
-            # _t0 = pc()
-            xt, yt = np.array(talweg(Z, ix, iy, Zend=TOPM["lake_alt"])).T
-            # print(f"{pc() - _t0}")
-            xt = xmin + xt*resolution
-            yt = ymin+ny*resolution - yt*resolution
-            l, = plt.plot(xt, yt, c='r')
-        im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds, zorder=l.get_zorder()+1)
+        # for ix in avids:
+        #     x, y = geojson[:, geojson[0, :] == ix][1:, :].mean(axis=1)
+        #     iy, ix = np.unravel_index(((X-x)**2+(Y-y)**2).argmin(), shape=Z.shape)
+        #     _t0 = pc()
+        #     xt, yt = np.array(talweg(Z, ix, iy, Zend=TOPM["lake_alt"])).T
+        #     # print(f"{pc() - _t0}")
+        #     xt = xmin + xt*resolution
+        #     yt = ymin+ny*resolution - yt*resolution
+        #     l, = plt.plot(xt, yt, c='r')
+        # im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds, zorder=l.get_zorder()+1)
+        im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds)
         plt.xlabel("$x$ [m]")
         plt.ylabel("$y$ [m]")
         plt.title("Avalanche panels and depth")
@@ -70,54 +65,53 @@ def write_qinit(avid="", plot=False):
         c.set_label("Snow fall over 3 days $d_0$ ($T=300y$)")
         # plt.legend()
         plt.show()
+    print(f"\tSaving {filename}", end="... ", flush=True)
+    X, Y = np.meshgrid(x, y, copy=False)
+    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    print("Saved.", flush=True)
 
 
-def make_qinit(X, Y, Z, geojson, indices):
+def make_qinit(x, y, Z, geojson, indices):
 
-    dX = X[1:-1, 2:] - X[1:-1, :-2]
-    dY = Y[:-2, 1:-1] - Y[2:, 1:-1]
-    print((dX<0).all())
-    print((dY<0).all())
-    H = np.zeros_like(X, dtype=np.float16)
-    print("\tINFO: Loading avalances.csv...", end=" ")
+    dx = (x[2:] - x[:-2])[0]
+    dy = (y[:-2] - y[2:])[0]
+    H = np.zeros((y.size, x.size), dtype=np.float32)
+    print("\tINFO: Loading avalances.csv...", end=" ", flush=True)
     ix, x_all, y_all = geojson
-    print("Loaded.")
+    print("Loaded.", flush=True)
     ix = ix.astype(np.uint8)
-    d0s = 2.0 - 5/100/100 * (Z[1:-1, 1:-1] - 2000)  # T = 300 years, Western Bernese Oberland
-    psi = dip(X, Y, Z)
 
+    X, Y = np.meshgrid(x, y)
     for _i, i in enumerate(indices):
-        print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})...")
+        print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})", end="...\r", flush=True)
         if i not in ix:
             raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
-        x = x_all[i==ix]
-        y = y_all[i==ix]
-        path = mPath(np.column_stack((x, y)))
-        inside = path.contains_points(np.column_stack((X.flatten(), Y.flatten())))
-        inside = inside.reshape(X.shape)
+        xi = x_all[i==ix]
+        yi = y_all[i==ix]
+        i0 = (xi.min() <= x).argmax()
+        j0 = (y <= yi.max()).argmax()
+        i1 = x.size-1 - (x <= xi.max())[::-1].argmax()
+        j1 = y.size-1 - (yi.min() <= y)[::-1].argmax()
+        X, Y = np.meshgrid(x[i0:i1+1], y[j0:j1+1])
+        inside = mPath(np.column_stack((xi, yi))).contains_points(
+            np.column_stack((X.flatten(), Y.flatten()))
+        ).reshape(X.shape)
         inside = isotropic_dilation(inside, 2)
-        # H[1:-1, 1:-1][inside] = np.maximum(Z[1:-1, 1:-1][inside] - 1000, 0)*30/100/100
-        p = psi[inside[1:-1, 1:-1]].mean()
-        d = d0s[inside[1:-1, 1:-1]].mean()
-        H[inside] = d * 0.291/(np.sin(p)-0.202*np.cos(p))
-        V = H[1:-1, 1:-1][inside[1:-1, 1:-1]]*dX[inside[1:-1,1:-1]]*dY[inside[1:-1,1:-1]]
-        print(f"\t\tVolume: {V.sum():.2e}")
+        p = dip(dx, dy, Z[j0:j1+1, i0:i1+1])[inside[1:-1, 1:-1]].mean()
+        d = 2.0 - 5/100/100 * (Z[j0:j1+1, i0:i1+1][inside] - 2000)  # T = 300 years, Western Bernese Oberland
+        H[j0:j1+1, i0:i1+1][inside] = (d * 0.291/(np.sin(p)-0.202*np.cos(p))).mean()
+        V = (H[j0:j1+1, i0:i1+1][inside]*dx*dy).sum()
+        # print(f"\t\tVolume: {V:.2e}", flush=True)
+    print()
     return H
 
-def dip(X, Y, Z):
-    dX = X[1:-1, 2:] - X[1:-1,:-2]
-    dY = Y[:-2, 1:-1] - Y[2:, 1:-1]
-    gradZ = np.zeros((3, Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
-    gradZ[0] = (Z[1:-1, 2:]-Z[1:-1, :-2])/dX
-    gradZ[1] = (Z[2:, 1:-1]-Z[:-2, 1:-1])/dY
-    gradZ[2] = (gradZ[:2]**2).sum(axis=0)
-    dip = np.zeros((Z.shape[0]-2, Z.shape[1]-2), dtype=np.float64)
-    m = ~np.isclose(gradZ[2], 0)
-    # dip[m] = np.arccos(np.linalg.norm(gradZ[:2], axis=0)[m] / np.linalg.norm(gradZ, axis=0)[m])
-    dip[m] = np.arccos(np.sqrt(gradZ[2])[m] / np.sqrt(gradZ[2]*(1+gradZ[2]))[m])
-    return dip
+def dip(dx, dy, Z):
+    Z = (((Z[1:-1, 2:]-Z[1:-1, :-2])/dx)**2 + ((Z[2:, 1:-1]-Z[:-2, 1:-1])/dy)**2)
+    m = ~np.isclose(Z, 0)
+    Z[m] = np.arccos(np.sqrt(Z[m]) / np.sqrt(Z[m]*(1+Z[m])))
+    Z[~m] = 0
+    return Z
 
-#@cython.locals(Z=np.ndarray, visited=list[tuple[cython.int]], wmax=cython.int, w=cython.int, Zend=cython.float)
 def _talweg(Z, visited, wmax: int, w=1, Zend=-float("inf"), tol_kw=dict()):
     x, y = visited[-1]
     x0 = max(0, x-w)

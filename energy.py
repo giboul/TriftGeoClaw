@@ -84,9 +84,10 @@ extent = x.min(), x.max(), y.min(), y.max()
 dx = (xmax-xmin)/(numx-1)
 dy = (ymax-ymin)/(numy-1)
 
-# contour1 = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
+contour1 = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
 contour2 = np.loadtxt(projdir / "TOPM" / "contour2.xy").T
-lake = mPath(contour2.T).contains_points(np.column_stack((X.flatten(), Y.flatten()))).reshape(X.shape)
+lake0 = mPath(contour1.T).contains_points(np.column_stack((X.flatten(), Y.flatten()))).reshape(X.shape)
+lake  = mPath(contour2.T).contains_points(np.column_stack((X.flatten(), Y.flatten()))).reshape(X.shape)
 # lake = isotropic_erosion(lake, 1)
 xc, yc = contour2
 inside = (extent[0] <= xc) & (xc <= extent[1]) & (extent[2] <= yc) & (yc <= extent[3])
@@ -104,6 +105,8 @@ Vtsul = np.zeros(TSULtimes.size, np.float64)
 Vlake = np.zeros(TSULtimes.size, np.float64)
 Eavac = np.zeros(AVACtimes.size, np.float64)
 Vavac = np.zeros(AVACtimes.size, np.float64)
+Zlake = np.zeros(AVACtimes.size, np.float64)
+
 
 def trapint(x, y):
     ym = (y[1:] + y[:-1])/2
@@ -131,9 +134,9 @@ def read_contour(i, x, y, outdir=TSULdir, file_format=TSUL["out_format"]):
 #     qi = q1 + (q2 - q1) * (t - times[it])/(times[it+1] - times[it])
 #     return qi
 
-h0, u0, v0, s0 = read_lake(0)
+h0, s0, s0, s0 = read_lake(0)
 
-def lake_energy_volume(q, rho):
+def lake_energy_volume_alt(q, rho):
     h, hu, hv, s = q
     hu2 = divide(hu**2 + hv**2, h)
     pot = 1/2 * rhow * g * np.where(lake, (h-h0)**2, 0.)
@@ -145,7 +148,7 @@ def lake_energy_volume(q, rho):
     # plt.colorbar(i, ax=a3)
     # i.set_clim(-np.abs(s-s0)[lake].max(), np.abs(s-s0)[wet_lake].max())
     # plt.show()
-    return intdA(pot + kin), intdA(np.where(lake, h, 0.))
+    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (s-s0)[lake0].max()
 
 def avalanche_energy_volume(q, rho):
     h, hu, hv, s = q
@@ -159,7 +162,7 @@ for i, t in enumerate(AVACtimes):
     Eavac[i], Vavac[i] = avalanche_energy_volume(read_contour(i, xc, yc, outdir=AVACdir), rhos)
 for i, t in enumerate(TSULtimes):
     Etsul[i], Vtsul[i] = avalanche_energy_volume(read_contour(i, xc, yc), rhow)
-    Elake[i], Vlake[i] = lake_energy_volume(read_lake(i), rhow)
+    Elake[i], Vlake[i], Zlake[i] = lake_energy_volume_alt(read_lake(i), rhow)
 
 ta, Eavac = trapint(AVACtimes, Eavac)
 tm, Etsul = trapint(TSULtimes, Etsul)
@@ -190,3 +193,4 @@ ax3.set_xlabel(r"$\mathcal{E_L}$ [J]")
 ax3.set_ylabel(r"$\mathcal{E_A}$ [J]")
 ax3.legend()
 plt.show()
+print(Zlake-TOPM["lake_alt"])

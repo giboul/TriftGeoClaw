@@ -9,6 +9,7 @@
 - [x] Faciliter l'utilisation avec un fichier `config.yaml` (chemin vers le ficier topo, paramètres redondants, préférences...)
 - [x] Faire un diagramme expliquant le fonctionnement de GeoClaw. => [AMR flowcharts](https://www.clawpack.org/dev/amrclaw_flowcharts.html)
 - [x] Rajouter une région de maille fine autour du barrage (éviter la rupture).
+- [x] Rajouter une avalanche correspondant à une chute de la langue du glacier.
 - [ ] Comparer les résultats à ceux des expériences VAW+LHE (test des conditions de bord).
 
 # À explorer 

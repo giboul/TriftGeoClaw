@@ -3,6 +3,7 @@ fort.*
 cut.*
 *.xy
 *.xyz
+*.npy
 *.asc
 *.mp4
 *.o

@@ -223,9 +223,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [5, 3, 2]
-    amrdata.refinement_ratios_y = [5, 3, 2]
-    amrdata.refinement_ratios_t = [5, 3, 2]
+    amrdata.refinement_ratios_x = [3, 3, 2]
+    amrdata.refinement_ratios_y = [3, 3, 2]
+    amrdata.refinement_ratios_t = [3, 3, 2]
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 4

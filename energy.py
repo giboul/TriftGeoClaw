@@ -7,7 +7,9 @@ from matplotlib.path import Path as mPath
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
 from skimage.morphology import isotropic_erosion
-plt.style.use("bmh")
+plt.style.use("seaborn-v0_8-paper")
+np.seterr(all="raise", under="ignore")
+plt.rcParams["text.usetex"] = True
 
 
 projdir = Path(__file__).parent
@@ -49,7 +51,8 @@ def read_clawdata(path):
             clawdata[key] = value[0] if len(value)==1 else value
     return clawdata
 
-outdir = Path(f"_output{parse_args().avid}")
+avid = parse_args().avid
+outdir = Path(f"_output{avid}")
 TSULdir = projdir / "TSUL" / outdir
 AVACdir = projdir / "AVAC" / outdir
 
@@ -77,12 +80,12 @@ numx, numy = TSULdata["num_cells"]
 #         line = file.readline()
 #         times[i] = float(line[:len(line)-line[::-1].find(" ")])
 
-x = np.linspace(xmin, xmax, numx)
-y = np.linspace(ymin, ymax, numy)
-X, Y = np.meshgrid(x, y)
+x = np.linspace(xmin, xmax, 4*numx, endpoint=True)
+y = np.linspace(ymin, ymax, 4*numy, endpoint=True)
 extent = x.min(), x.max(), y.min(), y.max()
-dx = (xmax-xmin)/(numx-1)
-dy = (ymax-ymin)/(numy-1)
+dx = np.diff(x).mean()
+dy = np.diff(y).mean()
+X, Y = np.meshgrid(x, y)
 
 contour1 = np.loadtxt(projdir / "TOPM" / "contour1.xy").T
 contour2 = np.loadtxt(projdir / "TOPM" / "contour2.xy").T
@@ -144,9 +147,9 @@ def lake_energy_volume_alt(q, rho):
     # f, (a1, a2, a3) = plt.subplots(ncols=3)
     # a1.imshow(np.where(lake, h, np.nan), origin="lower", cmap=plt.cm.RdBu)
     # a2.imshow(np.where(lake, pot, np.nan), origin="lower", cmap=plt.cm.RdBu)
-    # i = a3.imshow(np.where(lake, s-s0, np.nan), origin="lower", cmap=plt.cm.RdBu)
+    # i = a3.imshow(np.where(lake, h-h0, np.nan), origin="lower", cmap=plt.cm.RdBu)
     # plt.colorbar(i, ax=a3)
-    # i.set_clim(-np.abs(s-s0)[lake].max(), np.abs(s-s0)[wet_lake].max())
+    # i.set_clim(-np.abs(h-h0)[lake].max(), np.abs(h-h0)[wet_lake].max())
     # plt.show()
     return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (s-s0)[lake0].max()
 
@@ -159,38 +162,54 @@ def avalanche_energy_volume(q, rho):
     return intdl(pot + kin), intdl(hun)
 
 for i, t in enumerate(AVACtimes):
+    print(f"AVAC: {t = :.1f} ", end=f"({(i+1)/AVACtimes.size:.1%})... \r")
     Eavac[i], Vavac[i] = avalanche_energy_volume(read_contour(i, xc, yc, outdir=AVACdir), rhos)
+print()
 for i, t in enumerate(TSULtimes):
+    print(f"TSUL: {t = :.1f} ", end=f"({(i+1)/TSULtimes.size:.1%})... \r")
     Etsul[i], Vtsul[i] = avalanche_energy_volume(read_contour(i, xc, yc), rhow)
     Elake[i], Vlake[i], Zlake[i] = lake_energy_volume_alt(read_lake(i), rhow)
+print()
 
 ta, Eavac = trapint(AVACtimes, Eavac)
 tm, Etsul = trapint(TSULtimes, Etsul)
 Eavac += Elake[0]
 Etsul += Elake[0]
 
-fig, (ax, ax2, ax3) = plt.subplots(ncols=3, layout="tight")
-lavac, = ax.plot(ta, Eavac, '-.o', label=r"$\mathcal{E_A}$ (AVAC)", ms=3, mfc='w')
-ltsul, = ax.plot(tm, Etsul,  '-o', label=r"$\mathcal{E_A}$ (TSUL)", ms=3, mfc='w')
-llake, = ax.plot(TSULtimes, Elake, '-o', label=r"$\mathcal{\Delta E_L}$ (TSUL)", ms=3, mfc='w')
+np.savetxt(f"Eavac_{TSUL['inflow']}{avid}.npy", np.column_stack((ta, Eavac)))
+np.savetxt(f"Etsul_{TSUL['inflow']}{avid}.npy", np.column_stack((tm, Etsul)))
+np.savetxt(f"Elake_{TSUL['inflow']}{avid}.npy", np.column_stack((TSULtimes, Elake)))
+np.savetxt(f"Zlake_{TSUL['inflow']}{avid}.npy", np.column_stack((TSULtimes, Zlake)))
+
+fig, ((ax, ax3), (ax2, ax4)) = plt.subplots(ncols=2, nrows=2, layout="tight")
+
+lavac, = ax.plot(ta, Eavac, ':', label=r"$\mathcal{E_A}$ (AVAC)")
+ltsul, = ax.plot(tm, Etsul,  '-.', label=r"$\mathcal{E_A}$ (TSUL)")
+llake, = ax.plot(TSULtimes, Elake, '-', label=r"$\mathcal{\Delta E_L}$ (TSUL)")
+ax.set_xlabel("$t$ [s]")
+ax.set_ylabel(r"$\mathcal{E}$ [J]")
+ax.legend()
 
 Elake = (Elake[1:] + Elake[:-1])/2
 Vlake = (Vlake[1:] + Vlake[:-1])/2
 
-ax.legend()
-ax.set_xlabel("$t$ [s]")
-ax.set_ylabel(r"$\mathcal{E}$ [J]")
+ax3.plot(np.interp(tm, ta, Eavac), Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
+ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
+ax3.axline((0, 0), slope=1, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{E_A=\Delta E_L}$")
+ax3.set_ylabel(r"$\mathcal{E_L}$ [J]")
+ax3.set_xlabel(r"$\mathcal{E_A}$ [J]")
+ax3.legend()
+
 ax2.plot(ta, rhos*trapint(AVACtimes, Vavac)[1], ls=lavac.get_linestyle(), c=lavac.get_color(), label=r"$V_\mathcal{A}$ (AVAC)")
 ax2.plot(tm, rhow*trapint(TSULtimes, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsul.get_color(), label=r"$V_\mathcal{A}$ (TSUL)")
 ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta V_\mathcal{L}$ (TSUL)")
 ax2.legend()
 ax2.set_xlabel("$t$ [s]")
-ax2.set_ylabel(r"$V_\mathcal{L}$ [m$^\mathregular{3}$]")
-ax3.plot(np.interp(tm, ta, Eavac), Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
-ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-ax3.axline((0, 0), slope=1, ls='-.', c="gray", label=r"$\mathcal{E_A=\Delta E_L}$")
-ax3.set_xlabel(r"$\mathcal{E_L}$ [J]")
-ax3.set_ylabel(r"$\mathcal{E_A}$ [J]")
-ax3.legend()
+ax2.set_ylabel(r"$V_\mathcal{L}$ [m$^3$]")
+ax2.sharex(ax)
+
+ax4.plot(TSULtimes, Zlake, ls=llake.get_linestyle(), color=llake.get_color())
+ax4.set_xlabel("$t$ [s]")
+ax4.set_ylabel(r"$h_{max}$ [s]")
+
 plt.show()
-print(Zlake-TOPM["lake_alt"])

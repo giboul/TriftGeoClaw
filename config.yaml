@@ -33,4 +33,4 @@ TSUL:
   topo: *topofile
   out_format: binary
 
-  inflow: "bc"  # "bc" or "src"
+  inflow: "src"  # "bc" or "src"

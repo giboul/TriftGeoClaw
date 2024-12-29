@@ -7,7 +7,8 @@ projdir = Path(__file__).parents[1]
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)["TSUL"]
 
-module = dict(bc="bc_inflows.py", src="src_inflows.py")[config["inflow"]]
+if config["inflow"] == "bc":
+    module = dict(bc="bc_inflows.py", src="src_inflows.py")[config["inflow"]]
+    cmd = ["python", module, *argv[1:]]
+    call(cmd)
 
-cmd = ["python", module, *argv[1:]]
-call(cmd)

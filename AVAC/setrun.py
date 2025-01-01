@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 200
-    clawdata.num_cells[1] = 100
+    clawdata.num_cells[0] = int((clawdata.upper[0] - clawdata.lower[0])/100)
+    clawdata.num_cells[1] = int((clawdata.upper[1] - clawdata.lower[1])/100)
 
     # ---------------
     # Size of system:
@@ -147,33 +147,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     #   (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 0
-
-
-
-    # --------------
-    # Time stepping:
-    # --------------
-
-    # if dt_variable==1: variable time steps used based on cfl_desired,
-    # if dt_variable==0: fixed time steps dt = dt_initial will always be used.
-    clawdata.dt_variable = True
-
-    # Initial time step for variable dt.
-    # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = 1.
-
-    # Max time step to be allowed if variable dt used:
-    clawdata.dt_max = 1e+99
-
-    # Desired Courant number if variable dt used, and max to allow without
-    # retaking step with a smaller dt:
-    clawdata.cfl_desired = 0.5
-    clawdata.cfl_max = 0.95
-
-    # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = 500
-
+    clawdata.verbosity = 2
 
 
 
@@ -204,7 +178,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     #   2 or 'superbee' ==> superbee
     #   3 or 'mc'       ==> MC limiter
     #   4 or 'vanleer'  ==> van Leer
-    clawdata.limiter = ['mc', 'mc', 'mc']
+    # clawdata.limiter = ['mc', 'mc', 'mc']
+    clawdata.limiter = ['minmod', 'minmod', 'minmod']
 
     clawdata.use_fwaves = True    # True ==> use f-wave version of algorithms
     
@@ -263,12 +238,43 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata.max1d = 60
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 3
+    amrdata.amr_levels_max = 4
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 4, 8]
-    amrdata.refinement_ratios_y = [2, 4, 8]
-    amrdata.refinement_ratios_t = [2, 4, 8]
+    amrdata.refinement_ratios_x = [2, 8, 10]
+    amrdata.refinement_ratios_y = [2, 8, 10]
+    amrdata.refinement_ratios_t = [2, 8, 10]
+
+    cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
+    min_cell_size_x = cell_size_x/np.prod(amrdata.refinement_ratios_x)
+    print(f"Minimum cell size (x): {min_cell_size_x:.2f}")
+
+
+    # --------------
+    # Time stepping:
+    # --------------
+
+    # if dt_variable==1: variable time steps used based on cfl_desired,
+    # if dt_variable==0: fixed time steps dt = dt_initial will always be used.
+    clawdata.dt_variable = True
+
+    # Initial time step for variable dt.
+    # If dt_variable==0 then dt=dt_initial for all steps:
+    clawdata.dt_initial = min_cell_size_x / 300.
+
+    # Max time step to be allowed if variable dt used:
+    clawdata.dt_max = 1e+99
+
+    # Desired Courant number if variable dt used, and max to allow without
+    # retaking step with a smaller dt:
+    clawdata.cfl_desired = 0.5
+    clawdata.cfl_max = 0.95
+
+    # Maximum number of time steps to allow between output times:
+    clawdata.steps_max = 500
+
+    print(f"{clawdata.dt_initial = }")
+    print(f"Max speed u: {min_cell_size_x/clawdata.dt_initial*clawdata.cfl_max:.2f} m/s")
 
 
     # Specify type of each aux variable in amrdata.auxtype.
@@ -319,8 +325,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.nx = 200  # clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x[:1])
-    fgout.ny = 150  # clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y[:1])
+    fgout.nx = 200
+    fgout.ny = 150
     xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TOPM"/"lake_extent.txt"), 1/5)
     fgout.x1 = xmin
     fgout.x2 = xmax
@@ -408,7 +414,7 @@ def setgeo(rundata, avid):
 
     # == Algorithm and Initial Conditions ==
     geo_data.sea_level = 0
-    geo_data.dry_tolerance = 1e-4
+    geo_data.dry_tolerance = 1e-3
     geo_data.friction_forcing = True
     geo_data.manning_coefficient = 0.025
     geo_data.friction_depth = 20.0

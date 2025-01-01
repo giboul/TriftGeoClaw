@@ -26,7 +26,7 @@ def write_topo(plot=False):
 
     print(f"\tINFO: Opening {path}... ")
     with TiffFile(path) as tif:
-        Z = tif.asarray()
+        Z = tif.asarray().astype(np.float16)
         nx = tif.pages[0].tags["ImageWidth"].value
         ny = tif.pages[0].tags["ImageLength"].value
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
@@ -61,7 +61,7 @@ def write_topo(plot=False):
         Z = grid_interp(x[0], y[-1], Z.shape[1], Z.shape[0], x_res, Z, x, y[::-1])
     # plt.imshow(Z)
     # plt.show()
-    natpath = path.parent / 'natural_bathymetry.asc'
+    natpath = projdir / "TOPM" / 'natural_bathymetry.bin'
     print(f"\tINFO: Saving {natpath} (no dam nor smoothing)... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
@@ -71,12 +71,17 @@ def write_topo(plot=False):
         f"{TOPM['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt(natpath, Z.flatten(), header=asc_header, comments="")
-    print(f"\tINFO: File size is {natpath.stat().st_size:.2g} bytes.")
+    with open(natpath.with_suffix(".data"), "w") as file:
+        file.write(asc_header)
+    # Matrix is written in C order anyway... Hence the '.T'
+    # https://stackoverflow.com/questions/37905759/save-numpy-array-as-binary-to-read-from-fortran
+    Z.reshape(Z.shape, order="F").astype(np.float16).T.tofile(natpath)
+    print(f"\tINFO: {natpath} size is {natpath.stat().st_size:.2g} bytes.")
 
     print(f"\tINFO: Smoothing topo...")
     smooth_radius = max(1, int(TOPM.get("smooth_radius", 5) / TOPM["resolution"]))
     kernel = disk(smooth_radius)
+    # kernel = ~isotropic_erosion(disk(smooth_radius), 1)
     kernel = kernel / kernel.sum()
     Z = conv2d(Z, kernel)
     Z = pad_to_shape(Z, (y.size, x.size))
@@ -103,7 +108,7 @@ def write_topo(plot=False):
         f"{TOPM['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt(path, Z.flatten(), header=asc_header, comments="")
+    np.savetxt(path, Z.flatten(), header=asc_header, comments="", fmt="%.8e")
     print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
  
     print("\tINFO: writing dam coordinates")
@@ -135,32 +140,34 @@ def write_topo(plot=False):
     # Write qinit
     np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((
         X.flatten(), Y.flatten(), Z_lake.flatten()
-    )))
+    )), fmt="%.9e")
 
 
-    print("\tINFO: writing contours")
+    print("\tINFO: writing contours", end=" ", flush=True)
     contour1 = contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
     contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
 
+    print("2", end=" ", flush=True)
     contour2 = contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']+TOPM["overhang"]).T, 1))
     contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
 
+    print("3", end=" ", flush=True)
     contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+40).T)
     contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
 
-    # Save extents
+    print(f"\tINFO: Saving extents")
     extent = expand_bounds(
         X[flooded].min(), X[flooded].max(),
         Y[flooded].min(), Y[flooded].max(),
         rel_margin=1/20,
         abs_margin=10
     )
-
     np.savetxt(projdir/"TOPM"/"lake_extent.txt", extent)
 
+    print(f"\tINFO: Saving avalanches.csv")
     avacs = read_geojson(projdir / TOPM["avalanches"])
     np.savetxt(projdir / "TOPM" / "avalanches.csv", avacs)
 
@@ -315,7 +322,7 @@ def fill_lake(topo, seed, max_level=0):
     mask[*seed] = True
     flooded = flood(mask, seed)
     flooded[*seed] = initial_value
-    topo[flooded] = max_level
+    # topo[flooded] = max_level
     return flooded
 
 def norm2_kernel(radius: int):

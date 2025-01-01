@@ -17,21 +17,22 @@ with open(projdir / "config.yaml") as file:
 
 def write_qinit(avid="", plot=False):
 
-    path = (projdir / TOPM["topography"]).parent / "natural_bathymetry.asc"
+    path = projdir / "TOPM" / "natural_bathymetry.bin"
     print(f"\tINFO: Opening {path}... ", end="", flush=True)
     def readline(f, t):
         s = f.readline()
-        return t(s[:s.find(" ")])
-    with open(path) as file:
-        nx = readline(file, int)
-        ny = readline(file, int)
-        xmin = readline(file, float)
-        ymin = readline(file, float)
-        resolution = readline(file, float)
-        nodatavalue = readline(file, float)
+        ix = s.find(" ")
+        return t(s[:ix]), s[ix:]
+    with open(path.with_suffix(".data")) as file:
+        nx, _ = readline(file, int)
+        ny, _ = readline(file, int)
+        xmin, _ = readline(file, float)
+        ymin, _ = readline(file, float)
+        resolution, _ = readline(file, float)
+        nodatavalue, _ = readline(file, float)
     x = xmin + np.arange(nx)*resolution
     y = ymin + np.arange(ny)[::-1]*resolution
-    Z = np.loadtxt(path, skiprows=6).reshape(ny, nx)
+    Z = np.fromfile(path, dtype=np.float16).reshape(ny, nx, order="F").astype(np.float32)
     print("Loaded.", flush=True)
 
     for p in (projdir/"AVAC").glob("qinit*.xyz"):
@@ -57,7 +58,7 @@ def write_qinit(avid="", plot=False):
         #     yt = ymin+ny*resolution - yt*resolution
         #     l, = plt.plot(xt, yt, c='r')
         # im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds, zorder=l.get_zorder()+1)
-        im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds)
+        im = plt.imshow(np.where(qinit==0, np.nan, qinit)[::10, ::10], extent=ext, cmap=plt.cm.Reds)
         plt.xlabel("$x$ [m]")
         plt.ylabel("$y$ [m]")
         plt.title("Avalanche panels and depth")
@@ -67,7 +68,7 @@ def write_qinit(avid="", plot=False):
         plt.show()
     print(f"\tSaving {filename}", end="... ", flush=True)
     X, Y = np.meshgrid(x, y, copy=False)
-    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))
+    np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())), fmt="%.9e")
     print("Saved.", flush=True)
 
 

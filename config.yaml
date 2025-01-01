@@ -5,7 +5,7 @@ TOPM:
   lake_alt: 1767
   dam_alt: 1771.2
   resolution: 0.5
-  smooth_radius: 11
+  smooth_radius: 10
 
   overhang: 10
 

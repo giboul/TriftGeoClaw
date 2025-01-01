@@ -45,13 +45,13 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # Number of space dimensions:
     clawdata.num_dim = num_dim
 
+    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 20
-    clawdata.num_cells[1] = 30
+    clawdata.num_cells[0] = int((xmax-xmin)/100)
+    clawdata.num_cells[1] = int((ymax-ymin)/100)
 
     # Lower and upper edge of computational domain:
     margin = 1/min(clawdata.num_cells)
-    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
     clawdata.lower[0] = xmin
     clawdata.upper[0] = xmax
     clawdata.lower[1] = ymin
@@ -114,28 +114,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
     clawdata.verbosity = 3
-
-    # --------------
-    # Time stepping:
-    # --------------
-    # if dt_variable==1: variable time steps used based on cfl_desired,
-    # if dt_variable==0: fixed time steps dt = dt_initial will always be used.
-    clawdata.dt_variable = True  # 1 is a truthy value => same
-
-    # Initial time step for variable dt.
-    # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = 0.2
-
-    # Max time step to be allowed if variable dt used:
-    clawdata.dt_max = 1e+99
-
-    # Desired Courant number if variable dt used, and max to allow without
-    # retaking step with a smaller dt:
-    clawdata.cfl_desired = 0.75
-    clawdata.cfl_max = 1.0
-
-    # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = 5000
 
     # ------------------
     # Method to be used:
@@ -223,12 +201,38 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [3, 3, 2]
-    amrdata.refinement_ratios_y = [3, 3, 2]
-    amrdata.refinement_ratios_t = [3, 3, 2]
+    amrdata.refinement_ratios_x = [2, 8, 10]
+    amrdata.refinement_ratios_y = [2, 8, 10]
+    amrdata.refinement_ratios_t = [2, 8, 10]
+
+    cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
+    min_cell_size_x = cell_size_x / np.prod(amrdata.refinement_ratios_x)
+    print(f"Minimum cells size (x): {min_cell_size_x:.2f}")
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 4
+
+    # --------------
+    # Time stepping:
+    # --------------
+    # if dt_variable==1: variable time steps used based on cfl_desired,
+    # if dt_variable==0: fixed time steps dt = dt_initial will always be used.
+    clawdata.dt_variable = True  # 1 is a truthy value => same
+
+    # Initial time step for variable dt.
+    # If dt_variable==0 then dt=dt_initial for all steps:
+    clawdata.dt_initial = min_cell_size_x / 300.
+
+    # Max time step to be allowed if variable dt used:
+    clawdata.dt_max = 1e+99
+
+    # Desired Courant number if variable dt used, and max to allow without
+    # retaking step with a smaller dt:
+    clawdata.cfl_desired = 0.75
+    clawdata.cfl_max = 1.0
+
+    # Maximum number of time steps to allow between output times:
+    clawdata.steps_max = 5000
 
     # Specify type of each aux variable in amrdata.auxtype.
     # This must be a list of length maux, each element of which is one of:

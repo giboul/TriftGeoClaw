@@ -4,6 +4,7 @@ cut.*
 *.xy
 *.xyz
 *.npy
+*.bin
 *.asc
 *.mp4
 *.o

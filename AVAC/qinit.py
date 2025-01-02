@@ -66,7 +66,7 @@ def write_qinit(avid="", plot=False):
         c.set_label("Snow fall over 3 days $d_0$ ($T=300y$)")
         # plt.legend()
         plt.show()
-    print(f"\tSaving {filename}", end="... ", flush=True)
+    print(f"\tINFO: Saving {filename}", end="... ", flush=True)
     X, Y = np.meshgrid(x, y, copy=False)
     np.savetxt(filename, np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())), fmt="%.9e")
     print("Saved.", flush=True)
@@ -84,7 +84,7 @@ def make_qinit(x, y, Z, geojson, indices):
 
     X, Y = np.meshgrid(x, y)
     for _i, i in enumerate(indices):
-        print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})", end="...\r", flush=True)
+        # print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})", end="...\r", flush=True)
         if i not in ix:
             raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
         xi = x_all[i==ix]
@@ -101,8 +101,9 @@ def make_qinit(x, y, Z, geojson, indices):
         p = dip(dx, dy, Z[j0:j1+1, i0:i1+1])[inside[1:-1, 1:-1]].mean()
         d = 2.0 - 5/100/100 * (Z[j0:j1+1, i0:i1+1][inside] - 2000)  # T = 300 years, Western Bernese Oberland
         H[j0:j1+1, i0:i1+1][inside] = (d * 0.291/(np.sin(p)-0.202*np.cos(p))).mean()
-        V = (H[j0:j1+1, i0:i1+1][inside]*dx*dy).sum()
-        # print(f"\t\tVolume: {V:.2e}", flush=True)
+        d0 = H[j0:j1+1, i0:i1+1][inside]
+        V = (d0*dx*dy).sum()
+        print(f"\t\t{i=}: {V=:.2e} {d0.mean() = :.2e} {np.rad2deg(p)=:.2f}", flush=True)
     print()
     return H
 

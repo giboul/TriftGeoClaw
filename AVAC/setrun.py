@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((clawdata.upper[0] - clawdata.lower[0])/100)
-    clawdata.num_cells[1] = int((clawdata.upper[1] - clawdata.lower[1])/100)
+    clawdata.num_cells[0] = int((clawdata.upper[0] - clawdata.lower[0])/130)
+    clawdata.num_cells[1] = int((clawdata.upper[1] - clawdata.lower[1])/130)
 
     # ---------------
     # Size of system:
@@ -237,13 +237,13 @@ def setrun(claw_pkg='geoclaw', avid=""):
     amrdata = rundata.amrdata
     amrdata.max1d = 60
 
-    # max number of refinement levels:
-    amrdata.amr_levels_max = 4
-
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 8, 10]
-    amrdata.refinement_ratios_y = [2, 8, 10]
-    amrdata.refinement_ratios_t = [2, 8, 10]
+    amrdata.refinement_ratios_x = [2, 4, 4]
+    amrdata.refinement_ratios_y = [2, 4, 4]
+    amrdata.refinement_ratios_t = [2, 4, 4]
+
+    # max number of refinement levels:
+    amrdata.amr_levels_max = 1 + min(map(len, (amrdata.refinement_ratios_x, amrdata.refinement_ratios_y, amrdata.refinement_ratios_t)))
 
     cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
     min_cell_size_x = cell_size_x/np.prod(amrdata.refinement_ratios_x)
@@ -324,10 +324,12 @@ def setrun(claw_pkg='geoclaw', avid=""):
     fgout = FGoutGrid()
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
-    fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.nx = 200
-    fgout.ny = 150
     xmin, xmax, ymin, ymax = expand_bounds(*np.loadtxt(projdir/"TOPM"/"lake_extent.txt"), 1/5)
+    fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
+    # fgout.nx = int((xmax-xmin)/(clawdata.upper[0]-clawdata.lower[0]) * clawdata.num_cells[0]*np.prod(amrdata.refinement_ratios_x))
+    # fgout.ny = int((ymax-ymin)/(clawdata.upper[1]-clawdata.lower[1]) * clawdata.num_cells[1]*np.prod(amrdata.refinement_ratios_y))
+    fgout.nx = int((xmax-xmin)/1.)
+    fgout.ny = int((ymax-ymin)/1.)
     fgout.x1 = xmin
     fgout.x2 = xmax
     fgout.y1 = ymin
@@ -360,15 +362,6 @@ def setrun(claw_pkg='geoclaw', avid=""):
     #     x = r + .001  # shift a bit away from cell corners
     #     y = .001
      #    rundata.gaugedata.gauges.append([gaugeno, x, y, 0., 1e10])
-
-    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param("out_format", fgout.output_format, "Avalanche ID")
-    probdata.add_param("nx", fgout.nx, "Number of cells in y direction")
-    probdata.add_param("ny", fgout.ny, "Number of cells in x direction")
-    probdata.add_param("x1", fgout.x1, "")
-    probdata.add_param("x2", fgout.x2, "")
-    probdata.add_param("y1", fgout.y1, "")
-    probdata.add_param("y2", fgout.y2, "")
 
     friction = np.loadtxt(projdir / AVAC["friction"], skiprows=1)
     if avid == "":
@@ -438,11 +431,9 @@ def setgeo(rundata, avid):
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 1
-    # rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
-    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [minlev, maxlev, fname]
-    # rundata.qinit_data.qinitfiles.append([1, 2, 'initial.xyz'])
+    rundata.qinit_data.qinitfiles = [[projdir/"AVAC"/f"qinit{avid}.xyz"]]
 
     # == setfixedgrids.data values ==
     # fixedgrids = rundata.fixed_grid_data.fixedgrids

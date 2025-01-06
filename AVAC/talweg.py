@@ -3,7 +3,8 @@ from pathlib import Path
 from sys import getrecursionlimit, setrecursionlimit
 import numpy as np
 from matplotlib import pyplot as plt
-plt.style.use("seaborn-v0_8-paper")
+# plt.style.use("seaborn-v0_8-paper")
+plt.style.use("dark_background")
 
 def _talweg(Z: Iterable[float], visited: List[Tuple], wstart: int=1, wmax: int=np.inf,
             w: int=1, Zend: float=-float("inf"), tol_kw: Dict=dict()) -> List[Tuple]:
@@ -41,7 +42,7 @@ def talweg(Z: Iterable[float], i: int, j: int,
 
 def main():
     projdir = Path(__file__).parent.parent
-    path =  projdir / "natural_bathymetry.bin"
+    path =  projdir / "TOPM" / "natural_bathymetry.bin"
     print(f"INFO: Opening {path}... ", end="")
     def readline(f, t):
         s = f.readline()
@@ -55,13 +56,21 @@ def main():
         nodatavalue = readline(file, float)
     print("Loaded.")
     ext = xmin, xmin+nx*resolution, ymin, ymin+ny*resolution
-    Z = np.fromfile(path, dtype=np.float64).reshape(ny, nx, order="F")
-    print(f"{Z.max() = }")
-    print(f"{Z.min() = }")
+    Z = np.fromfile(path, dtype=np.float16).reshape(ny, nx, order="F")
 
     geojson = np.loadtxt(projdir / "TOPM" / "avalanches.csv")
 
-    fig, ax = plt.subplots(nrows=3, layout="tight", figsize=(6, 11))
+    fig, ax = plt.subplots(nrows=3, layout="tight", figsize=(6, 11), gridspec_kw=dict(height_ratios=(2, 1, 1)))
+    click = dict(xprev=0, yprev=0)
+    def onclick(event):
+        if event.dblclick:
+            x = event.xdata
+            y = event.ydata
+            l = np.sqrt((x-click["xprev"])**2 + (y-click["yprev"])**2)
+            print(f"{l = }")
+            click["xprev"] = x
+            click["yprev"] = y
+    fig.canvas.mpl_connect("button_press_event", onclick)
     for ix in np.unique(geojson[0]):
         xa, ya = geojson[1:, geojson[0, :] == ix]
         xi, yi = talweg(Z,
@@ -73,23 +82,28 @@ def main():
         y = ymin + (ny-1-yi)*resolution
         # print(pts)
         ax[0].fill(*geojson[:, geojson[0]==ix][1:])
-        ax[0].imshow(Z, extent=ext)
+        ax[0].imshow(Z[::10, ::10], extent=ext)
         ax[0].plot(x, y)
-        dl = np.sqrt(np.diff(x)**2+np.diff(y)**2)
-        l = np.hstack((0, np.cumsum(dl)))
+        dl  = np.sqrt((x[1:]-x[:-1])**2 + (y[1:]-y[:-1])**2)
+        dl_ = np.sqrt((x[2:]-x[:-2])**2 + (y[2:]-y[:-2])**2)
+        l  = np.hstack((0, np.cumsum(dl)))
+        l_ = np.hstack((0, np.cumsum(dl_)))
         z = Z[yi, xi]
         ax[1].plot(l, z, '-', ms=5, label=int(ix))
-        ax[2].plot((l[1:]+l[:-1])/2/l[-1], -np.rad2deg(np.arctan((z[1:]-z[:-1])/dl)))
+        ax[2].plot(l[1:-1]/l[-1], -np.rad2deg(np.arctan((z[2:]-z[:-2])/dl_)), alpha=0.6)
         # ax[2].plot((l[1:]+l[:-1])/2, (z[1:]-z[:-1])/dl)
+    ax[0].set_xlabel("$x$ [m]")
+    ax[0].set_ylabel("$y$ [m]")
     ax[1].set_aspect("equal")
     ax[1].legend(ncols=5, title="Identifiant de l'avalanche")
     ax[1].set_xlabel(r"Distance parcourue $\ell$ [m]")
     ax[1].set_ylabel("Altitude $z$ [m.s.m.]")
     ax[1].set_ylim(1767, None)
     ax[1].margins(x=0, y=0)
-    ax[2].set_xlabel(r"Distance paurcourue normalisée $\ell/\ell_f$ [m]")
+    ax[2].set_xlabel(r"Distance parcourue normalisée $\ell/\ell_f$ [-]")
     ax[2].set_ylabel(r"Pente $\psi$ [°]")
-    ax[2].axline((0, 27.5), slope=0, ls='-.', c='grey')
+    ax[2].axline((0, 27.5), slope=0, ls='-.', c='grey', zorder=0)
+    ax[2].set_aspect(1/200)
     plt.show()
 
 if __name__ == "__main__":

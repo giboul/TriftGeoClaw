@@ -69,7 +69,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.plot_var = 0
     plotitem.pcolor_cmap = plt.cm.RdBu_r# plt.cm.Blues_r # geoplot.tsunami_colormap
     plotitem.pcolor_cmin = 0
-    plotitem.pcolor_cmax = 4
+    plotitem.pcolor_cmax = 3
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,0]
     # plotitem.patchedges_show = 1
@@ -80,7 +80,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.pcolor_cmap = plt.cm.viridis  # geoplot.land_colors
     plotitem.pcolor_cmin = topoconfig["lake_alt"] - 500
     plotitem.pcolor_cmax = topoconfig["lake_alt"] + 1300
-    plotitem.add_colorbar = False
+    plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = []
     # plotitem.patchedges_show = 1
 

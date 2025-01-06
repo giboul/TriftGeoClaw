@@ -19,3 +19,4 @@ xgeoclaw
 *.geojson
 *.csv
 _*
+*.zip

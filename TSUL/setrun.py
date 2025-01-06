@@ -11,7 +11,6 @@ from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
-from clawpack.geoclaw.fgout_tools import FGoutGrid
 
 
 projdir = Path(__file__).parents[1]
@@ -31,7 +30,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     """
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
-    rundata = setgeo(rundata, bouss)
+    rundata = setgeo(rundata, damping, bouss)
     # Standard Clawpack parameters to be written to claw.data:
     # (or to amr2ez.data for AMR)
     clawdata = rundata.clawdata  # initialized when rundata instantiated
@@ -47,8 +46,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
 
     xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((xmax-xmin)/100)
-    clawdata.num_cells[1] = int((ymax-ymin)/100)
+    clawdata.num_cells[0] = int((xmax-xmin)/160)
+    clawdata.num_cells[1] = int((ymax-ymin)/160)
 
     # Lower and upper edge of computational domain:
     margin = 1/min(clawdata.num_cells)
@@ -201,9 +200,9 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 8, 10]
-    amrdata.refinement_ratios_y = [2, 8, 10]
-    amrdata.refinement_ratios_t = [2, 8, 10]
+    amrdata.refinement_ratios_x = [2, 4, 5]
+    amrdata.refinement_ratios_y = [2, 4, 5]
+    amrdata.refinement_ratios_t = [2, 4, 5]
 
     cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
     min_cell_size_x = cell_size_x / np.prod(amrdata.refinement_ratios_x)
@@ -284,7 +283,6 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
         2.67e6, 2.67e6+400,
         1.171e6+650, 1.171e6+950
     ])
-    # rundata.regiondata.regions.append([3, 3, 8000., 26000., -90,-80,-30,-15])
     # -------
     # Gauges:
     # -------
@@ -313,7 +311,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     return rundata
 
 
-def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
+def setgeo(rundata: ClawRunData, damping, bouss=False) -> ClawRunData:
     """
     Set GeoClaw specific runtime parameters.
     For documentation see ....
@@ -333,7 +331,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     geo_data.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geo_data.dry_tolerance = 1.e-10
+    geo_data.dry_tolerance = 1.e-10*damping
     geo_data.friction_forcing = True
     geo_data.manning_coefficient =.025
     geo_data.friction_depth = 1e9
@@ -362,11 +360,6 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [fname]
     # Check if using qinit or boundary condition
-    # with open("Makefile", "r") as makefile:
-    #     lines = [l for l in makefile.readlines() if "bc2amr.f" in l]
-    # if lines and not lines[0].strip().startswith("#"):
-    #     print("INFO: Using the boundary conditions for momentum introduction.")
-    # else:
     rundata.qinit_data.qinit_type = 4
     rundata.qinit_data.qinitfiles = [[projdir/"TSUL"/"qinit.xyz"]]
 

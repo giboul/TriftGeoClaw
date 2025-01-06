@@ -17,6 +17,7 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
 
     use helpers, only : q_avac, closest, closest_inf, times, damping, &
                         inflow_mode, interp1d4d, overhang
+    use helpers, only : fgoutinterp, AVAC_fgrid, lake_alt
 
     implicit none
     
@@ -37,12 +38,33 @@ subroutine src2(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux,t,dt)
     real(kind=8) :: tau, wind_speed, theta, phi, psi, P_gradient(2), S(2)
     real(kind=8) :: Ddt, sloc(2)
     real(kind=8) :: tanyR, huv, huu, hvv
+    real(kind=8) :: qt(size(q_avac,2),size(q_avac,3),size(q_avac,4))
 
     ! Algorithm parameters
 
     ! Parameter controls when to zero out the momentum at a depth in the
     ! friction source term
     real(kind=8), parameter :: depth_tolerance = 1.0d-30
+
+
+    ! ----------------------------------------------------------------   
+    ! AVAC inflows                                                       
+    ! if (trim(inflow_mode) == "src") then                                 
+    !     qt = interp1d4d(t, times, q_avac)                                
+    !     do j = 1, my                                                     
+    !         yc = ylower + (j - 0.5d0) * dy                               
+    !         do i = 1, mx                                                 
+    !             xc = xlower + (i - 0.5d0) * dx                           
+    !             if (lake_alt+overhang<aux(1,i,j)) then                   
+    !                 q(1,i,j) = fgoutinterp(AVAC_fgrid,qt(1,:,:),xc,yc)   
+    !                 q(2,i,j) = fgoutinterp(AVAC_fgrid,qt(2,:,:),xc,yc)   
+    !                 q(3,i,j) = fgoutinterp(AVAC_fgrid,qt(3,:,:),xc,yc)   
+    !                 q(1:3,i,j) = q(1:3,i,j) * damping                    
+    !             end if                                                   
+    !         end do                                                       
+    !     end do                                                           
+    ! end if                                                               
+    ! ----------------------------------------------------------------
 
     ! ----------------------------------------------------------------
     ! Spherical geometry source term(s)

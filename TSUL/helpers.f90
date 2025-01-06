@@ -20,10 +20,7 @@ contains
 
         INTEGER :: i, unit=2
 
-        OPEN(unit, FILE="../setprob.data", STATUS='old')
-            DO i=1,6
-                READ(unit,*)
-            END DO
+        call opendatafile(unit, "setprob.data")
             READ(unit,*) avid
             READ(unit,*) inflow_mode
             READ(unit,*) damping
@@ -226,6 +223,8 @@ contains
     
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
+
+        call read_times()
  
         num_cells = 0
         do mthbc = 1, 4
@@ -308,7 +307,6 @@ contains
 
         i = closest_inf(t, ts)
         s = closest_sup(t, ts)
-        ! PRINT *, "INTERP1D4D"
         IF (ts(s)<t) THEN
             interp1d4d = q(i,:,:,:)*0
         ELSE IF (t<ts(i)) THEN
@@ -318,7 +316,6 @@ contains
                         (q(s,:,:,:) - q(i,:,:,:)) * &
                         (t - ts(i)) / (ts(s) - ts(i))
         END IF
-        ! PRINT "(F6.1,F6.1,F6.1)", SUM(q(i,:,:,:)), SUM(interp1d4d), SUM(q(s,:,:,:))
 
     END FUNCTION interp1d4d
 
@@ -365,18 +362,21 @@ contains
         PRINT *, AVAC_fgrid%y_low
         PRINT *, AVAC_fgrid%y_hi
 
+        ALLOCATE(times(SIZE(AVAC_fgrid%output_times)))
+        times = AVAC_fgrid%output_times
+
         DEALLOCATE(FGOUT_fgrids)
         module_setup = .false.
         ALLOCATE(q_avac(&
-            size(times),&
+            SIZE(times),&
             AVAC_fgrid%nqout,&
             AVAC_fgrid%mx,&
             AVAC_fgrid%my&
         ))
 
-        ftemp = TRIM(ftemp) // "fgout0001.b"
+        ftemp = TRIM(ftemp) // "fgout0001."
         DO i = 1, size(times)-1
-            WRITE(file,"(A,I0.4)") TRIM(ftemp), i
+            WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
             PRINT *, "READING FGOUT: ", TRIM(file)
             OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
                 READ(2) q_avac(i,:,:,:) ! ti,qi,xi,yj

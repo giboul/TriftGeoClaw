@@ -80,9 +80,10 @@ def write_topo(plot=False):
 
     print(f"\tINFO: Smoothing topo...")
     smooth_radius = max(1, int(TOPM.get("smooth_radius", 5) / TOPM["resolution"]))
-    kernel = disk(smooth_radius)
+    # kernel = disk(smooth_radius)
     # kernel = ~isotropic_erosion(disk(smooth_radius), 1)
-    kernel = kernel / kernel.sum()
+    # kernel = kernel / kernel.sum()
+    kernel = gkern(l=smooth_radius, sig=1.)
     Z = conv2d(Z, kernel)
     Z = pad_to_shape(Z, (y.size, x.size))
     # plt.imshow(Z)
@@ -360,6 +361,15 @@ def read_geojson(path):
 
     avacs = np.array(coords).T
     return avacs
+
+def gkern(l=5, sig=1.):
+    """\
+    creates gaussian kernel with side length `l` and a sigma of `sig`
+    """
+    ax = np.linspace(-(l - 1) / 2., (l - 1) / 2., l)
+    gauss = np.exp(-0.5 * np.square(ax) / np.square(sig))
+    kernel = np.outer(gauss, gauss)
+    return kernel / np.sum(kernel)
 
 if __name__ == "__main__":
     parser = ArgumentParser()

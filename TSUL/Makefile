@@ -14,7 +14,7 @@ SETPLOT_FILE = setplot.py      # File containing function to set plots
 PLOTDIR = _plots               # Directory for plots
 
 FFLAGS = -O2 -fopenmp -llapack -lblas
-OMP_NUM_THREADS = 16
+OMP_NUM_THREADS = 15
 
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
@@ -43,11 +43,10 @@ EXCLUDE_SOURCES = \
 MODULES = \
   ./fgout_module.f90 \
   ./helpers.f90 \
-
+# TODO remove src2
 SOURCES = \
   ./setprob.f90 \
   ./bc2amr.f90 \
-  ./src2.f90 \
   ./b4step2.f90 \
   $(CLAW)/riemann/src/rpn2_geoclaw.f \
   $(CLAW)/riemann/src/rpt2_geoclaw.f \

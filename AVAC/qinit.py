@@ -58,7 +58,7 @@ def write_qinit(avid="", plot=False):
         #     yt = ymin+ny*resolution - yt*resolution
         #     l, = plt.plot(xt, yt, c='r')
         # im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds, zorder=l.get_zorder()+1)
-        im = plt.imshow(np.where(qinit==0, np.nan, qinit)[::10, ::10], extent=ext, cmap=plt.cm.Reds)
+        im = plt.imshow(np.where(qinit==0, np.nan, qinit), extent=ext, cmap=plt.cm.Reds)
         plt.xlabel("$x$ [m]")
         plt.ylabel("$y$ [m]")
         plt.title("Avalanche panels and depth")
@@ -100,7 +100,7 @@ def make_qinit(x, y, Z, geojson, indices):
         inside = isotropic_dilation(inside, 2)
         p = dip(dx, dy, Z[j0:j1+1, i0:i1+1])[inside[1:-1, 1:-1]].mean()
         d = 2.0 - 5/100/100 * (Z[j0:j1+1, i0:i1+1][inside] - 2000)  # T = 300 years, Western Bernese Oberland
-        H[j0:j1+1, i0:i1+1][inside] = (d * 0.291/(np.sin(p)-0.202*np.cos(p))).mean()
+        H[j0:j1+1, i0:i1+1][inside] = (d*0.291/((np.sin(p)-0.202*np.cos(p))*np.cos(p))).mean()
         d0 = H[j0:j1+1, i0:i1+1][inside]
         V = (d0*dx*dy).sum()
         print(f"\t\t{i=}: {V=:.2e} {d0.mean() = :.2e} {np.rad2deg(p)=:.2f}", flush=True)

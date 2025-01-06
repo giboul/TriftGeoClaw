@@ -181,7 +181,7 @@ fig.suptitle(f"{AVACdir}\nversus\n{TSULdir}")
 
 lavac, = ax.plot(ta, Eavac, ':', label=r"$\mathcal{E_A}$ (AVAC)")
 ltsul, = ax.plot(tm, Etsul,  '-.', label=r"$\mathcal{E_A}$ (TSUL)")
-llake, = ax.plot(TSULtimes, Elake, '-', label=r"$\mathcal{\Delta E_L}$ (TSUL)")
+llake, = ax.plot(TSULtimes, Elake, '-', label=r"$\Delta \mathcal{E_L}$ (TSUL)")
 ax.set_xlabel("$t$ [s]")
 ax.set_ylabel(r"$\mathcal{E}$ [J]")
 ax.legend(loc="lower right")
@@ -191,7 +191,7 @@ Vlake = (Vlake[1:] + Vlake[:-1])/2
 
 ax3.plot(np.interp(tm, ta, Eavac), Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
 ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-ax3.axline((0, 0), slope=1, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{E_A=\Delta E_L}$")
+ax3.axline((0, 0), slope=1, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{E_A}=\Delta \mathcal{E_L}$")
 ax3.set_ylabel(r"$\mathcal{E_L}$ [J]")
 ax3.set_xlabel(r"$\mathcal{E_A}$ [J]")
 ax3.legend(loc="center right")

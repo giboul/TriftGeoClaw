@@ -11,14 +11,8 @@ from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
+from maketopo import X, Y, Z, H, h0
 
-
-projdir = Path(__file__).parents[1]
-with open(projdir / "config.yaml") as file:
-    config = safe_load(file)
-    AVAC = config["AVAC"]
-    TOPM = config["TOPM"]
-    TSUL = config["TSUL"]
 
 def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.3) -> ClawRunData:
     """
@@ -44,10 +38,10 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # Number of space dimensions:
     clawdata.num_dim = num_dim
 
-    xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt")
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((xmax-xmin)/80)
-    clawdata.num_cells[1] = int((ymax-ymin)/80)
+    xmin, xmax, ymin, ymax = X.min(), X.max(), Y.min(), Y.max()
+    clawdata.num_cells[0] = 20
+    clawdata.num_cells[1] = 10
 
     # Lower and upper edge of computational domain:
     margin = 1/min(clawdata.num_cells)
@@ -87,8 +81,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 50
-        clawdata.tfinal = 300
+        clawdata.num_output_times = 30
+        clawdata.tfinal = 0.6
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -101,7 +95,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = TSUL["out_format"]   # 'ascii' or 'binary' 
+    clawdata.output_format = "binary"   # 'ascii' or 'binary' 
     clawdata.output_q_components = "all"   # h, hu, hv, eta
     # clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -112,7 +106,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     # The current t, dt, and cfl will be printed every time step
     # at AMR levels <= verbosity.  Set verbosity = 0 for no printing.
     # (E.g. verbosity == 2 means print only on levels 1 and 2.)
-    clawdata.verbosity = 3
+    clawdata.verbosity = 0
 
     # ------------------
     # Method to be used:
@@ -162,18 +156,18 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    if TSUL["inflow"] == "src":
+    if True:# TSUL["inflow"] == "src":
         clawdata.bc_lower[0] = 'wall'
         clawdata.bc_upper[0] = 'wall'
         clawdata.bc_lower[1] = 'wall'
         clawdata.bc_upper[1] = 'wall'
-    elif TSUL["inflow"] == "bc":
-        clawdata.bc_lower[0] = 'user'
-        clawdata.bc_upper[0] = 'user'
-        clawdata.bc_lower[1] = 'user'
-        clawdata.bc_upper[1] = 'user'
-    else:
-        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
+    # elif TSUL["inflow"] == "bc":
+    #     clawdata.bc_lower[0] = 'user'
+    #     clawdata.bc_upper[0] = 'user'
+    #     clawdata.bc_lower[1] = 'user'
+    #     clawdata.bc_upper[1] = 'user'
+    # else:
+    #     raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -206,7 +200,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
 
     cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
     min_cell_size_x = cell_size_x / np.prod(amrdata.refinement_ratios_x)
-    print(f"Minimum cells size (x): {min_cell_size_x:.2f}")
+    print(f"Minimum cells size (x): {min_cell_size_x:.3f}")
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 4
@@ -294,14 +288,14 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc", damping=0.
         avid = int(avid)
     else:
         avid = None
-    inflow_mode = TSUL.get('inflow') or inflow
+    # inflow_mode = TSUL.get('inflow') or inflow
 
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')
-    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
+    probdata.add_param('mode', "src",  'The method for introucing the avalnche')
     probdata.add_param('damping', damping,  'rho_snow/rho_water with safety')
-    probdata.add_param('lake_alt', TOPM["lake_alt"],  'Lake altitude')
-    probdata.add_param('overhang', TOPM.get("overhang", 0.),  'Overhang of the contour over the lake')
+    probdata.add_param('lake_alt', h0,  'Lake altitude')
+    probdata.add_param('overhang', 0.01,  'Overhang of the contour over the lake')
     # bounds = TOPM["bounds"] | AVAC.get("bounds", dict())
     # probdata.add_param("x1", bounds["xmin"], "")
     # probdata.add_param("x2", bounds["xmax"], "")
@@ -325,7 +319,7 @@ def setgeo(rundata: ClawRunData, damping, bouss=False) -> ClawRunData:
     geo_data.gravity = 9.81
     geo_data.coordinate_system = 1
     geo_data.earth_radius = 6367.5e3
-    geo_data.sea_level = 0.
+    # geo_data.sea_level = h0
 
     # == Forcing Options ==
     geo_data.coriolis_forcing = False
@@ -345,7 +339,7 @@ def setgeo(rundata: ClawRunData, damping, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[2, projdir/TSUL["topo"]]]
+    topo_data.topofiles = [[2, "bathymetry.asc"]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -361,7 +355,7 @@ def setgeo(rundata: ClawRunData, damping, bouss=False) -> ClawRunData:
     #   [fname]
     # Check if using qinit or boundary condition
     rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = [[projdir/"TSUL"/"qinit.xyz"]]
+    rundata.qinit_data.qinitfiles = [["qinit.xyz"]]
 
     # == fgout grids ==
     # new style as of v5.9.0 (old rundata.fixed_grid_data is deprecated)
@@ -413,11 +407,11 @@ def main():
     data = Path(".data")
     data.unlink(missing_ok=True)
     rundata = setrun(**args.__dict__)
-    rundata.write(projdir / "TSUL")
+    rundata.write(".")
     data.touch()
 
-    if TSUL["inflow"] == "bc":
-        Popen(["python", projdir/"TSUL"/"bc_inflows.py", args.avid])
+    # if TSUL["inflow"] == "bc":
+    #     Popen(["python", projdir/"TSUL"/"bc_inflows.py", args.avid])
 
 
 def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):

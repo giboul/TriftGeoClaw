@@ -74,8 +74,8 @@ def setrun(claw_pkg='geoclaw', avid=""):
     # See below for AMR parameters.
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((clawdata.upper[0] - clawdata.lower[0])/130)
-    clawdata.num_cells[1] = int((clawdata.upper[1] - clawdata.lower[1])/130)
+    clawdata.num_cells[0] = int((clawdata.upper[0] - clawdata.lower[0])/66)
+    clawdata.num_cells[1] = int((clawdata.upper[1] - clawdata.lower[1])/66)
 
     # ---------------
     # Size of system:

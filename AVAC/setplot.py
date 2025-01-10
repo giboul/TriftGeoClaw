@@ -48,17 +48,33 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes('pcolor')
-    # plotaxes.title = 'Surface'
+    plotaxes.title = 'Surface'
     plotaxes.scaled = True
 
     def fixup(current_data):
 
         # addgauges(current_data)
         t = current_data.t
-        plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
+        # plt.title(f'Surface at {t//60:.0f}min {t%60}s', fontsize=20)
+        # plt.xticks(fontsize=15)
+        # plt.yticks(fontsize=15)
         # plt.plot(*np.loadtxt(projdir/"TOPM"/"contour1.xy").T)
+        plt.box(False)
+        plt.gca().xaxis.set_visible(False)
+        plt.gca().yaxis.set_visible(False)
+        plt.title("")
+        plt.tight_layout()
+
+    # prev_click = dict(x=0, y=0)
+    # def onclick(event):
+    #     if event.dblclick:
+    #         x = event.xdata
+    #         y = event.ydata
+    #         dist = np.sqrt((x-prev_click["x"])**2 + (y-prev_click["y"])**2)
+    #         print(f"{dist = }")
+    #         prev_click["x"] = x
+    #         prev_click["y"] = y
+    # plotfigure.canvas.mpl_connect("button_press_event", onclick)
 
     plotaxes.afteraxes = fixup
 
@@ -69,8 +85,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.plot_var = 0
     plotitem.pcolor_cmap = plt.cm.RdBu_r# plt.cm.Blues_r # geoplot.tsunami_colormap
     plotitem.pcolor_cmin = 0
-    plotitem.pcolor_cmax = 3
-    plotitem.add_colorbar = True
+    plotitem.pcolor_cmax = 2.5
+    plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = [1,1,0]
     # plotitem.patchedges_show = 1
 
@@ -78,9 +94,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     plotitem.plot_var = geoplot.land
     plotitem.pcolor_cmap = plt.cm.viridis  # geoplot.land_colors
-    plotitem.pcolor_cmin = topoconfig["lake_alt"] - 500
+    plotitem.pcolor_cmin = topoconfig["lake_alt"] - 100
     plotitem.pcolor_cmax = topoconfig["lake_alt"] + 1300
-    plotitem.add_colorbar = True
+    plotitem.add_colorbar = False
     # plotitem.amr_celledges_show = []
     # plotitem.patchedges_show = 1
 

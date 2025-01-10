@@ -101,9 +101,12 @@ def make_qinit(x, y, Z, geojson, indices):
         p = dip(dx, dy, Z[j0:j1+1, i0:i1+1])[inside[1:-1, 1:-1]].mean()
         d = 2.0 - 5/100/100 * (Z[j0:j1+1, i0:i1+1][inside] - 2000)  # T = 300 years, Western Bernese Oberland
         H[j0:j1+1, i0:i1+1][inside] = (d*0.291/((np.sin(p)-0.202*np.cos(p))*np.cos(p))).mean()
+        if i == 25 or i == 24:  # ice avalanches
+            H[j0:j1+1, i0:i1+1][inside] = 15 * 900./300.
         d0 = H[j0:j1+1, i0:i1+1][inside]
         V = (d0*dx*dy).sum()
-        print(f"\t\t{i=}: {V=:.2e} {d0.mean() = :.2e} {np.rad2deg(p)=:.2f}", flush=True)
+        with open(projdir/"AVAC"/"qinit.log", "a") as file:
+            print(f"\t\t{i=}: {V=:.2e} {d0.mean() = :.2e} {np.rad2deg(p)=:.2f}", flush=True, file=file)
     print()
     return H
 

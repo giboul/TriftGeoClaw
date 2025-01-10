@@ -67,6 +67,7 @@ def plot():
 
     def update(i):
         (h, hu, hv, eta), t = extract(i)
+        (h, hu, hv, eta), t = extract(i)
         z = eta-h
         state["zmax"] = max(state["zmax"], np.where(h>1e-5, eta, 0).max())
         line.set_xy1(x[0], state["zmax"])

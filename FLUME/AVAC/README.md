@@ -1,0 +1,2 @@
+# Disclaimer
+If you are curious about the theory and the methods or you want to create a similar project, please refer to the parent repository: [AVAC](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/README.md).

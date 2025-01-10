@@ -1,18 +1,18 @@
 TOPM:
   topography: swissALTI3D_merged.tif
   bathymetry: &topofile TOPM/bathymetry.asc
-  avalanches: avalanches.geojson
+  avalanches: avalanches_tongue.geojson
   lake_alt: 1767
   dam_alt: 1771.2
-  resolution: 1
+  resolution: 2.
   smooth_radius: 5
 
-  overhang: 5
+  overhang: 0
 
   bounds:
     xmin: 2666500.
     xmax: 2673700.
-    ymin: 1169500.
+    ymin: 1169000.
     ymax: 1174200.
 
   flood_seed: [2.6705e+6, 1.1710e+6]

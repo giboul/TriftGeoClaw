@@ -354,7 +354,7 @@ def read_geojson(path):
 
     coords = []
     for e in data["features"]:
-        ix = e['properties']['id']
+        ix = e['properties']['fid']
         points = e['geometry']['coordinates'][0][0]
         for x, y in points:
             coords.append([ix-1, x, y])

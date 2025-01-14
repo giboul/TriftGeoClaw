@@ -71,8 +71,6 @@ qinit:
 	$(CLAW_PYTHON) qinit.py $(avid)
 run:
 	rm -f _output$(avid)/fgout*
-	make data avid=$(avid)
-	make qinit avid=$(avid)
-	make output OUTDIR=_output$(avid)
+	make data avid=$(avid) && make qinit avid=$(avid) && make output OUTDIR=_output$(avid)
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)

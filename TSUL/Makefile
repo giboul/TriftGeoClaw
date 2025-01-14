@@ -70,9 +70,7 @@ data:
 	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(avid)
 	touch .data
 run:
-	make data avid=$(avid)
-	make inflows avid=$(avid)
-	make output OUTDIR=_output$(avid)
+	make data avid=$(avid) && make inflows avid=$(avid) && make output OUTDIR=_output$(avid)
 inflows:
 	$(CLAW_PYTHON) inflows.py $(avid)
 outflows:

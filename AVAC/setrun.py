@@ -369,7 +369,7 @@ def setrun(claw_pkg='geoclaw', avid=""):
     else:
         mu, xi, u_ = friction[(friction[:, 0]==int(avid)).argmax(), 1:]
     voellmydata = rundata.new_UserData(name='probdata',fname='voellmy.data')
-    voellmydata.add_param("snow_density", 300.0, "")
+    voellmydata.add_param("snow_density", AVAC["snow_density"], "")
     voellmydata.add_param("xi", xi, "Voellmy: geometrical resistance")
     voellmydata.add_param("mu", mu, "Voellmy: friction coefficient ~snow viscosity")
     voellmydata.add_param("u_", u_, "Velocity threshold")

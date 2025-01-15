@@ -55,16 +55,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
         # addgauges(current_data)
         t = current_data.t
-        plt.title(f'$hu$ at {t//60:.0f}min {t%60:.2f}s', fontsize=20)
+        plt.gca().set_title(f'$hu$ at {t//60:.0f}min {t%60:.2f}s', fontsize=20)
         # plt.title("")
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
-        bounds = TOPM["bounds"] | AVAC.get("bounds", dict()) | TSUL.get("bounds", dict()) 
-        xmin, xmax, ymin, ymax = np.loadtxt(projdir/"TOPM"/"lake_extent.txt").T
-        xc, yc = np.loadtxt(projdir/"TOPM"/"contour2.xy").T
-        xc = np.maximum(xmin, np.minimum(xmax, xc))
-        yc = np.maximum(ymin, np.minimum(ymax, yc))
-        plt.plot(xc, yc)
+        # plt.xticks(fontsize=15)
+        # plt.yticks(fontsize=15)
 
     plotaxes.afteraxes = fixup
 

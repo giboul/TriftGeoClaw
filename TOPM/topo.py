@@ -96,11 +96,11 @@ def write_topo(plot=False):
     Z = Z.astype(np.float16)
     mask = dam_mask(X, Y, Z)
     Z[mask] = TOPM['dam_alt']
-    path = projdir / TOPM["bathymetry"]
+    bathypath = projdir / TOPM["bathymetry"]
     # plt.imshow(Z)
     # plt.show()
 
-    print(f"\tINFO: Saving {path}... ")
+    print(f"\tINFO: Saving {bathypath}... ")
     asc_header = "\n".join((
         f"{x.size} ncols",
         f"{y.size} nrows",
@@ -109,8 +109,8 @@ def write_topo(plot=False):
         f"{TOPM['resolution']} cellsize",
         f"{999999} nodata_value"
     ))
-    np.savetxt(path, Z.flatten(), header=asc_header, comments="", fmt="%.8e")
-    print(f"\tINFO: File size is {path.stat().st_size:.2g} bytes.")
+    np.savetxt(bathypath, Z.flatten(), header=asc_header, comments="", fmt="%.8e")
+    print(f"\tINFO: File size is {bathypath.stat().st_size:.2g} bytes.")
  
     print("\tINFO: writing dam coordinates")
     xdam = np.linspace(X[mask].min(), X[mask].max(), 100)
@@ -125,7 +125,7 @@ def write_topo(plot=False):
     if 'flood_seed' in TOPM:
         seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
                 np.abs(y[::-1]-TOPM['flood_seed'][1]).argmin())
-        r = 3  # TODO
+        r = int(3/TOPM["resolution"])  # TODO convert to meters
     else:
         seed, TOPM['lake_alt'], r = pick_seed(Z, x, y[::-1], TOPM['resolution'], TOPM['lake_alt'])
     # Fill topo
@@ -137,27 +137,27 @@ def write_topo(plot=False):
     # plt.imshow(Z_lake)
     # plt.show()
 
-    print("\tINFO: writing qinit")
+    print("\tINFO: writing TSUL/qinit.xyz")
     # Write qinit
-    np.savetxt(projdir/"TSUL"/"qinit.xyz", np.column_stack((
+    np.savetxt(projdir / "TSUL" / "qinit.xyz", np.column_stack((
         X.flatten(), Y.flatten(), Z_lake.flatten()
     )), fmt="%.9e")
 
 
-    print("\tINFO: writing contours", end=" ", flush=True)
-    contour1 = contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
-    contour1 = scale_contour(*contour1.T, x.size, y.size, **TOPM['bounds'])
-    np.savetxt(projdir / "TOPM" / "contour1.xy", contour1)
+    print("\tINFO: writing contours...", flush=True)
+    contour = find_contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
+    contour = scale_contour(*contour.T, x.size, y.size, **TOPM['bounds'])
+    np.savetxt(projdir / "TOPM" / "contour.xy", contour)
 
-    print("2", end=" ", flush=True)
-    contour2 = contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']+TOPM["overhang"]).T, 1))
-    contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
-    np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
+    # print("2", end=" ", flush=True)
+    # contour2 = contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']+TOPM["overhang"]).T, 1))
+    # contour2 = scale_contour(*contour2.T, x.size, y.size, **TOPM['bounds'])
+    # np.savetxt(projdir / "TOPM" / "contour2.xy", contour2)
 
-    print("3", end=" ", flush=True)
-    contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+40).T)
-    contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
-    np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
+    # print("3", end=" ", flush=True)
+    # contour3 = contour(fill_lake(Z, seed[::-1], TOPM['lake_alt']+40).T)
+    # contour3 = scale_contour(*contour3.T, x.size, y.size, **TOPM['bounds'])
+    # np.savetxt(projdir / "TOPM" / "contour3.xy", contour3)
 
     print(f"\tINFO: Saving extents")
     extent = expand_bounds(
@@ -166,7 +166,7 @@ def write_topo(plot=False):
         rel_margin=1/20,
         abs_margin=10
     )
-    np.savetxt(projdir/"TOPM"/"lake_extent.txt", extent)
+    np.savetxt(projdir / "TOPM" / "lake_extent.txt", extent)
 
     print(f"\tINFO: Saving avalanches.csv")
     avacs = read_geojson(projdir / TOPM["avalanches"])
@@ -178,21 +178,21 @@ def write_topo(plot=False):
         for i in np.unique(avacs[0]):
             av = avacs.T[i==avacs[0]].T
             plt.fill(*av[1:])
-        plt.plot(*contour1.T, '-', label="Lake contour")
-        plt.plot(*contour2.T, '-', label="Dilated contour")
-        plt.plot(*contour3.T, '-', label="Dilated contour")
+        plt.plot(*contour.T, '-', label="Lake contour")
+        # plt.plot(*contour2.T, '-', label="Dilated contour")
+        # plt.plot(*contour3.T, '-', label="Dilated contour")
         plt.scatter(x[seed[0]], y[seed[1]], c="g", label="Fill seed")
         plt.plot(xdam, ydam, label="Dam middle line")
         plt.plot(xdam, dam_upstream(xdam), label="Dam upper line")
         plt.plot(xdam, dam_downstream(xdam), label="Dam lower line")
+        plt.plot(
+            (*extent[:2], *extent[:2][::-1], extent[0]),
+            (extent[2], extent[2], extent[3], extent[3], extent[2])
+        , c='k', label="TSUL box")
         plt.legend()
-        plt.show(block=False)
-        plt.figure()
-        plt.imshow(Z_lake, extent=(x.min(), x.max(), y.min(), y.max()))
-        plt.scatter(extent[:2], extent[2:], c='r')
         plt.show()
 
-def contour(mask):
+def find_contour(mask):
     return find_contours(mask, 0.5)[0]
 
 def scale_contour(x, y, nx, ny, xmin, xmax, ymin, ymax):
@@ -354,7 +354,7 @@ def read_geojson(path):
 
     coords = []
     for e in data["features"]:
-        ix = e['properties']['fid']
+        ix = e['properties']['id']
         points = e['geometry']['coordinates'][0][0]
         for x, y in points:
             coords.append([ix-1, x, y])

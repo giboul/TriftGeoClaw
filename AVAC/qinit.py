@@ -35,8 +35,8 @@ def write_qinit(avid="", plot=False):
     Z = np.fromfile(path, dtype=np.float16).reshape(ny, nx, order="F").astype(np.float32)
     print("Loaded.", flush=True)
 
-    for p in (projdir/"AVAC").glob("qinit*.xyz"):
-        p.unlink()
+    # for p in (projdir/"AVAC").glob("qinit*.xyz"):
+    #     p.unlink()
     geojson = np.loadtxt(projdir / "TOPM" / "avalanches.csv")
     if avid:
         avids = [int(a) for a in avid.split(",")]

@@ -152,6 +152,8 @@ def read_contour(i, x, y, outdir=TSULdir, file_format=TSUL["out_format"]):
 h0 = read_lake(0)[0]
 ht0 = read_contour(0, xc, yc)[0]
 
+# TODO also plot dam spills data
+
 def lake_energy_volume_alt(q, rho):
     h, hu, hv, _ = q
     hu2 = divide(hu**2 + hv**2, h)

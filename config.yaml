@@ -16,7 +16,7 @@ TOPM:
     ymax: 1174200.
 
   flood_seed: [2.6705e+6, 1.1710e+6]
-  dilation_radius: 6
+  dilation_radius: 10
 
 AVAC:
   friction: friction.csv

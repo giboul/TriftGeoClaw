@@ -125,7 +125,7 @@ def write_topo(plot=False):
     if 'flood_seed' in TOPM:
         seed = (np.abs(x-TOPM['flood_seed'][0]).argmin(),
                 np.abs(y[::-1]-TOPM['flood_seed'][1]).argmin())
-        r = int(3/TOPM["resolution"])  # TODO convert to meters
+        r = int(TOPM["dilation_radius"]/TOPM["resolution"])  # TODO convert to meters
     else:
         seed, TOPM['lake_alt'], r = pick_seed(Z, x, y[::-1], TOPM['resolution'], TOPM['lake_alt'])
     # Fill topo
@@ -145,7 +145,8 @@ def write_topo(plot=False):
 
 
     print("\tINFO: writing contours...", flush=True)
-    contour = find_contour(isotropic_erosion(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
+    # contour = find_contour(isotropic_dilation(fill_lake(Z, seed[::-1], TOPM['lake_alt']).T, 1))
+    contour = find_contour(dilated.T)
     contour = scale_contour(*contour.T, x.size, y.size, **TOPM['bounds'])
     np.savetxt(projdir / "TOPM" / "contour.xy", contour)
 

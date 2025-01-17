@@ -16,13 +16,15 @@ avid ?= ""
 one:
 	cd AVAC; make run avid=$(avid)
 	cd TSUL; make run avid=$(avid)
-	git add -f log.log && git commit -m "'make one avid=$(avid)' terminated" && git push
+	git add -f log.log && git add figures/*.pdf && git commit -m "'make one avid=$(avid)' terminated" && git push
 
 RUN_COUNT?=26
 all:
 	for avid in $(shell seq 4 $(RUN_COUNT)) ; do \
         make one avid=$$avid ; \
+        python energy.py $$avid -s ; \
     done
+
 figures:
 	for avid in $(shell seq 4 $(RUN_COUNT)) ; do \
         python energy.py $$avid -s ; \

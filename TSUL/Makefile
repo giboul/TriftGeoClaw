@@ -71,7 +71,8 @@ data:
 	touch .data
 run:
 	echo avid=$(avid)
-	make data avid=$(avid) && make inflows avid=$(avid) && make output OUTDIR=_output$(avid)
+	# make data avid=$(avid) && make inflows avid=$(avid) && make output OUTDIR=_output$(avid)
+	echo `date +'%y.%m.%d %H:%M:%S'` "| TSUL/_output$$avid exit code: $$?" >> ../log.log
 inflows:
 	$(CLAW_PYTHON) inflows.py $(avid)
 outflows:
@@ -81,5 +82,4 @@ RUN_COUNT?=24
 runs:
 	for avid in $(shell seq 0 $(RUN_COUNT)) ; do \
 		make run avid=$$avid; \
-		echo `date +'%y.%m.%d %H:%M:%S'` "| TSUL/_output$$avid exit code: $$?" >> ../log.log; \
 	done

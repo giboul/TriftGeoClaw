@@ -72,6 +72,7 @@ qinit:
 run:
 	rm -f _output$(avid)/fgout*
 	make data avid=$(avid) && make qinit avid=$(avid) && make output OUTDIR=_output$(avid)
+	echo `date +'%y.%m.%d %H:%M:%S'` "| AVAC/_output$$avid exit code: $$?" >> ../log.log
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)
 
@@ -79,5 +80,4 @@ RUN_COUNT?=24
 runs:
 	for avid in $(shell seq 0 $(RUN_COUNT)) ; do \
 		make run avid=$$avid; \
-		echo `date +'%y.%m.%d %H:%M:%S'` "| AVAC/_output$$avid exit code: $$?" >> ../log.log; \
 	done

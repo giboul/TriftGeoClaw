@@ -14,8 +14,8 @@ new:
 
 avid ?= ""
 one:
-	# cd AVAC; make run avid=$(avid)
-	# cd TSUL; make run avid=$(avid)
+	cd AVAC; make run avid=$(avid)
+	cd TSUL; make run avid=$(avid)
 	git add -f log.log && git commit -m "'make one avid=$(avid)' terminated" && git push
 
 RUN_COUNT?=26

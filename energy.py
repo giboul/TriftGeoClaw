@@ -233,6 +233,7 @@ ax5 = ax3
 ax5.plot(AVACtimes, vavac, ls=lavac.get_linestyle(), color=lavac.get_color(), label="AVAC")
 ax5.plot(TSULtimes, vtsul, ls=ltsul.get_linestyle(), color=ltsul.get_color(), label="TSUL")
 ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), label=r"$\mathcal{L}$")
+ax4.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
 ax5.set_ylabel(r"$|u|$ [m/s]")
 ax5.sharex(ax)
 

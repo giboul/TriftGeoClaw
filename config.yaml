@@ -4,10 +4,10 @@ TOPM:
   avalanches: avalanches.geojson
   lake_alt: 1767
   dam_alt: 1771.2
-  resolution: 2.
+  resolution: 4.
   smooth_radius: 5
 
-  overhang: 4
+  overhang: 2
 
   bounds:
     xmin: 2666500.

@@ -35,6 +35,7 @@ def divide(a, b, fill=0., rtol=1e-05, atol=1e-08):
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("avid", type=str, nargs="?", default="")
+    parser.add_argument("-s", "--save", type=bool, default=False)
     return parser.parse_args()
 
 def read_clawdata(path):
@@ -235,8 +236,8 @@ ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), la
 ax5.set_ylabel(r"$|u|$ [m/s]")
 ax5.sharex(ax)
 
-# fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
-plt.show()
+fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
+# plt.show()
 
 # plt.plot(AVACtimes, hdama)
 # plt.plot(TSULtimes, hdamt)

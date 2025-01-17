@@ -20,7 +20,11 @@ one:
 
 RUN_COUNT?=26
 all:
-	for avid in $(shell seq 5 $(RUN_COUNT)) ; do \
+	for avid in $(shell seq 4 $(RUN_COUNT)) ; do \
         make one avid=$$avid ; \
+    done
+figures:
+	for avid in $(shell seq 4 $(RUN_COUNT)) ; do \
+        python energy.py $$avid -s ; \
     done
 

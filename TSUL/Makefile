@@ -71,7 +71,7 @@ data:
 	touch .data
 run:
 	echo avid=$(avid)
-	# make data avid=$(avid) && make inflows avid=$(avid) && make output OUTDIR=_output$(avid)
+	make data avid=$(avid) && make inflows avid=$(avid) && make output OUTDIR=_output$(avid)
 	echo `date +'%y.%m.%d %H:%M:%S'` "| TSUL/_output$$avid exit code: $$?" >> ../log.log
 inflows:
 	$(CLAW_PYTHON) inflows.py $(avid)

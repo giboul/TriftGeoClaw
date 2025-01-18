@@ -299,7 +299,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('avid', avid,  'Avalanche ID')
     probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
-    probdata.add_param('damping', AVAC["snow_density"]/1025.,  'rho_snow/rho_water with safety')  # TODO water density
+    probdata.add_param('damping', AVAC["snow_density"]/1025.,  'rho_snow/rho_water')  # TODO water density
     probdata.add_param('lake_alt', TOPM["lake_alt"],  'Lake altitude')
     probdata.add_param('overhang', TOPM.get("overhang", 0.),  'Overhang of the contour over the lake')
     # bounds = TOPM["bounds"] | AVAC.get("bounds", dict())

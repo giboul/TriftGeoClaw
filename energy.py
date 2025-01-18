@@ -237,6 +237,7 @@ ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), la
 ax5.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
 ax5.set_ylabel(r"$|u|$ [m/s]")
 ax5.sharex(ax)
+ax5.legend()
 
 if args.save:
     fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")

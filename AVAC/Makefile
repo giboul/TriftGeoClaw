@@ -76,8 +76,8 @@ run:
 flows:
 	$(CLAW_PYTHON) flows.py $(avid)
 
-RUN_COUNT?=25
+RUN_COUNT?=26
 runs:
-	for avid in $(shell seq 0 $(RUN_COUNT)) ; do \
+	for avid in $(shell seq 1 $(RUN_COUNT)) ; do \
 		make run avid=$$avid; \
 	done

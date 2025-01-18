@@ -358,7 +358,7 @@ def read_geojson(path):
         ix = e['properties']['id']
         points = e['geometry']['coordinates'][0][0]
         for x, y in points:
-            coords.append([ix-1, x, y])
+            coords.append([ix, x, y])
 
     avacs = np.array(coords).T
     return avacs

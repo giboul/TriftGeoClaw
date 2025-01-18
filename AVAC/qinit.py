@@ -84,7 +84,7 @@ def make_qinit(x, y, Z, geojson, indices):
 
     X, Y = np.meshgrid(x, y)
     for _i, i in enumerate(indices):
-        # print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})", end="...\r", flush=True)
+        print(f"\tINFO: Setting avalanche {i} ({_i+1}/{len(indices)})", end="...\r", flush=True)
         if i not in ix:
             raise ValueError(f"Avalanche #{i} is not in {np.unique(ix)}")
         xi = x_all[i==ix]

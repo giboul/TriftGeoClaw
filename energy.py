@@ -35,7 +35,7 @@ def divide(a, b, fill=0., rtol=1e-05, atol=1e-08):
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("avid", type=str, nargs="?", default="")
-    parser.add_argument("-s", "--save", type=bool, default=False)
+    parser.add_argument("-s", "--save", action="store_true")
     return parser.parse_args()
 
 def read_clawdata(path):
@@ -57,7 +57,8 @@ def read_clawdata(path):
             clawdata[key] = value[0] if len(value)==1 else value
     return clawdata
 
-avid = parse_args().avid
+args = parse_args()
+avid = args.avid
 outdir = Path(f"_output{avid}")
 TSULdir = projdir / "TSUL" / outdir
 AVACdir = projdir / "AVAC" / outdir
@@ -237,8 +238,10 @@ ax5.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
 ax5.set_ylabel(r"$|u|$ [m/s]")
 ax5.sharex(ax)
 
-fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
-# plt.show()
+if args.save:
+    fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
+else:
+    plt.show()
 
 # plt.plot(AVACtimes, hdama)
 # plt.plot(TSULtimes, hdamt)

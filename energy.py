@@ -214,10 +214,10 @@ Vlake = (Vlake[1:] + Vlake[:-1])/2
 
 ax2.plot(ta, rhos*trapint(AVACtimes, Vavac)[1], ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
 ax2.plot(tm, rhow*trapint(TSULtimes, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta V_\mathcal{L}$")
+ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta M_\mathcal{L}$")
 ax2.legend()
 ax2.set_xlabel("$t$ [s]")
-ax2.set_ylabel(r"$V_\mathcal{L}$ [m$^3$]")
+ax2.set_ylabel(r"$M_\mathcal{L}$ [m$^3$]")
 ax2.sharex(ax)
 
 ax4.plot(AVACtimes, havac, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
@@ -233,7 +233,7 @@ ax5 = ax3
 ax5.plot(AVACtimes, vavac, ls=lavac.get_linestyle(), color=lavac.get_color(), label="AVAC")
 ax5.plot(TSULtimes, vtsul, ls=ltsul.get_linestyle(), color=ltsul.get_color(), label="TSUL")
 ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), label=r"$\mathcal{L}$")
-ax4.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
+ax5.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
 ax5.set_ylabel(r"$|u|$ [m/s]")
 ax5.sharex(ax)
 

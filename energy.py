@@ -218,7 +218,7 @@ ax2.plot(tm, rhow*trapint(TSULtimes, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsu
 ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta M_\mathcal{L}$")
 ax2.legend()
 ax2.set_xlabel("$t$ [s]")
-ax2.set_ylabel(r"$M_\mathcal{L}$ [kg]")
+ax2.set_ylabel(r"$M$ [kg]")
 ax2.sharex(ax)
 
 ax4.plot(AVACtimes, havac, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")

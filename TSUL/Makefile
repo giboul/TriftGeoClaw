@@ -67,7 +67,7 @@ topo:
 avid=""
 data:
 	-rm -f .data
-	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(avid)
+	$(CLAW_PYTHON) $(SETRUN_FILE) $(avid)
 	touch .data
 run:
 	echo avid=$(avid)

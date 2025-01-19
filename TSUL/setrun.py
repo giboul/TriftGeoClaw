@@ -11,6 +11,7 @@ from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
+from energy import t_start
 
 
 projdir = Path(__file__).parents[1]
@@ -69,7 +70,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
     # -------------
     # Initial time:
     # -------------
-    clawdata.t0 = 0.0
+    clawdata.t0 = t_start
     # Restart from checkpoint file of a previous run?
     # If restarting, t0 above should be from original run, and the
     # restart_file 'fort.chkNNNNN' specified below should be in 
@@ -87,8 +88,8 @@ def setrun(claw_pkg='geoclaw', bouss=False, avid='None', inflow="bc") -> ClawRun
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 50
-        clawdata.tfinal = 600
+        clawdata.num_output_times = 100
+        clawdata.tfinal = clawdata.t0 + 200
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -404,7 +405,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
 def main():
     # Treating command line arguments
     parser = ArgumentParser()
-    parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    # parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('avid', default='None', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()

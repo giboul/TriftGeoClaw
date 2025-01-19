@@ -17,7 +17,7 @@ plt.rcParams["text.usetex"] = True
 np.seterr(all="raise", under="ignore")
 
 
-projdir = Path(__file__).parent
+projdir = Path(__file__).parent.parent
 with open(projdir / "config.yaml") as file:
     config = safe_load(file)
     AVAC = config["AVAC"]
@@ -38,22 +38,22 @@ def parse_args():
     parser.add_argument("-s", "--save", action="store_true")
     return parser.parse_args()
 
-def read_clawdata(path):
+def read_clawdata(path, sep="=: ", comments="#"):
     clawdata_trans = dict(T=True, F=False)
     clawdata = dict()
     with open(path) as file:
-        lines = [l for l in file.readlines() if "=" in l]
+        lines = [l for l in file.readlines() if sep in l]
         for line in lines:
-            value, key = line.split("=: ")
-            key = key[:key.find(" ")]
-            if "#" in value:
-                value = value[value.find("#")]
+            value, key = [e for e in line.split(sep) if e]
+            key = key.strip()
+            if comments in key:
+                key = key[:key.find(comments)].strip()
             value = [v for v in value.split() if v]
             for e, element in enumerate(value):
                 try:
                     value[e] = eval(element)
                 except Exception:
-                    value[e] = clawdata_trans[element]
+                    value[e] = clawdata_trans.get(element, element)
             clawdata[key] = value[0] if len(value)==1 else value
     return clawdata
 
@@ -74,6 +74,8 @@ dry_tolerance = TSULgeodata["dry_tolerance"]
 g = TSULgeodata["gravity"]
 rhow = TSULgeodata["rho"]
 rhos = voellmy["snow_density"]
+
+read_clawdata(AVACdir/"fgout0001.t0001", sep="  ")
 
 xmin, ymin = TSULdata["lower"]
 xmax, ymax = TSULdata["upper"]
@@ -156,18 +158,6 @@ def read_contour(i, x, y, outdir=TSULdir, file_format=TSUL["out_format"]):
     frame_sol = Solution(int(i), path=outdir, file_format=file_format)
     return grid_output_2d(frame_sol, lambda q: q, x, y, levels = "all", return_ma=True)
 
-h0 = read_lake(0)[0]
-ht0 = read_contour(0, xc, yc)[0]
-hd0 = read_contour(0, xd, yd)[0]
-lake0 = h0 > 1e-5
-
-def lake_energy_volume_alt(q, rho):
-    h, hu, hv, _ = q
-    hu2 = divide(hu**2 + hv**2, h)
-    pot = 1/2 * rhow * g * np.where(lake, (h-h0)**2, 0.)
-    kin = 1/2 * rhow * np.where(lake, hu2, 0.)
-    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (h-h0)[lake0].max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
-
 def avalanche_energy_volume(q, rho, h0=0, nx=nx, ny=ny, dl=dl):
     h, hu, hv, s = q
     hun = hu*nx + hv*ny
@@ -180,74 +170,89 @@ for i, t in enumerate(AVACtimes):
     print(f"AVAC: {t = :.1f} ", end=f"({(i+1)/AVACtimes.size:.1%})... \r")
     Eavac[i], Vavac[i], havac[i], vavac[i] = avalanche_energy_volume(read_contour(i, xc, yc, outdir=AVACdir), rhos)
 print()
+t_start = AVACtimes[max(0, (havac > 0).argmax()-1)]
 
-for i, t in enumerate(TSULtimes):
-    print(f"TSUL: {t = :.1f} ", end=f"({(i+1)/TSULtimes.size:.1%})... \r")
-    Etsul[i], Vtsul[i], htsul[i], vtsul[i] = avalanche_energy_volume(read_contour(i, xc, yc), rhow, h0=ht0)
-    Elake[i], Vlake[i], hlake[i], vlake[i] = lake_energy_volume_alt(read_lake(i), rhow)
-    Edam[i],  Vdam[i],  hdam[i],  vdam[i]  = avalanche_energy_volume(read_contour(i, xd, yd, outdir=TSULdir), rhow, h0=hd0, nx=nxd, ny=nyd, dl=dld)
-print()
+def lake_energy_volume_alt(q, rho):
+    h, hu, hv, _ = q
+    hu2 = divide(hu**2 + hv**2, h)
+    pot = 1/2 * rhow * g * np.where(lake, (h-h0)**2, 0.)
+    kin = 1/2 * rhow * np.where(lake, hu2, 0.)
+    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (h-h0)[lake0].max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
 
-ta, Eavac = trapint(AVACtimes, Eavac)
-tm, Etsul = trapint(TSULtimes, Etsul)
-Eavac += Elake[0]
-Etsul += Elake[0]
+if __name__ == "__main__":
 
-fig, ((ax, ax3), (ax2, ax4)) = plt.subplots(ncols=2, nrows=2, layout="tight", figsize=(8, 6))
-fig.suptitle(f"{AVACdir.relative_to(AVACdir.parents[1])} versus {TSULdir.relative_to(TSULdir.parents[1])}")
+    h0 = read_lake(0)[0]
+    ht0 = read_contour(0, xc, yc)[0]
+    hd0 = read_contour(0, xd, yd)[0]
+    lake0 = h0 > 1e-5
 
-lavac, = ax.plot(ta, Eavac, ':', label="AVAC")
-ltsul, = ax.plot(tm, Etsul,  '-.', label="TSUL")
-llake, = ax.plot(TSULtimes, Elake, '-', label=r"$\Delta \mathcal{E_L}$")
-ax.set_xlabel("$t$ [s]")
-ax.set_ylabel(r"$\mathcal{E}$ [J]")
-ax.legend()
+    for i, t in enumerate(TSULtimes):
+        print(f"TSUL: {t = :.1f} ", end=f"({(i+1)/TSULtimes.size:.1%})... \r")
+        Etsul[i], Vtsul[i], htsul[i], vtsul[i] = avalanche_energy_volume(read_contour(i, xc, yc), rhow, h0=ht0)
+        Elake[i], Vlake[i], hlake[i], vlake[i] = lake_energy_volume_alt(read_lake(i), rhow)
+        Edam[i],  Vdam[i],  hdam[i],  vdam[i]  = avalanche_energy_volume(read_contour(i, xd, yd, outdir=TSULdir), rhow, h0=hd0, nx=nxd, ny=nyd, dl=dld)
+    print()
 
-Elake = (Elake[1:] + Elake[:-1])/2
-Vlake = (Vlake[1:] + Vlake[:-1])/2
+    ta, Eavac = trapint(AVACtimes, Eavac)
+    tm, Etsul = trapint(TSULtimes, Etsul)
+    Eavac += Elake[0]
+    Etsul += Elake[0]
 
-# ax3.plot(np.interp(tm, ta, Eavac), Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
-# ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-# ax3.axline((0, 0), slope=1, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{E_A}=\Delta \mathcal{E_L}$")
-# ax3.set_ylabel(r"$\mathcal{E_L}$ [J]")
-# ax3.set_xlabel(r"$\mathcal{E_A}$ [J]")
-# ax3.legend()
+    fig, ((ax, ax3), (ax2, ax4)) = plt.subplots(ncols=2, nrows=2, layout="tight", figsize=(8, 6))
+    fig.suptitle(f"{AVACdir.relative_to(AVACdir.parents[1])} versus {TSULdir.relative_to(TSULdir.parents[1])}")
 
-ax2.plot(ta, rhos*trapint(AVACtimes, Vavac)[1], ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
-ax2.plot(tm, rhow*trapint(TSULtimes, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta M_\mathcal{L}$")
-ax2.legend()
-ax2.set_xlabel("$t$ [s]")
-ax2.set_ylabel(r"$M$ [kg]")
-ax2.sharex(ax)
+    lavac, = ax.plot(ta, Eavac, ':', label="AVAC")
+    ltsul, = ax.plot(tm, Etsul,  '-.', label="TSUL")
+    llake, = ax.plot(TSULtimes, Elake, '-', label=r"$\Delta \mathcal{E_L}$")
+    ax.set_xlabel("$t$ [s]")
+    ax.set_ylabel(r"$\mathcal{E}$ [J]")
+    ax.legend()
 
-ax4.plot(AVACtimes, havac, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
-ax4.plot(TSULtimes, htsul, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
-ax4.plot(TSULtimes, hlake, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{L}$")
-ax4.plot(TSULtimes, hdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
-ax4.set_xlabel("$t$ [s]")
-ax4.set_ylabel(r"$h_{max}$ [m]")
-ax4.legend()
+    Elake = (Elake[1:] + Elake[:-1])/2
+    Vlake = (Vlake[1:] + Vlake[:-1])/2
 
-# ax5 = ax4.twinx()
-ax5 = ax3
-ax5.plot(AVACtimes, vavac, ls=lavac.get_linestyle(), color=lavac.get_color(), label="AVAC")
-ax5.plot(TSULtimes, vtsul, ls=ltsul.get_linestyle(), color=ltsul.get_color(), label="TSUL")
-ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), label=r"$\mathcal{L}$")
-ax5.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
-ax5.set_ylabel(r"$|u|$ [m/s]")
-ax5.sharex(ax)
-ax5.legend()
+    # ax3.plot(np.interp(tm, ta, Eavac), Elake, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
+    # ax3.plot(Etsul, Elake, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
+    # ax3.axline((0, 0), slope=1, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{E_A}=\Delta \mathcal{E_L}$")
+    # ax3.set_ylabel(r"$\mathcal{E_L}$ [J]")
+    # ax3.set_xlabel(r"$\mathcal{E_A}$ [J]")
+    # ax3.legend()
 
-if args.save:
-    fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
-else:
-    plt.show()
+    ax2.plot(ta, rhos*trapint(AVACtimes, Vavac)[1], ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
+    ax2.plot(tm, rhow*trapint(TSULtimes, Vtsul)[1], ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
+    ax2.plot(tm, rhow*(Vlake-Vlake[0]), ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\Delta M_\mathcal{L}$")
+    ax2.legend()
+    ax2.set_xlabel("$t$ [s]")
+    ax2.set_ylabel(r"$M$ [kg]")
+    ax2.sharex(ax)
 
-# plt.plot(AVACtimes, hdama)
-# plt.plot(TSULtimes, hdamt)
-# plt.show()
+    ax4.plot(AVACtimes, havac, ls=lavac.get_linestyle(), c=lavac.get_color(), label="AVAC")
+    ax4.plot(TSULtimes, htsul, ls=ltsul.get_linestyle(), c=ltsul.get_color(), label="TSUL")
+    ax4.plot(TSULtimes, hlake, ls=llake.get_linestyle(), c=llake.get_color(), label=r"$\mathcal{L}$")
+    ax4.plot(TSULtimes, hdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
+    ax4.set_xlabel("$t$ [s]")
+    ax4.set_ylabel(r"$h_{max}$ [m]")
+    ax4.legend()
 
-with open("max.log", "a") as file:
-    txt = rf"{avid: >2} & {vtsul.max(): >5.1f} & {havac.max(): >5.1f} & {Vavac.max():.3e} & {hlake.max(): >5.1f}\\""\n"
-    file.write(txt)
+    # ax5 = ax4.twinx()
+    ax5 = ax3
+    ax5.plot(AVACtimes, vavac, ls=lavac.get_linestyle(), color=lavac.get_color(), label="AVAC")
+    ax5.plot(TSULtimes, vtsul, ls=ltsul.get_linestyle(), color=ltsul.get_color(), label="TSUL")
+    ax5.plot(TSULtimes, vlake, ls=llake.get_linestyle(), color=llake.get_color(), label=r"$\mathcal{L}$")
+    ax5.plot(TSULtimes, vdam, alpha=1.0, color="k", label=r"$\mathcal{B}$")
+    ax5.set_ylabel(r"$|u|$ [m/s]")
+    ax5.sharex(ax)
+    ax5.legend()
+
+    if args.save:
+        fig.savefig(projdir / "figures" / f"energy{avid}.pdf", bbox_inches="tight")
+    else:
+        plt.show()
+
+    # plt.plot(AVACtimes, hdama)
+    # plt.plot(TSULtimes, hdamt)
+    # plt.show()
+
+    with open("max.log", "a") as file:
+        txt = rf"{avid: >2} & {vtsul.max(): >5.1f} & {havac.max(): >5.1f} & {Vavac.max():.3e} & {hlake.max(): >5.1f}\\""\n"
+        file.write(txt)

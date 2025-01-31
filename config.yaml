@@ -1,0 +1,41 @@
+TOPM:
+  topography: swissALTI3D_merged.tif
+  bathymetry: &topofile TOPM/bathymetry.asc
+  avalanches: avalanches.geojson
+  lake_alt: 1767  # m.s.m.
+  dam_alt: 1771.2  # m.s.m.
+  resolution: 2.  # m
+  smooth_radius: 5  # m
+
+  overhang: 2  # m
+
+  bounds:
+    xmin: 2666500.
+    xmax: 2673700.
+    ymin: 1169000.
+    ymax: 1174200.
+
+  flood_seed: [2.6705e+6, 1.1710e+6]
+  dilation_radius: 10  # m
+
+AVAC:
+  friction: friction.csv
+  out_format: binary  # binary32
+  topo: *topofile
+
+  snow_density: 500.0  # kg/m³
+
+  num_out: &num_out 300
+
+TSUL:
+  bounds:
+    xmin: 2669650.
+    xmax: 2671000.
+    ymin: 1170100.
+    ymax: 1172260.
+
+  topo: *topofile
+  out_format: binary  # binary32
+  num_out: *num_out
+
+  inflow: "src"  # "bc" or "src"

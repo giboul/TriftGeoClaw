@@ -14,8 +14,8 @@ new:
 
 avid ?= ""
 one:
-	cd avac; make qinit avid=$(avid) && make output && make iplot OUTDIR=_output$(avid) fps=5 fname=../figures/avac$(avid).gif
-	cd tsul; make data avid=$(avid) && make output && make iplot OUTDIR=_output$(avid) fps=5 fname=../figures/tsul$(avid).gif
+	cd avac; make qinit avid=$(avid) && make output && make iplot fps=5 fname=../figures/avac$(avid).gif
+	cd tsul; make data avid=$(avid) && make output && make iplot fps=5 fname=../figures/tsul$(avid).gif
 
 RUN_COUNT?=26
 all:

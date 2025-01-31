@@ -15,11 +15,15 @@ A `tiff` file is expected. It will be cropped, downsampled and maybe rotated in 
 ## `qinit.xyz`
 From an `geojson` of polygons, the avalanches are defined by `id` to be run together or separately. This treatment is done in [`qinit.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/qinit.py).
 
+```Makefile
+make qinit avid=<avid>
+```
+
 <img src="avac/qinit.png"/>
 
 ## Running the avalanche
-Each avalanche can be run individually with the command `make run avid=<avalanche id>` and the output will go to a folder named `_output<avid>`. `make output` or `make run` without specifying `avid` will run all avalanches on a signle simulation.
 
+With a simple `make output`, the initial snow that was set will flow down.
 
 
 <!--
@@ -68,7 +72,7 @@ The mode of momentum introduction can be chosen in the `config.yaml` file (`tsul
 
 ### From the boundary conditions
 
-The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient. The avalanche can be specified with the avalanche id again: `make run avid=<avalanche id>` or `make output OUTDIR=_output<avalanche id>`.
+The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient.
 
 
 <img src="tsul/movie_bc.gif"/>
@@ -78,6 +82,14 @@ The saved files from the AVAC results are read by the `setprob.f90` through the 
 SAme as boundary condition but with `src2.f90`.
 
 <img src="tsul/movie_src.gif"/>
+
+## Fixed grid output
+
+This convenient output format allows for easy visualization:
+
+<img src="figures/pyv10.gif">
+
+All results for Trift are in the `figures` folder.
 
 <!--
 ## Reading the dam overflows

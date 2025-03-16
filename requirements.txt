@@ -1,0 +1,9 @@
+# python3 -m venv claw
+# sudo apt install liblapack-dev libopenblas-dev
+# clawpack (please set $CLAW environment variable)
+# clawpack requirements:
+meson-python
+ninja
+pyyaml
+matplotlib
+scikit-image  # tifffile is included

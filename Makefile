@@ -1,33 +1,37 @@
-install:
-	sudo apt install libgdal-dev
-	pip install -r pyrequirements.txt
-	pip install --src=$(CLAW)/.. --no-build-isolation -e git+https://github.com/clawpack/clawpack.git@v5.11.0#egg=clawpack
-	echo "PETSC_DIR/PETSC_ARCH/lib/... could match:"
-	find / -name petsc 2>/dev/null
+avid ?= 1
+RUN_COUNT?=26
 
 topo:
-	python topm/topo.py
+	python topm/maketopo.py
 
 new:
 	cd avac; make new
 	cd tsul; make new
 
-avid ?= ""
-one:
-	cd avac; make qinit avid=$(avid) && make output && make iplot fps=5 fname=../figures/avac$(avid).gif
-	cd tsul; make data avid=$(avid) && make output && make iplot fps=5 fname=../figures/tsul$(avid).gif
+qinit:
+	python topm/makeqinit_avac.py $(avid)
+	python topm/makeqinit_tsul.py
 
-RUN_COUNT?=26
+run:
+	cd avac; make data && make qinit avid=$(avid) && make output
+	cd tsul; make data && make output
+
 all:
-	for avid in $(shell seq 5 $(RUN_COUNT)) ; do \
-		rm -rv **/_output*; \
-        make one avid=$$avid ; \
-		python tsul/energy.py $$avid -s ; \
-		git add -f log.log figures/*.gif && git add figures/*.pdf && git commit -m "'make one avid=$$avid' terminated" && git push ; \
+	make new
+	make qinit
+	for avid in $(shell seq 1 $(RUN_COUNT)) ; do \
+        make run avid=$$avid ; \
+		mv avac/_output avac/_output$$avid
+		mv tsul/_output tsul/_output$$avid
+		# python tsul/energy.py $$avid -s && \
+		# git add -f log.log figures/*.gif && \
+		# git add figures/*.pdf && \
+		# git commit -m "'make run avid=$$avid' terminated" && \
+		# git push ; \
     done
 
 figures:
-	for avid in $(shell seq 5 $(RUN_COUNT)) ; do \
+	for avid in $(shell seq 1 $(RUN_COUNT)) ; do \
         python energy.py -s $$avid ; \
     done
 

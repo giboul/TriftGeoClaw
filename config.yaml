@@ -1,9 +1,10 @@
 TOPM:
-  topography: swissALTI3D_merged.tif
-  bathymetry: &topofile TOPM/bathymetry.asc
+  original_bathymetry: topo.tif
+  bathymetry: &topofile topm/bathymetry.asc  # processed bathymetry
   avalanches: avalanches.geojson
-  lake_alt: 1767  # m.s.m.
+  dam: dam.geojson
   dam_alt: 1771.2  # m.s.m.
+  lake_alt: 1767  # m.s.m.
   resolution: 2.  # m
   smooth_radius: 5  # m
 
@@ -15,17 +16,20 @@ TOPM:
     ymin: 1169000.
     ymax: 1174200.
 
-  flood_seed: [2.6705e+6, 1.1710e+6]
+  flood_seed: [2.6705e+6, 1.1710e+6]  # x, y
   dilation_radius: 10  # m
 
 AVAC:
-  friction: friction.csv
   out_format: binary  # binary32
+
+  qinit: avac/qinit.xyz
   topo: *topofile
 
   snow_density: 500.0  # kg/m³
+  d0s: 2.0  # between 0.88 and 2.1 http://www.toraval.ch/articles/trad2.pdf
+  d0_gradient: 5  # cm/100m
+  z0: 2000
 
-  num_out: &num_out 300
 
 TSUL:
   bounds:
@@ -35,7 +39,8 @@ TSUL:
     ymax: 1172260.
 
   topo: *topofile
+  qinit: tsul/qinit.xyz
   out_format: binary  # binary32
-  num_out: *num_out
 
-  inflow: "src"  # "bc" or "src"
+  inflow: bc  # bc or src
+  bc_size: 100

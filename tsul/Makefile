@@ -24,6 +24,9 @@ PLOTDIR = _plots               # Directory for plots
 FFLAGS = -O2 -fopenmp -llapack -lblas
 OMP_NUM_THREADS = 4
 
+# Which avac results to read
+AVAC_DIR ?= avac/_output
+
 # ---------------------------------
 # package sources for this program:
 # ---------------------------------
@@ -63,20 +66,19 @@ SOURCES = \
 include $(CLAWMAKE)
 
 # Construct the topography data
-.PHONY: topo all fgout_plots
+.PHONY: topo all
 topo:
-	$(CLAW_PYTHON) maketopo.py
+	$(CLAW_PYTHON) ../topm/maketopo_tsul.py
 
-fgout_plots: 
-	$(MAKE) plots SETPLOT_FILE=setplot_fgout.py PLOTDIR=_plots_fgout
-	$(CLAW_PYTHON) make_fgout_animation.py
-	$(CLAW_PYTHON) make_fgout_animation_transect.py
-	mv fgout_animation* _plots_fgout/
+qinit:
+	$(CLAW_PYTHON) ../topm/makeqinit_tsul.py
 
 all: 
 	$(MAKE) topo
 	$(MAKE) .plots
-	$(MAKE) fgout_plots
 	$(MAKE) .htmls
-	@echo 'See _plots and _plots_fgout'
 
+data: $(MAKEFILE_LIST);
+	-rm -f .data
+	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(AVAC_DIR)
+	touch .data

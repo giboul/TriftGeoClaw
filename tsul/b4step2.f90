@@ -52,18 +52,22 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
 
     ! ----------------------------------------------------------------
     ! AVAC inflows
-    if (trim(inflow_mode) == "src") then
+    if (trim(inflow_mode) == "src") then ! Introduce AVAC flows
       inf = closest_inf(t, ts)
       sup = closest_sup(t, ts)
-      do j = 1, my
+      do j = 1, my ! Loop over all cells
         yc = ylower + (j - 0.5d0) * dy
         do i = 1, mx
           xc = xlower + (i - 0.5d0) * dx
+          ! lake_level + overhang < z => high enough
           if (lake_alt+overhang<aux(1,i,j)) then
             w = MIN(fg%mx-1, 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
             s = MIN(fg%my-1, 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
+            ! If at least one value is not zero
             if (MAXVAL(qa(inf:sup,1,w:w+1,s:s+1)) > 0) then
+              ! if times are coherent (?) ! TODO check
               if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
+                ! Interpolate q
                 xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
                 ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
                 xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)

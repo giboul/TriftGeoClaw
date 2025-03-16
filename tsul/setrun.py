@@ -21,7 +21,7 @@ with open(projdir / "config.yaml") as file:
     TOPM = config["TOPM"]
     TSUL = config["TSUL"]
 
-def setrun(claw_pkg='geoclaw', bouss=False, inflow="bc") -> ClawRunData:
+def setrun(claw_pkg='geoclaw', AVAC_DIR: str="_output", bouss=False, inflow="bc") -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -51,10 +51,10 @@ def setrun(claw_pkg='geoclaw', bouss=False, inflow="bc") -> ClawRunData:
     clawdata.num_cells[1] = int((ymax-ymin)/60)
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = xmin
-    clawdata.upper[0] = xmax
-    clawdata.lower[1] = ymin
-    clawdata.upper[1] = ymax
+    clawdata.lower[0] = float(xmin)
+    clawdata.upper[0] = float(xmax)
+    clawdata.lower[1] = float(ymin)
+    clawdata.upper[1] = float(ymax)
 
     # ---------------
     # Size of system:
@@ -173,7 +173,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, inflow="bc") -> ClawRunData:
         clawdata.bc_lower[1] = 'user'
         clawdata.bc_upper[1] = 'user'
     else:
-        raise ValueError(f"inflow mode '{tsul['inflow']}' is not 'bc' or 'src'")
+        raise ValueError(f"inflow mode '{TSUL['inflow']}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -220,7 +220,7 @@ def setrun(claw_pkg='geoclaw', bouss=False, inflow="bc") -> ClawRunData:
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = min_cell_size_x / 300.
+    clawdata.dt_initial = float(min_cell_size_x) / 300.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -311,13 +311,16 @@ def setrun(claw_pkg='geoclaw', bouss=False, inflow="bc") -> ClawRunData:
     fgout.nout = clawdata.num_output_times
     fgout_grids.append(fgout)
  
-    inflow_mode = TSUL.get('inflow') or inflow
+    inflow_mode = TSUL.get("inflow", inflow)
 
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('mode', inflow_mode,  'The method for introucing the avalnche')
-    probdata.add_param('damping', AVAC["snow_density"]/1025.,  'rho_snow/rho_water')  # TODO water density
-    probdata.add_param('lake_alt', TOPM["lake_alt"],  'Lake altitude')
-    probdata.add_param('overhang', TOPM.get("overhang", 0.),  'Overhang of the contour over the lake')
+    probdata.add_param('mode', inflow_mode, 'The method for introucing the avalanche')
+    probdata.add_param('damping', float(AVAC['snow_density'])/1025., 'rho_snow/rho_water')  # TODO water density
+    probdata.add_param('lake_alt', float(TOPM['lake_alt']),  'Lake altitude')
+    probdata.add_param('overhang', float(TOPM.get('overhang', 0.)), 'Overhang of the contour over the lake')
+    if not Path(AVAC_DIR).is_absolute():
+        AVAC_DIR = projdir / AVAC_DIR
+    probdata.add_param('AVAC_DIR', str(AVAC_DIR), 'The directory containing the fixed grid output of AVAC.')
 
     return rundata
 
@@ -356,7 +359,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[2, "../topm/bathymetry.asc"]]
+    topo_data.topofiles = [[2, projdir / TOPM["bathymetry"]]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -393,6 +396,7 @@ def main():
     # Treating command line arguments
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
+    parser.add_argument('AVAC_DIR', default='_output', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     args = parser.parse_args()
 

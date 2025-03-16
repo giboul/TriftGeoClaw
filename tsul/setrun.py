@@ -5,13 +5,13 @@ Module to set up run time parameters for Clawpack.
 The values set in the function setrun are then written out to data files
 that will be read in by the Fortran code.
 """
-from subprocess import Popen
 from argparse import ArgumentParser
 from yaml import safe_load
 from pathlib import Path
 import numpy as np
 from clawpack.clawutil.data import ClawRunData
 from clawpack.geoclaw.fgout_tools import FGoutGrid
+import bc_inflows
 
 
 projdir = Path(__file__).parents[1]
@@ -407,7 +407,7 @@ def main():
     data.touch()
 
     if TSUL["inflow"] == "bc":
-        Popen(["python", projdir/"tsul"/"bc_inflows.py"])
+        bc_inflows.write(Path(args.AVAC_DIR), projdir/"tsul"/"_bc_inflows")
 
 
 def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):

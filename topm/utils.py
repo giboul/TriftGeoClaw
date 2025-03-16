@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from pathlib import Path
 from json import load
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,7 +10,67 @@ from skimage.morphology import flood
 from skimage.measure import find_contours
 
 
+def read_asc_dataline(file):
+    return file.readline().strip().split()
+
+
+def read_asc(path, dtype=np.float16):
+    print(f"{__name__}.read_asc: Reading {path}", end="... ", flush=True)
+
+    path = Path(path)
+    if path.suffix == ".asc":
+        order = "C"
+        datapath = path
+        Z = np.loadtxt(path, skiprows=6)
+    elif path.suffix == ".bin":
+        order = "F"
+        datapath = path.with_suffix(".data")
+        Z = np.fromfile(path, dtype=dtype)
+    else:
+        print()
+        raise NotImplementedError(f"{path.suffix} not yet supported.")
+
+    with open(datapath) as datafile:
+        nx = int(read_asc_dataline(datafile)[0])
+        ny = int(read_asc_dataline(datafile)[0])
+        xmin = float(read_asc_dataline(datafile)[0])
+        ymin = float(read_asc_dataline(datafile)[0])
+        resolution = float(read_asc_dataline(datafile)[0])
+        nodatavalue = float(read_asc_dataline(datafile)[0])
+    
+    x = xmin + np.arange(nx)*resolution
+    y = (ymin + np.arange(ny)*resolution)[::-1]
+
+    print("Done.", flush=True)
+
+    return x, y, Z.reshape(ny, nx, order=order)
+
+
+def write_asc(path, Z, xmin, ymin, resolution, nodatavalue=999999, fmt="%.16e", dtype=np.float16):
+    path = Path(path)
+    print(f"{__name__}.write_asc: Writing to {path}", end="... ", flush=True)
+    asc_header = f"""
+    {Z.shape[1]} ncols
+    {Z.shape[0]} nrows
+    {xmin} xllcenter
+    {ymin} yllcenter
+    {resolution} cellsize
+    {nodatavalue} nodata_value
+    """.strip()
+    if path.suffix == ".asc":
+        np.savetxt(path, Z.flatten(), header=asc_header, comments="")
+    elif path.suffix == ".bin":
+        with open(path.with_suffix(".data"), "w") as file:
+            file.write(asc_header)
+        Z.reshape(Z.shape, order="F").astype(dtype).T.tofile(path)
+    else:
+        print()
+        raise NotImplementedError(f"{path.suffix} not yet implemented.")
+    print("Done.", flush=True)
+
+
 def read_tiff(path):
+    print(f"{__name__}.read_tiff: Reading {path}", end="... ", flush=True)
     with TiffFile(path) as tif:
         Z = tif.asarray().astype(np.float16)
         nx = tif.pages[0].tags["ImageWidth"].value
@@ -20,16 +81,18 @@ def read_tiff(path):
         tifres = tif.pages[0].tags["ModelPixelScaleTag"].value[0]
     x = xmin + (np.arange(nx) + 0.5)*x_res
     y = ymax - (np.arange(ny) + 0.5)*y_res
+    print("Done.")
     return x, y, Z
 
-def fill_lake(topo, seed, max_level=0):
+
+def flood_mask(topo, seed, max_level=0):
     mask = topo < max_level
     initial_value = mask[*seed]
     mask[*seed] = True
     flooded = flood(mask, seed)
     flooded[*seed] = initial_value
-    # topo[flooded] = max_level
     return flooded
+
 
 def read_geojson(path):
     with open(path, "r") as file:
@@ -44,6 +107,7 @@ def read_geojson(path):
 
     avacs = np.array(coords).T
     return avacs
+
 
 def pick_seed(z_im, x, y, res=0, lake_alt=0):
 
@@ -73,18 +137,19 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
             print(e)
     text_box.on_submit(on_submit)
 
+    flooded = np.full(z_im.shape, False, dtype=bool)
+    dilated = flooded.copy()
+
     def redraw(ignore_pause=False):
         if data["status"] == "pause" and ignore_pause is False:
             return None
         fig.canvas.manager.set_window_title("Flooding...")
-        flooded = fill_lake(z_im.copy(), (data["y"], data["x"]), float(data.get("alt") or 0))
-        dilated = isotropic_dilation(flooded, data["r"])
-        flooded = np.ma.MaskedArray(z_im, ~flooded)
-        dilated = np.ma.MaskedArray(z_im, ~dilated)
-        imf.set_data(flooded)
-        imd.set_data(dilated)
-        imf.set(clim=(flooded.min(), flooded.max()))
-        imd.set(clim=(dilated.min(), dilated.max()))
+        flooded[:,:] = flood_mask(z_im, (data["y"], data["x"]), float(data.get("alt") or 0))
+        dilated[:,:] = isotropic_dilation(flooded, data["r"])
+        imf.set_data(np.where(flooded, z_im, np.nan))
+        imd.set_data(np.where(dilated, z_im, np.nan))
+        imf.set(clim=(z_im[flooded].min(), z_im[flooded].max()))
+        imd.set(clim=(z_im[dilated].min(), z_im[dilated].max()))
         fig.canvas.draw()
         fig.canvas.manager.set_window_title(f"Status: {data['status']}")
 
@@ -114,7 +179,8 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
     fig.canvas.mpl_connect("button_press_event", flood_pick)
     
     plt.show()
-    return (data["x"], data["y"]), float(data["alt"]), data["r"]
+    return flooded, dilated
+
 
 def uniform_grid_interp(x, y, Z, xZ=None, yZ=None):
     if xZ is not None:
@@ -134,12 +200,14 @@ def uniform_grid_interp(x, y, Z, xZ=None, yZ=None):
         + (e-x)*((n-y)*Z[:, w][s, :].T).T
     )
 
+
 def find_contour(mask, extent, nx, ny):
     xmin, xmax, ymin, ymax = extent
     x, y = find_contours(mask, 0.5)[0].T
     x = xmin + x/nx * (xmax - xmin)
     y = ymax - y/ny * (ymax - ymin)
     return np.column_stack((x, y))
+
 
 def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
     dx = (x2 - x1) * rel_margin + abs_margin
@@ -150,12 +218,14 @@ def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
     ymax = y2 + dy
     return xmin, xmax, ymin, ymax
 
+
 def gkern(l, sig):
     """creates gaussian kernel with side length `l` and a sigma of `sig`"""
     ax = np.linspace(-(l - 1) / 2., (l - 1) / 2., l)
     gauss = np.exp(-0.5 * np.square(ax) / np.square(sig))
     kernel = np.outer(gauss, gauss)
     return kernel / np.sum(kernel)
+
 
 def conv2d(Z, k):
     k = np.array(k)
@@ -167,6 +237,7 @@ def conv2d(Z, k):
     subM = strd(Z, shape = s, strides = Z.strides * 2)
     return np.einsum('ij,ijkl->kl', k, subM)
 
+
 def pad_to_shape(Z, shape):
     y_pad, x_pad = np.subtract(shape, Z.shape)
     return np.pad(Z,(
@@ -174,8 +245,10 @@ def pad_to_shape(Z, shape):
         (x_pad//2, x_pad//2 + x_pad%2)
     ), mode = 'edge')
 
+
 def apply_gkernel(Z, size=1, sig=1.):
     return pad_to_shape(conv2d(Z, gkern(size, sig)), Z.shape)
+
 
 def isodil(M):
     M[1:-1, 1:-1] = (
@@ -185,8 +258,8 @@ def isodil(M):
     )
     return M
 
+
 def isotropic_dilation(M, r):
     for _ in range(r):
         M = isodil(M)
     return M
-

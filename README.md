@@ -1,95 +1,116 @@
 <img src="drawing.png"/>
 
 # TriftGeoclaw
-This repository is an attempt to quantify the potential of impulse waves induced by snow avalanches in the future [Trift reservoir](https://www.researchgate.net/publication/313646761_L'amenagement_hydroelectrique_de_Trift) (Gadmen, Bern, Switerland).
+This repository quantifies the impulse waves induced by snow avalanches in the future [Trift reservoir](https://www.researchgate.net/publication/313646761_L'amenagement_hydroelectrique_de_Trift) (Gadmen, Bern, Switerland).
 
-This work is divided in two parts which are both based on David George's [Geoclaw](https://www.clawpack.org/geoclaw) module from Randall J. Leveque's [Clawpack](https://www.clawpack.org/). It may apply in other similar cases.
+This work is divided in two parts which are both based on David George's [Geoclaw](https://www.clawpack.org/geoclaw) module from Randall J. Leveque's [Clawpack](https://www.clawpack.org/).
 
-# 1. Simulating the snow avalanches: [AVAC](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/README.md)
+# Requirements
+- [Clawpack](https://www.clawpack.org/installing_pip.html#install-quick-all)
+- [liblapack-dev](https://www.netlib.org/lapack/) and [libopenblas-dev](http://www.openmathlib.org/OpenBLAS/)
+- `python>=3.7` (in order to use [pathlib](https://docs.python.org/3/library/pathlib.html)). The required packages are listed in [requirements.txt](requirements.txt):
+    - [matplotlib](https://pypi.org/project/matplotlib/)
+    - [PyYAML](https://pypi.org/project/PyYAML/) for reading the `config.yaml` file.
+    - [scikit-image](https://pypi.org/project/scikit-image/) for treating the bathymetry.
 
-This part is cloned from Christophe Ancey's (@cancey) work on avalanches, see his [AVAC](https://github.com/cancey/avac.git) repo. 
+# 1. Input data: bathymetry, avalanches and dam
 
-## `topo.asc`
-A `tiff` file is expected. It will be cropped, downsampled and maybe rotated in the future to find the best bounding box of the lake. The expected final format is either `.xyz` or `.asc`. This can be done with tools like `gdal`, the `tifffile` package is used here because it comes with `scikit-image`. See [`topo.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/topo.py).
+## Bathymetry file (and dam): [topm/maketopo.py](topm/maketopo.py)
+The bathymetry is essential to both the avalanche and the tsunami modelling. The [topm/maketopo.py](topm/maketopo.py) script modifies the original bathymetry specified in `config.yaml` (in .asc of .tif format) and writes it to `config.yaml:TOPM:resolution`. You can use it if you need to:
+- crop the data to `config.yaml:TOPM:resolution`,
+- downscale (or upscale) the resolution to `config.yaml:TOPM:bounds`,
+- and eventully add a dam from a geojson or a csv (with 2 columns: x and y) file specified in `config.yaml:TOPM:dam`.
 
-## `qinit.xyz`
-From an `geojson` of polygons, the avalanches are defined by `id` to be run together or separately. This treatment is done in [`qinit.py`](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/qinit.py).
+> If your bathymetry file is already treated and does not need the points above, just make sure that the `config.yaml:TOPM:bathymetry` points to your bathymetry file.
 
-```Makefile
-make qinit avid=<avid>
-```
+## Avalanches file: [topm/makeqinit_avac.py](topm/makeqinit_avac.py)
 
-<img src="avac/qinit.png"/>
-
-## Running the avalanche
-
-With a simple `make output`, the initial snow that was set will flow down.
-
+The avalanches file contains the coordinates of polygons that define the panels. It should either be a csv (with 3 columns: id, x and y) or a geojson so that it can directly be exported from a QGIS polygon shapefile. Once loaded, the snow cover will be determined according to the [VSG method](http://www.toraval.ch/articles/trad2.pdf). By passing an avalanche id as an argument to [makeqinit_avac.py](topm/makeqinit_avac.py), the avalanche with the corresponding avalanche id (avid for short) will be used to set the initial snow cover.
 
 <!--
-## Measurement of the flows
-The `clawpack.visclaw.gridtools.grid_output_2d` comes in handy here, it allows to extract all information passing though a curve. Thanks to this function, the momentum flux and the depth are quickly extracted and written to files in the `_cut_output` directory.
-
-<img src="AVAC/cut_movie.gif"/>
+> ### Example of geojson file fron a polygons shapefile in QGIS
+> ```json
+> {
+> "features": [
+> { "properties": { "id": 1 }, "geometry": {
+>     "type": "MultiPolygon", "coordinates": [ [ [
+>         /// longitude, latitude
+>         [ 2667324.50905901286751, 1170874.322037271922454 ],
+>         [ 2667353.040285009425133, 1170896.59031122061424 ],
+>         ...
+>         [ 2667311.287271355744451, 1170840.919626349117607 ],
+>         [ 2667324.50905901286751, 1170874.322037271922454 ] ] ] ] }
+> },
+> ...,
+> { "properties": { "id": 4 }, "geometry": {
+>     "type": "MultiPolygon", "coordinates": [ [ [
+>         [ 2668405.216229078359902, 1170305.089284461690113 ],
+>         [ 2668405.912112639285624, 1170238.284462615847588 ],
+>         ...
+>         [ 2668483.155187898315489, 1170355.888784406706691 ],
+>         [ 2668405.216229078359902, 1170305.089284461690113 ] ] ] ] } }
+> ]
+> }
+> ```
 -->
 
+# 2. Simulating the snow avalanches: [AVAC](https://github.com/giboul/TriftGeoclaw/blob/main/AVAC/README.md)
 
-# 2. Lake tsunami modelling: [TSUL](https://github.com/giboul/TriftGeoclaw/blob/main/TSUL/README.md)
+This part is forked from Christophe Ancey's (@cancey) work on dense avalanches, see his [AVAC](https://github.com/cancey/avac.git) repo.
 
-Here, David George's [Geoclaw](https://www.clawpack.org/geoclaw) covers everything.
+The snow parameters (Voellmy, snow density, d0, ...) can be set in  `config.yaml:AVAC`.
 
-## `topo.asc`
+Once the bathymetry file is ready, go into the `avac` directory, compile the fortran scripts with `make new` and create the data files with `make data`. The remaining file to prepare is `qinit.xyz`: create it with `make qinit` and specify which panel to initiate with `make qinit avid=<avalanche_id>` (default is `avid=1`). Finally, run `make output`.
 
-The same process as the avalanche's `topo.asc` is applied, only with bounds capturing the lake limits.
-
-## `qinit.xyz`
-
-The `skimage.morphology.flood` is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive `matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input:
-
-<img src="tsul/qinit.png"/>
-
-The dilation is because of an (likely) interpolation error during simulation causing waves from the edge of steep borders. For an illustration, see the [DamErrorExample](https://github.com/giboul/TriftGeoClaw/blob/main/DamErrorExample/README.md).
-
-```python
-from skimage.morphology import flood
-
-def fill_lake(topo, seed, max_level=0):
-    mask = topo < max_level 
-    initial_value = mask[*seed]
-    mask[*seed] = True
-    flooded = flood(mask, seed)
-    flooded[*seed] = initial_value
-    topo[flooded] = max_level
-    return flooded
-
-flooded = fill_lake(z, (seed_iy, seed_ix), lake_alt)
-dilated = isotropic_dilation(flooded, radius)
+To sum up:
+```Makefile
+echo $PWD  # You should be in the AVAC directory
+make new  # Compile fortran codes, you only need to do this once
+make data  # Prepare the datafiles
+make qinit avid=1  # Create qinit.xyz (initial depth),
+                   # specifying the avalanche id
+make output  # compute
 ```
 
-## Introducing a flow
+# 3. Lake tsunami modelling: [TSUL](https://github.com/giboul/TriftGeoclaw/blob/main/TSUL/README.md)
 
-The mode of momentum introduction can be chosen in the `config.yaml` file (`tsul->inflow: 'src' or 'bc'`).
+Here, David George's [Geoclaw](https://www.clawpack.org/geoclaw) is used again. The data in the output directory is used to introduce an avalanche with ajusted fluxes according to the difference in density between the water and the snow.
 
-### From the boundary conditions
+To run the simulation, simply use `make` as well. The only difference is that the directory where the results will be read can be specified in `make data`:
+```Makefile
+echo $PWD  # You should be in the TSUL directory
+make new  # Compile fortran codes, you only need to do this once
+make qinit  # Create qinit.xyz (initial surface)
+make data AVAC_DIR=avac/_output  # Prepare the datafiles
+make output  # compute
+```
+
+## Lake as initial solution: `makeqinit_tsul.py`
+
+The `skimage.morphology.flood` is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input ([topm/makeqinit_tsul.py](topm/makeqinit_tsul.py)). The lake level, the flood seed and the dilation radius can also be specified in `config.yaml:TSUL`:
+
+The dilation is needed because of an interpolation error, causing waves at the edge of steep borders.
+<!-- For an illustration, see the [DamErrorExample](https://github.com/giboul/TriftGeoClaw/blob/main/DamErrorExample/README.md).-->
+
+# Flux introduction
+
+The mode of mass and momentum introduction can be chosen in `config.yaml:TSUL:inflow`. It can be `src` or `bc`.
+
+### From the boundary conditions (`bc`)
 
 The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient.
 
 
-<img src="tsul/movie_bc.gif"/>
+<!-- <img src="tsul/movie_bc.gif"/> -->
 
-### With the source term
+### With the source term (`src`)
 
-SAme as boundary condition but with `src2.f90`.
+Same as boundary condition but with `b4step2.f90` instead of `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `lake_level+overhang`. It is a curvilinear boundary condition if you will.
 
-<img src="tsul/movie_src.gif"/>
+<!-- img src="tsul/movie_src.gif"/> -->
 
-## Fixed grid output
-
-This convenient output format allows for easy visualization:
-
-<img src="figures/pyv10.gif">
-
-All results for Trift are in the `figures` folder.
+# Global view
+<img src=flowchart.png>
 
 <!--
 ## Reading the dam overflows

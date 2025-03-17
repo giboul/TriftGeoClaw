@@ -10,7 +10,6 @@ new:
 	cd tsul; make new
 
 qinit:
-	python topm/makeqinit_avac.py $(avid)
 	python topm/makeqinit_tsul.py
 
 run:

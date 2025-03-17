@@ -6,7 +6,6 @@ TOPM:
   dam_alt: 1771.2  # m.s.m.
   lake_alt: 1767  # m.s.m.
   resolution: 2.  # m
-  smooth_radius: 5  # m
 
   overhang: 2  # m
 
@@ -29,6 +28,12 @@ AVAC:
   d0s: 2.0  # between 0.88 and 2.1 http://www.toraval.ch/articles/trad2.pdf
   d0_gradient: 5  # cm/100m
   z0: 2000
+
+  # Voellmy
+  xi: 2500
+  mu: 0.2
+  u*: 0.3
+  beta_slope: 1.1
 
 
 TSUL:

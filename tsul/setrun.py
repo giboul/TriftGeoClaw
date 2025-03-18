@@ -321,6 +321,7 @@ def setrun(claw_pkg='geoclaw', AVAC_DIR: str="_output", bouss=False, inflow="bc"
     if not Path(AVAC_DIR).is_absolute():
         AVAC_DIR = projdir / AVAC_DIR
     probdata.add_param('AVAC_DIR', str(AVAC_DIR), 'The directory containing the fixed grid output of AVAC.')
+    probdata.add_param('bc_size', int(TSUL["bc_size"]), 'Number of cells to interpolate from for each boundary.')
 
     return rundata
 
@@ -407,7 +408,7 @@ def main():
     data.touch()
 
     if TSUL["inflow"] == "bc":
-        bc_inflows.write(Path(args.AVAC_DIR), projdir/"tsul"/"_bc_inflows")
+        bc_inflows.write(args.AVAC_DIR, projdir/"tsul"/"_bc_inflows")
 
 
 def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):

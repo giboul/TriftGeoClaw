@@ -5,6 +5,7 @@ module helpers
     implicit none
     save
 
+    integer :: bc_size
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping, overhang
@@ -25,6 +26,7 @@ contains
             READ(unit,*) lake_alt
             READ(unit,*) overhang
             READ(unit,*) AVAC_DIR
+            READ(unit,*) bc_size
         CLOSE(unit)
 
         IF (TRIM(inflow_mode) == "None") then
@@ -40,7 +42,7 @@ contains
         integer :: unit
 
         unit = 2
-        fname = "times.txt"
+        fname = "../_bc_inflows/times.txt"
         print "(A,A)", "Reading ", trim(fname)
         open(unit, file=fname)
             n = 0
@@ -63,60 +65,33 @@ contains
     subroutine init_bc()
 
         character(len=6), dimension(4) :: sides
-        character(len=255) :: ftemp
         character(len=255) :: fname
         real(kind=8) :: x, y, h, hu, hv
         integer :: unit, io, i, n, mthbc
-        integer :: num_cells
     
         unit = 2
         sides = [character(len=6) :: "left", "right", "bottom", "top"]
 
         call read_times()
  
-        ftemp = "../_bc_inflows"
-        num_cells = 0
-        do mthbc = 1, 4
-            do i = 1, size(times)
-            n = 0
-                write(fname,"(A,I0.4,A4)") &
-                    trim(ftemp)//"/"//trim(sides(mthbc))//"_",i-1,".npy"
-                open(unit, file=fname, status="old")
-                    do
-                        read(unit,*,iostat=io)
-                        if (io /= 0) then
-                            exit
-                        end if
-                        n = n + 1
-                    end do
-                close(unit)
-                num_cells = max(num_cells, n)
-            end do
-        end do
  
-        allocate(q_avac(size(times), 4, num_cells, 5))
-        print "(A,I10)", "size(q_avac)    = ", size(q_avac)
-        print "(A,I10)", "size(q_avac, 1) = ", size(q_avac, 1)
-        print "(A,I10)", "size(q_avac, 2) = ", size(q_avac, 2)
-        print "(A,I10)", "size(q_avac, 3) = ", size(q_avac, 3)
-        print "(A,I10)", "size(q_avac, 4) = ", size(q_avac, 4)
+        allocate(q_avac(size(times), 4, bc_size, 5))
+        print "(A,I10)", "size(q_avac) = ", size(q_avac)
+        print "(A,I10)", "times:     size(q_avac, 1) = ", size(q_avac, 1)
+        print "(A,I10)", "sides:     size(q_avac, 2) = ", size(q_avac, 2)
+        print "(A,I10)", "bc_size:   size(q_avac, 3) = ", size(q_avac, 3)
+        print "(A,I10)", "variables: size(q_avac, 4) = ", size(q_avac, 4)
    
         do mthbc = 1, 4
             do i = 1, size(times)
-                write(fname,"(A,I0.4,A4)") &
-                    trim(ftemp)//"/"//trim(sides(mthbc))//"_",i-1,".npy"
-                open(unit, file=fname, status="old")
-                do n = 1, num_cells
-                    read(unit,*, iostat=io) x, y, h, hu, hv
-                    q_avac(i, mthbc, n, 1) = x
-                    q_avac(i, mthbc, n, 2) = y
-                    q_avac(i, mthbc, n, 3) = h
-                    q_avac(i, mthbc, n, 4) = hu
-                    q_avac(i, mthbc, n, 5) = hv
-                end do
+                fname = "../_bc_inflows/"//trim(sides(mthbc))//"_"
+                write(fname,"(A,I0.4,A4)") fname, i-1, ".npy"
+                open(unit, file=fname, status="unknown", access="stream")
+                    read(unit) q_avac(i, mthbc, :, :)
                 close(unit)
             end do
         end do
+
     end subroutine init_bc
 
 
@@ -161,6 +136,8 @@ contains
             interp1d4d = q(i,:,:,:)*0
         ELSE IF (t<ts(i)) THEN
             interp1d4d = q(s,:,:,:)*0
+        ELSE IF (ts(i)==ts(s)) THEN
+            interp1d4d = q(i,:,:,:)
         ELSE
             interp1d4d = q(i,:,:,:) + &
                         (q(s,:,:,:) - q(i,:,:,:)) * &
@@ -178,13 +155,12 @@ contains
 
         i = closest_inf(xnew, x)
         s = closest_sup(xnew, x)
-        IF (.not.(x(i)<=xnew.and.xnew<=x(s))) THEN
-            IF (xnew>=MINVAL(x) .and. MAXVAL(x)>=xnew) THEN
-                PRINT *, "####", MINVAL(x), x(i), xnew, x(s), MAXVAL(x)
-                stop
-            END IF
-        END IF
-        IF (x(i)==x(s)) THEN
+
+        IF (x(s)<xnew) THEN
+            interp1d2d = q(i,:)*0
+        ELSE IF (xnew<x(i)) THEN
+            interp1d2d = q(i,:)*0
+        ELSE IF (x(i)==x(s)) THEN
             interp1d2d = q(i,:)
         ELSE
             interp1d2d = q(i,:) + &

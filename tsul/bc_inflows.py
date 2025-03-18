@@ -25,6 +25,9 @@ def extract(i, x, y, outdir):
 
 def write(AVAC_DIR, outdir, n=TSUL["bc_size"]):
 
+    AVAC_DIR = Path(AVAC_DIR)
+    if not AVAC_DIR.is_absolute():
+        AVAC_DIR = projdir / AVAC_DIR
     ntimes = len(list(AVAC_DIR.glob("fort.q*")))
 
     xmin, xmax, ymin, ymax = np.loadtxt(projdir/"topm"/"lake_extent.txt")
@@ -55,12 +58,13 @@ def write(AVAC_DIR, outdir, n=TSUL["bc_size"]):
         print(f"Saving cut {ti+1:>{4}}/{ntimes}...", end="\r")
         q, t = extract(ti, x, y, AVAC_DIR)
         times.append(t)
-        h, hu, hv, eta = q
+        h, hu, hv, eta = np.array(q)
         for bi, boundary in enumerate(boundaries):
             s = slice(bi*n, (bi+1)*n)
             data = np.column_stack((x[s], y[s], h[s], hu[s], hv[s]))
             path = outdir / f"{boundary}_{ti:0>{4}}.npy"
-            np.savetxt(path, data, comments="")
+            # np.savetxt(path, data, comments="")
+            data.reshape(data.shape, order="F").astype(np.float64).T.tofile(path)
     print()
 
     np.savetxt(outdir / "times.txt", times)

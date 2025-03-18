@@ -47,5 +47,5 @@ TSUL:
   qinit: tsul/qinit.xyz
   out_format: binary  # binary32
 
-  inflow: bc  # bc or src
+  inflow: src  # bc or src
   bc_size: 100

@@ -12,7 +12,7 @@ new:
 qinit:
 	python topm/makeqinit_tsul.py
 
-run:
+output:
 	cd avac; make data && make qinit avid=$(avid) && make output
 	cd tsul; make data AVAC_DIR=$(AVAC_DIR) && make output
 

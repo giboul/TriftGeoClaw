@@ -53,14 +53,26 @@ def write_qinit(avid=1, plot=False):
     else:
         geojson = np.loadtxt(geopath).T
 
-    qinit = make_qinit(
-        x, y, Z,
-        geojson,
-        avid,
-        AVAC["d0s"],
-        AVAC.get("z0", 2000),
-        AVAC.get("d0g", 5/100/100)
-    )
+    if avid == -1: # Launch all avalanches (for debugging purposes in TSUL)
+        qinit = np.zeros(Z.shape)
+        for avid in np.unique(geojson[0]):
+            qinit = qinit + make_qinit(
+                x, y, Z,
+                geojson,
+                avid,
+                AVAC["d0s"],
+                AVAC.get("z0", 2000),
+                AVAC.get("d0g", 5/100/100)
+            )
+    else:
+        qinit = make_qinit(
+            x, y, Z,
+            geojson,
+            avid,
+            AVAC["d0s"],
+            AVAC.get("z0", 2000),
+            AVAC.get("d0g", 5/100/100)
+        )
     print(f"Saving {projdir/AVAC['qinit']}", end="... ", flush=True)
     X, Y = np.meshgrid(x, y, copy=False)
     np.savetxt(projdir/AVAC['qinit'], np.column_stack((X.flatten(), Y.flatten(), qinit.flatten())))

@@ -184,9 +184,9 @@ def pick_seed(z_im, x, y, res=0, lake_alt=0):
 
 def uniform_grid_interp(x, y, Z, xZ=None, yZ=None):
     if xZ is not None:
-        x = (x-x[0])/(x[-1]-x[0])*(Z.shape[1]-1)
+        x = (x-xZ[0])/(xZ[-1]-xZ[0])*(Z.shape[1]-1)
     if yZ is not None:
-        y = (y-y[0])/(y[-1]-y[0])*(Z.shape[0]-1)
+        y = (y-yZ[0])/(yZ[-1]-yZ[0])*(Z.shape[0]-1)
     x = np.clip(0., Z.shape[1], x)
     y = np.clip(0., Z.shape[0], y)
     w = np.clip(x.astype(int), 0, Z.shape[1]-2)

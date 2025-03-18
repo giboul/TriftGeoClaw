@@ -32,7 +32,7 @@ Z = Z[ymask, :][:, xmask]
 print(f"Rescaling to {TOPM['resolution']}", flush=True)
 x = np.arange(xmin, xmax+TOPM["resolution"], step=TOPM["resolution"])
 y = np.arange(ymin, ymax+TOPM["resolution"], step=TOPM["resolution"])
-Z = utils.uniform_grid_interp(x, y, Z, xt, yt)
+Z = utils.uniform_grid_interp(x, y, Z, xt, yt[::-1])
 
 # print(f"Smoothing topography")
 # smooth_radius = max(1, int(TOPM.get("smooth_radius", 5) / TOPM["resolution"]))

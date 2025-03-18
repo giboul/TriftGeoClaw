@@ -68,7 +68,8 @@ echo $PWD  # You should be in the AVAC directory
 make new  # Compile fortran codes, you only need to do this once
 make data  # Prepare the datafiles
 make qinit avid=1  # Create qinit.xyz (initial depth),
-                   # specifying the avalanche id
+                   # specifying the avalanche id (optional)
+                   # avid=-1 will assemble all avalanches
 make output  # compute
 ```
 
@@ -81,7 +82,7 @@ To run the simulation, simply use `make` as well. The only difference is that th
 echo $PWD  # You should be in the TSUL directory
 make new  # Compile fortran codes, you only need to do this once
 make qinit  # Create qinit.xyz (initial surface)
-make data AVAC_DIR=avac/_output  # Prepare the datafiles
+make data AVAC_DIR=avac/_output  # Prepare the datafiles, AVAC_DIR is optional
 make output  # compute
 ```
 
@@ -100,17 +101,42 @@ The mode of mass and momentum introduction can be chosen in `config.yaml:TSUL:in
 
 The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient.
 
+With this mode of flux introcution, the variable `q_avac` in TSUL has 4 dimensions: `q_avac(time, side, i, variable)` where
+- `time` is the index of the fgout frame from AVAC with time `t`,
+- `side` is the index of the boundary condition (left, right, bottom, top),
+- `i` is the index along a side, it goes from 1 to `config.yaml:TSUL["bc_size"]`,
+- `variable` is the index that specifies wich of `x`, `y`, `h`, `hu` or `hv` to get.
 
+The initialization of this array is done in [tsul/helpers](tsul/helpers):`init_bc()`.
 <!-- <img src="tsul/movie_bc.gif"/> -->
 
 ### With the source term (`src`)
 
 Same as boundary condition but with `b4step2.f90` instead of `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `lake_level+overhang`. It is a curvilinear boundary condition if you will.
 
+With this mode of flux introcution, the variable `q_avac` in TSUL has 4 dimensions again: `q_avac(time, variable, x, y)` where
+- `time` is the index of the fgout frame from AVAC with time `t`,
+- `variable` is the index that specifies wich of `h`, `hu` or `hv` to get.
+- `x` is the index along the x-position on the AVAC fgout grid,
+- `y` is the index along the y-direction ont he AVAC fgout grid,
+
+The initialization of this array is done in [tsul/helpers](tsul/helpers):`init_src_fgout_bin()`.
 <!-- img src="tsul/movie_src.gif"/> -->
 
-# Global view
+# Flowchart
 <img src=flowchart.png>
+
+# Shortcuts from the main directory: [Makefile](Makefile)
+```Makefile
+make new  # Compile both AVAC and TSUL programs
+make topo  # Treat the topography
+           # Creates topm/bathymetry.asc from
+           # config.yaml:original_bathymetry.
+           # Don't use it if your file is ready for use and
+           # referenced by congif.yaml:bathymetry.
+make qinit  # Create tsul/qinit.xyz
+make output avid=1  # Make data files, avac/qinit.xyz and make output
+```
 
 <!--
 ## Reading the dam overflows

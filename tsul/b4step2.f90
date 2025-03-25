@@ -30,7 +30,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
     use helpers, only : qa=>q_avac, ts=>times, damping, &
                         inflow_mode, overhang, lake_alt, &
                         fg=>AVAC_fgrid, closest_sup, closest_inf
-    ! use helpers, only : fgoutinterp, interp1d4d, AVAC_fgrid, lake_alt
+    use helpers, only : interp_time, interp_src
     use fgout_module, only : fgout_grid
 
     implicit none
@@ -46,47 +46,69 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
     ! Local storage
     integer :: index,i,j,k,dummy, inf, sup, w, s
     real(kind=8) :: h,u,v, xw, xe, ys, yn
-    real(kind=8) :: xc, yc
+    real(kind=8) :: alpha, xc, yc
+    real(kind=8) :: qt(2,3,2,2)
     ! real(kind=8) :: qt(size(qa,2),size(qa,3),size(qa,4))
-    real(kind=8) :: qt(3,2,2)
 
     ! ----------------------------------------------------------------
     ! AVAC inflows
-    if (trim(inflow_mode) == "src") then ! Introduce AVAC flows
+    if (trim(inflow_mode) == "src") then ! introduce AVAC flows
+      ! qt = interp_time(t, ts, qa)
+      ! where qt = qa(inf) + (t-time(inf))/(t-time(sup)) * (qa(sup)-qa(inf))
+      !                       ~~~~~~~~~~~~~~~~~~~~~~~~~~ := alpha     
       inf = closest_inf(t, ts)
       sup = closest_sup(t, ts)
+      alpha = (t-ts(inf)) / (ts(sup) - ts(inf))
       do j = 1, my ! Loop over all cells
         yc = ylower + (j - 0.5d0) * dy
         do i = 1, mx
           xc = xlower + (i - 0.5d0) * dx
           ! lake_level + overhang < z => high enough
           if (lake_alt+overhang<aux(1,i,j)) then
-            w = MIN(fg%mx-1, 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
-            s = MIN(fg%my-1, 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
-            ! If at least one value is not zero
-            if (MAXVAL(qa(inf:sup,1,w:w+1,s:s+1)) > 0) then
-              ! if times are coherent (?) ! TODO check
-              if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
-                ! Interpolate q
-                xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
-                ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
-                xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)
-                yn = ys + (fg%y_hi-fg%y_low)/(fg%my-1)
-                qt(:,:,:) = qa(inf,1:3,w:w+1,s:s+1) + &
-                    (qa(sup,1:3,w:w+1,s:s+1) - &
-                     qa(inf,1:3,w:w+1,s:s+1))* &
-                    (t-ts(inf)) / (ts(sup)-ts(inf))
-                q(1:3,i,j) = (&
-                    + (xc-xw) * (yc-ys) * qt(:,2,2) &
-                    + (xc-xw) * (yn-yc) * qt(:,2,1) &
-                    + (xe-xc) * (yc-ys) * qt(:,1,2) &
-                    + (xe-xc) * (yn-yc) * qt(:,1,1) &
-                ) / ((xe-xw) * (yn-ys)) * damping
-              end if
+            ! if times are coherent (?) ! TODO check
+            if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
+                q(1:3,i,j) = interp_src( &
+                    xc, yc, fg, alpha, qa(inf:sup,1:3,:,:) &
+                ) * damping
             end if
           end if
         end do
       end do
+      !---
+      ! inf = closest_inf(t, ts)
+      ! sup = closest_sup(t, ts)
+      ! do j = 1, my ! Loop over all cells
+      !   yc = ylower + (j - 0.5d0) * dy
+      !   do i = 1, mx
+      !     xc = xlower + (i - 0.5d0) * dx
+      !     ! lake_level + overhang < z => high enough
+      !     if (lake_alt+overhang<aux(1,i,j)) then
+      !       w = MIN(fg%mx-1, 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
+      !       s = MIN(fg%my-1, 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
+      !       ! If at least one value is not zero
+      !       if (MAXVAL(qa(inf:sup,1,w:w+1,s:s+1)) > 0) then
+      !         ! if times are coherent (?) ! TODO check
+      !         if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
+      !           ! Interpolate q
+      !           xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
+      !           ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
+      !           xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)
+      !           yn = ys + (fg%y_hi-fg%y_low)/(fg%my-1)
+      !           qt(:,:,:) = qa(inf,1:3,w:w+1,s:s+1) + &
+      !               (qa(sup,1:3,w:w+1,s:s+1) - &
+      !                qa(inf,1:3,w:w+1,s:s+1))* &
+      !               (t-ts(inf)) / (ts(sup)-ts(inf))
+      !           q(1:3,i,j) = (&
+      !               + (xc-xw) * (yc-ys) * qt(:,2,2) &
+      !               + (xc-xw) * (yn-yc) * qt(:,2,1) &
+      !               + (xe-xc) * (yc-ys) * qt(:,1,2) &
+      !               + (xe-xc) * (yn-yc) * qt(:,1,1) &
+      !           ) / ((xe-xw) * (yn-ys)) * damping
+      !         end if
+      !       end if
+      !     end if
+      !   end do
+      ! end do
     end if
     ! ----------------------------------------------------------------
 

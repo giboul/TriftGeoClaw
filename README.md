@@ -152,7 +152,10 @@ python pyvista_fgout_grid.py \
 [--file_name -f output_gif_movie_file_name]
 ```
 
+## Example for the AVAC output:
 <img src="output_avac.gif">
+
+## Example for the TSUL output
 <img src="output_tsul.gif">
 
 <!--

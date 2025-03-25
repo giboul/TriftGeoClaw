@@ -300,12 +300,12 @@ def setrun(claw_pkg='geoclaw', AVAC_DIR: str="_output", bouss=False, inflow="bc"
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.nx = int((clawdata.upper[0]-clawdata.lower[0])/1.)
-    fgout.ny = int((clawdata.upper[1]-clawdata.lower[1])/1.)
-    fgout.x1 = clawdata.lower[0]
-    fgout.x2 = clawdata.upper[0]
-    fgout.y1 = clawdata.lower[1]
-    fgout.y2 = clawdata.upper[1]
+    fgout.x1 = xmin - 10
+    fgout.x2 = xmax + 10
+    fgout.y1 = ymin - 10
+    fgout.y2 = ymax + 10
+    fgout.nx = int((fgout.x2 - fgout.x1)/1.)
+    fgout.ny = int((fgout.y2 - fgout.y1)/1.)
     fgout.tstart = clawdata.t0
     fgout.tend = clawdata.tfinal
     fgout.nout = clawdata.num_output_times
@@ -410,15 +410,6 @@ def main():
     if TSUL["inflow"] == "bc":
         bc_inflows.write(args.AVAC_DIR, projdir/"tsul"/"_bc_inflows")
 
-
-def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
-    dx = (x2 - x1) * rel_margin + abs_margin
-    dy = (y2 - y1) * rel_margin + abs_margin
-    xmin = x1 - dx
-    xmax = x2 + dx
-    ymin = y1 - dy
-    ymax = y2 + dy
-    return xmin, xmax, ymin, ymax
 
 if __name__ == '__main__':
     main()

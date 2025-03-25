@@ -92,7 +92,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_avac, times, damping, interp1d4d, interp1d2d, &
+    use helpers, only: q_avac, times, damping, interp_time, interp_bc_space, &
         inflow_mode
 
     implicit none
@@ -121,7 +121,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
 
 ! Interpolate AVAC state in time before interpolating in space
     if (inflow_mode=="bc") then
-        qt = interp1d4d(time, times, q_avac)
+        qt = interp_time(time, times, q_avac)
     end if
 
 ! Each check has an initial check to ensure that the boundary is a real
@@ -139,7 +139,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = 1, nxl ! Avalanche
-                    val(1:3,i,j) = interp1d2d( &
+                    val(1:3,i,j) = interp_bc_space( &
                         yc, qt(1,:,2), qt(1,:,3:5) &
                     ) * damping
                 end do
@@ -196,7 +196,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do j = 1, ncol
                 yc = ylo_patch + (j - 0.5d0)*hy
                 do i = ibeg, nrow ! Avalanche
-                    val(1:3,i,j) = interp1d2d( &
+                    val(1:3,i,j) = interp_bc_space( &
                         yc, qt(2,:,2), qt(2,:,3:5) &
                     ) * damping
                 end do
@@ -253,7 +253,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = 1, nyb ! Avalanche
-                    val(1:3,i,j) = interp1d2d( &
+                    val(1:3,i,j) = interp_bc_space( &
                         xc, qt(3,:,1), qt(3,:,3:5) &
                     ) * damping
                 end do
@@ -311,7 +311,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
             do i = 1, nrow
                 xc = xlo_patch + (i - 0.5d0)*hx
                 do j = jbeg, ncol ! Avalanche
-                    val(1:3,i,j) = interp1d2d( &
+                    val(1:3,i,j) = interp_bc_space( &
                         xc, qt(4,:,1), qt(4,:,3:5) &
                     ) * damping
                 end do

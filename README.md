@@ -16,12 +16,12 @@ This work is divided in two parts which are both based on David George's [Geocla
 # 1. Input data: bathymetry, avalanches and dam
 
 ## Bathymetry file (and dam): [topm/maketopo.py](topm/maketopo.py)
-The bathymetry is essential to both the avalanche and the tsunami modelling. The [topm/maketopo.py](topm/maketopo.py) script modifies the original bathymetry specified in `config.yaml` (in .asc of .tif format) and writes it to `config.yaml:TOPM:resolution`. You can use it if you need to:
-- crop the data to `config.yaml:TOPM:resolution`,
-- downscale (or upscale) the resolution to `config.yaml:TOPM:bounds`,
+The bathymetry is essential to both the avalanche and the tsunami modelling. The [topm/maketopo.py](topm/maketopo.py) script modifies the original bathymetry specified in `config.yaml:TOPM:original_bathymetry` (in .asc or .tif format) and writes it to `config.yaml:TOPM:bathymetry`. You can use it if you need to:
+- crop the data to `config.yaml:TOPM:bounds`,
+- downscale (or upscale) the resolution to `config.yaml:TOPM:resolution`,
 - and eventully add a dam from a geojson or a csv (with 2 columns: x and y) file specified in `config.yaml:TOPM:dam`.
 
-> If your bathymetry file is already treated and does not need the points above, just make sure that the `config.yaml:TOPM:bathymetry` points to your bathymetry file.
+> If your bathymetry file is already treated and does not need the edits above, just make sure that the `config.yaml:TOPM:bathymetry` points to that bathymetry file.
 
 ## Avalanches file: [topm/makeqinit_avac.py](topm/makeqinit_avac.py)
 
@@ -95,11 +95,11 @@ The dilation is needed because of an interpolation error, causing waves at the e
 
 # Flux introduction
 
-The mode of mass and momentum introduction can be chosen in `config.yaml:TSUL:inflow`. It can be `src` or `bc`.
+The mode of mass and momentum introduction can be chosen in `config.yaml:TSUL:inflow`. It can be either `src` or `bc`.
 
 ### From the boundary conditions (`bc`)
 
-The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient.
+The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient, interpolated in time then in space.
 
 With this mode of flux introcution, the variable `q_avac` in TSUL has 4 dimensions: `q_avac(time, side, i, variable)` where
 - `time` is the index of the fgout frame from AVAC with time `t`,
@@ -112,7 +112,7 @@ The initialization of this array is done in [tsul/helpers](tsul/helpers):`init_b
 
 ### With the source term (`src`)
 
-Same as boundary condition but with `b4step2.f90` instead of `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `lake_level+overhang`. It is a curvilinear boundary condition if you will.
+Same as boundary condition but with `b4step2.f90` instead of `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `lake_level+overhang`. It is first interpolated in time, then in space. It is a curvilinear boundary condition if you will.
 
 With this mode of flux introcution, the variable `q_avac` in TSUL has 4 dimensions again: `q_avac(time, variable, x, y)` where
 - `time` is the index of the fgout frame from AVAC with time `t`,
@@ -136,6 +136,19 @@ make topo  # Treat the topography
            # referenced by congif.yaml:bathymetry.
 make qinit  # Create tsul/qinit.xyz
 make output avid=1  # Make data files, avac/qinit.xyz and make output
+```
+
+# Plotting a FGout grid with pyvista:
+
+> Only binary format at the moment
+
+```bash
+python pyvista_fgout_grid.py \
+[outdir] \
+[--color_by -c variable ] \ # variable is one of h, hu, hv, z, b, dh, ds
+[--gridno -g grid_number] \
+[--cmaps -m mpl_colormap_bathy mpl_colormap_variable] \
+[--clim -l mpl_colormap_variable_lower mpl_colormap_variable_upper]
 ```
 
 <!--

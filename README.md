@@ -149,6 +149,7 @@ python pyvista_fgout_grid.py \
 [--gridno -g grid_number] \
 [--cmaps -m mpl_colormap_bathy mpl_colormap_variable] \
 [--clim -l mpl_colormap_variable_lower mpl_colormap_variable_upper]
+[--file_name -f output_gif_movie_file_name]
 ```
 
 <!--

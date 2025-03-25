@@ -52,10 +52,11 @@ def parse_args():
     parser.add_argument("--gridno", "-g", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "jet"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-1, 1))
+    parser.add_argument("--file_name", "-f", type=str, default="")
     args = parser.parse_args()
     return args
 
-def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1)):
+def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
 
     outdir = Path(outdir)
     color_func = color_functions[color_by]
@@ -88,9 +89,15 @@ def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim
         surf.points[:, 2] = np.where(h(q)>0, z(q), np.nan).T.flatten()
         surf[color_by] = color_func(q, q0).T.flatten()
 
-    p.add_timer_event(max_steps=len(times), duration=500, callback=update)
-
-    p.show()
+    if file_name:
+        p.open_gif(file_name)
+        for i, t in enumerate(times[:50]):
+            update(i)
+            p.write_frame()
+        p.close()
+    else:
+        p.add_timer_event(max_steps=len(times), duration=500, callback=update)
+        p.show()
 
 def main():
     args = parse_args()

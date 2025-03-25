@@ -152,7 +152,8 @@ python pyvista_fgout_grid.py \
 [--file_name -f output_gif_movie_file_name]
 ```
 
-<img src="output.gif">
+<img src="output_avac.gif">
+<img src="output_tsul.gif">
 
 <!--
 ## Reading the dam overflows

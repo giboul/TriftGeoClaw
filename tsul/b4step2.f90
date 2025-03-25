@@ -74,41 +74,6 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
           end if
         end do
       end do
-      !---
-      ! inf = closest_inf(t, ts)
-      ! sup = closest_sup(t, ts)
-      ! do j = 1, my ! Loop over all cells
-      !   yc = ylower + (j - 0.5d0) * dy
-      !   do i = 1, mx
-      !     xc = xlower + (i - 0.5d0) * dx
-      !     ! lake_level + overhang < z => high enough
-      !     if (lake_alt+overhang<aux(1,i,j)) then
-      !       w = MIN(fg%mx-1, 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
-      !       s = MIN(fg%my-1, 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
-      !       ! If at least one value is not zero
-      !       if (MAXVAL(qa(inf:sup,1,w:w+1,s:s+1)) > 0) then
-      !         ! if times are coherent (?) ! TODO check
-      !         if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
-      !           ! Interpolate q
-      !           xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
-      !           ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
-      !           xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)
-      !           yn = ys + (fg%y_hi-fg%y_low)/(fg%my-1)
-      !           qt(:,:,:) = qa(inf,1:3,w:w+1,s:s+1) + &
-      !               (qa(sup,1:3,w:w+1,s:s+1) - &
-      !                qa(inf,1:3,w:w+1,s:s+1))* &
-      !               (t-ts(inf)) / (ts(sup)-ts(inf))
-      !           q(1:3,i,j) = (&
-      !               + (xc-xw) * (yc-ys) * qt(:,2,2) &
-      !               + (xc-xw) * (yn-yc) * qt(:,2,1) &
-      !               + (xe-xc) * (yc-ys) * qt(:,1,2) &
-      !               + (xe-xc) * (yn-yc) * qt(:,1,1) &
-      !           ) / ((xe-xw) * (yn-ys)) * damping
-      !         end if
-      !       end if
-      !     end if
-      !   end do
-      ! end do
     end if
     ! ----------------------------------------------------------------
 

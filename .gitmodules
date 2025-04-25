@@ -1,4 +1,0 @@
-[submodule "avac"]
-	path = avac
-	url = git@https://github.com/giboul/avac.git
-	branch = TriftGeoClaw

@@ -1,51 +1,7 @@
-TOPM:
-  original_bathymetry: topo.tif
-  bathymetry: &topofile topm/bathymetry.asc  # processed bathymetry
-  avalanches: avalanches.geojson
-  dam: dam.geojson
-  dam_alt: 1771.2  # m.s.m.
-  lake_alt: 1767  # m.s.m.
-  resolution: 2.  # m
-
-  overhang: 2  # m
-
-  bounds:
-    xmin: 2666500.
-    xmax: 2673700.
-    ymin: 1169000.
-    ymax: 1174200.
-
-  flood_seed: [2.6705e+6, 1.1710e+6]  # x, y
-  dilation_radius: 10  # m
-
-AVAC:
-  out_format: binary  # binary32
-
-  qinit: avac/qinit.xyz
-  topo: *topofile
-
-  snow_density: 500.0  # kg/m³
-  d0s: 2.0  # between 0.88 and 2.1 http://www.toraval.ch/articles/trad2.pdf
-  d0_gradient: 5  # cm/100m
-  z0: 2000
-
-  # Voellmy
-  xi: 2500
-  mu: 0.2
-  u*: 0.3
-  beta_slope: 1.1
-
-
-TSUL:
-  bounds:
-    xmin: 2669650.
-    xmax: 2671000.
-    ymin: 1170100.
-    ymax: 1172260.
-
-  topo: *topofile
-  qinit: tsul/qinit.xyz
-  out_format: binary  # binary32
-
-  inflow: src  # bc or src
-  bc_size: 100
+AVAC_outdir: ~/Desktop/TriftGeoClaw/AVAC/_output8
+bathymetry: ~/Desktop/TriftGeoClaw/TOPM/bathymetry.asc
+inflow_mode: src # src or bc
+lake_alt: 1767
+overhang: 5.
+output_format: binary64
+bc_size: 100

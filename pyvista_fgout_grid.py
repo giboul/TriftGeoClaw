@@ -47,7 +47,7 @@ color_functions = dict(dh=dh, ds=ds, h=h, hu=hu, hv=hv, b=b, z=z)
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("outdir", type=str, nargs="?", default="tsul/_output")
+    parser.add_argument("outdir", type=str, nargs="?", default="_output")
     parser.add_argument("--color_by", "-c", type=str, default="dh")
     parser.add_argument("--gridno", "-g", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "jet"))
@@ -91,7 +91,7 @@ def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim
 
     if file_name:
         p.open_gif(file_name)
-        for i, t in enumerate(times[:50]):
+        for i, t in enumerate(times[:20]):
             update(i)
             p.write_frame()
         p.close()

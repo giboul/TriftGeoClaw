@@ -41,7 +41,7 @@ def read_datafiles(outdir: Path, ext=".data", *args, **kwargs):
     return {f.stem: read_clawdata(f, *args, **kwargs) for f in outdir.glob(f"*{ext}")}
 
 
-def setrun(claw_pkg='geoclaw', AVAC_outdir: str="../avac/_output", outdir="_output", bouss=False) -> ClawRunData:
+def setrun(claw_pkg='geoclaw', AVAC_outdir: str="", outdir="_output", bouss=False) -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -50,9 +50,8 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str="../avac/_output", outdir="_outp
         ClawRunData
     """
 
-    AVAC_outdir = Path(config.get("AVAC_outdir", AVAC_outdir)).expanduser()
-    AVAC_data = read_datafiles(AVAC_outdir, ext=".data")
-    AVAC_fgout = read_clawdata(AVAC_outdir/"fgout_grids.data", sep="#", skiprows=9)
+    AVAC_outdir = Path(AVAC_outdir or config.get("AVAC_outdir") or "../avac/_output").expanduser().absolute()
+    AVAC_data = read_datafiles(AVAC_outdir)
 
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -337,8 +336,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str="../avac/_output", outdir="_outp
  
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('mode', config["inflow_mode"], 'The method for introucing the avalanche')
-    # probdata.add_param('damping', float(AVAC_data['snow_density'])/1025., 'rho_snow/rho_water')  # TODO water density
-    probdata.add_param('damping', float(AVAC_data["voellmy"]['snow_density'])/rundata.geo_data.rho, 'rho_snow/rho_water')
+    probdata.add_param('damping', float(AVAC_data['voellmy']['snow_density'])/rundata.geo_data.rho, 'rho_snow/rho_water')
     probdata.add_param('lake_alt', float(config.get('lake_alt', 0.)),  'Lake altitude')
     probdata.add_param('overhang', float(config.get('overhang', 0.)), 'Overhang of the contour over the lake')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')

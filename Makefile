@@ -73,11 +73,6 @@ topo:
 qinit:
 	$(CLAW_PYTHON) makeqinit.py
 
-all: 
-	$(MAKE) topo
-	$(MAKE) .plots
-	$(MAKE) .htmls
-
 data: $(MAKEFILE_LIST);
 	-rm -f .data
 	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(AVAC_outdir)

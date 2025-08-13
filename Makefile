@@ -25,7 +25,7 @@ FFLAGS = -O2 -fopenmp -llapack -lblas
 OMP_NUM_THREADS = 4
 
 # Which avac results to read
-AVAC_outdir ?= ../avac/_output
+AVAC_DIR ?= ""
 
 # ---------------------------------
 # package sources for this program:
@@ -67,6 +67,11 @@ include $(CLAWMAKE)
 
 # Construct the topography data
 .PHONY: topo all
+all: 
+	$(MAKE) topo
+	$(MAKE) .plots
+	$(MAKE) .htmls
+
 topo:
 	$(CLAW_PYTHON) ../topm/maketopo.py
 
@@ -75,5 +80,11 @@ qinit:
 
 data: $(MAKEFILE_LIST);
 	-rm -f .data
-	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(AVAC_outdir)
+	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(AVAC_DIR)
 	touch .data
+
+empty:
+	rm -f *.data
+	rm -f *.o
+	rm -f *.mod
+	rm -rf __pycache__

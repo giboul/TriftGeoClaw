@@ -1,5 +1,5 @@
-AVAC_outdir: ~/Desktop/TriftGeoClaw/AVAC/_output8
-bathymetry: ~/Desktop/TriftGeoClaw/TriftGeoClaw/bathymetry.asc
+AVAC_outdir: ~/Documents/Trift/avac/_output
+bathymetry: bathymetry.asc
 inflow_mode: src # src or bc
 lake_alt: 1767
 overhang: 5.

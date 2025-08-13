@@ -20,20 +20,19 @@ with open("config.yaml") as file:
 def read_clawdata(path: Path, sep="=: ", comments="#", skiprows=0): # TODO read grids correctly (e.g. with fgno)
     clawdata_trans = dict(T=True, F=False)
     clawdata = dict()
-    with open(path) as file:
-        lines = [line for line in file.readlines()[skiprows:] if sep in line]
-        for line in lines:
-            value, key = [e for e in line.split(sep) if e]
-            key = key.strip()
-            if comments in key:
-                key = key[:key.find(comments)].strip()
-            value = [v for v in value.split() if v]
-            for e, element in enumerate(value):
-                try:
-                    value[e] = eval(element)
-                except Exception:
-                    value[e] = clawdata_trans.get(element, element)
-            clawdata[key] = value[0] if len(value)==1 else value
+    lines = [line for line in path.read_text().split("\n")[skiprows:] if sep in line]
+    for line in lines:
+        value, key = [e for e in line.split(sep) if e]
+        key = key.strip()
+        if comments in key:
+            key = key[:key.find(comments)].strip()
+        value = [v for v in value.split() if v]
+        for e, element in enumerate(value):
+            try:
+                value[e] = eval(element)
+            except Exception:
+                value[e] = clawdata_trans.get(element, element)
+        clawdata[key] = value[0] if len(value)==1 else value
     return clawdata
 
 
@@ -50,8 +49,10 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str="", outdir="_output", bouss=Fals
         ClawRunData
     """
 
-    AVAC_outdir = Path(AVAC_outdir or config.get("AVAC_outdir") or "../avac/_output").expanduser().absolute()
+    AVAC_outdir = Path(AVAC_outdir or config.get("AVAC_outdir", "../avac/_output")).expanduser().absolute()
     AVAC_data = read_datafiles(AVAC_outdir)
+    for k, v in AVAC_data.items():
+        print(k, v)
 
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -336,7 +337,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str="", outdir="_output", bouss=Fals
  
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('mode', config["inflow_mode"], 'The method for introucing the avalanche')
-    probdata.add_param('damping', float(AVAC_data['voellmy']['snow_density'])/rundata.geo_data.rho, 'rho_snow/rho_water')
+    probdata.add_param('damping', float(AVAC_data["voellmy"]['snow_density'])/rundata.geo_data.rho, 'rho_snow/rho_water')
     probdata.add_param('lake_alt', float(config.get('lake_alt', 0.)),  'Lake altitude')
     probdata.add_param('overhang', float(config.get('overhang', 0.)), 'Overhang of the contour over the lake')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
@@ -420,7 +421,7 @@ def main():
     # Treating command line arguments
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
-    parser.add_argument('AVAC_outdir', default='../avac/_output', nargs='?')
+    parser.add_argument('AVAC_outdir', default='', nargs='?')
     parser.add_argument('--bouss', action='store_true')
     parser.add_argument('-o', '--outdir', type=str, nargs='?', default="_output")
     args = parser.parse_args()

@@ -10,11 +10,63 @@ from pathlib import Path
 from yaml import safe_load
 import numpy as np
 
+from json import load
+
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
 with open("config.yaml") as file:
     config = safe_load(file)
+
+def read_geojson(path):
+    with open(path, "r") as file:
+        data = load(file)
+
+    coords = []
+    for e in data["features"]:
+        ix = e['properties']['id']
+        points = e['geometry']['coordinates'][0][0]
+        for x, y in points:
+            coords.append([ix, x, y])
+
+    avacs = np.array(coords).T
+    return avacs
+
+def mask_coarse(current_data):
+    patch = current_data.framesoln.state.patch
+    xc_centers,yc_centers = patch.grid.c_centers
+    mask_coarse = np.empty(xc_centers.shape, dtype=bool)
+    mask_coarse.fill(False)
+    for state_fine in current_data.framesoln.states:
+        # iterate over all patches, and find any finer level grids that are
+        # sitting on top of this patch/grid/state.
+        patch_fine = state_fine.patch
+    
+        # Only look at patches one level finer
+        if patch_fine.level != patch.level+1:
+            continue
+    
+        xlower_fine = patch_fine.dimensions[0].lower
+        xupper_fine = patch_fine.dimensions[0].upper
+        ylower_fine = patch_fine.dimensions[1].lower
+        yupper_fine = patch_fine.dimensions[1].upper
+    
+        m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
+        m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
+    
+        # Mask all fine grid regions
+        mask_coarse = (m1 & m2) | mask_coarse
+    
+    current_data.add_attribute('mask_coarse',mask_coarse)
+
+
+def read_world_image(path):
+    path = Path(path)
+    im = plt.imread(path)
+    ny, nx, _ = im.shape
+    world_text = path.with_suffix(".pgw").read_text().strip().split("\n")
+    dx, _, _, dy, xul, yul = [float(f) for f in world_text]
+    return im, (xul, xul+nx*dx, yul+ny*dy, yul)
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 
@@ -22,6 +74,14 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     Input:  plotdata, an instance of pyclaw.plotters.data.ClawPlotData.
     Output: a modified version of plotdata.
     """ 
+
+    import cmap 
+    cmap.set_transparent_cmaps(eps=2e-1)
+    background, back_extent = read_world_image("topo.png")
+    dam = read_geojson("dam.geojson")[1:]
+    def background_image(_):
+        plt.imshow(background, extent=back_extent, zorder=0)
+        plt.fill(*dam, c="k", zorder=0)
 
     if plotdata is None:
         plotdata = ClawPlotData()
@@ -41,6 +101,14 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Figure for surface
     #-----------------------------------------
     plotfigure = plotdata.new_plotfigure(name='Surface', figno=0)
+    plotfigure.use_for_kml = True
+    xc, yc = np.loadtxt("contour.xy").T
+    xmin = xc.min()
+    xmax = xc.max()
+    ymin = yc.min()
+    ymax = yc.max()
+    plotfigure.kml_xlimits = xmin, xmax
+    plotfigure.kml_ylimits = ymin, ymax
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes('pcolor')
@@ -49,48 +117,58 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     def fixup(current_data):
 
-        # addgauges(current_data)
         t = current_data.t
         plt.gca().set_title(f'$hu$ at {t//60:.0f}min {t%60:.2f}s', fontsize=20)
         # plt.title("")
         # plt.xticks(fontsize=15)
         # plt.yticks(fontsize=15)
 
+    plotaxes.beforeaxes = background_image
     plotaxes.afteraxes = fixup
 
     # Water
+    def masked_var(data):
+        # mask_coarse(data)
+        drytol = data.user.get("dry_tolerance", 1e-3)
+        h, hu, hv, eta = np.ma.masked_where(np.tile(data.q[0], (4,1,1))<=drytol, data.q)
+        # arr = np.sqrt(hu**2 + hv**2)
+        arr = eta - np.maximum(1767, eta-h)
+        if hasattr(data, "mask_coarse"):
+            return np.ma.masked_where(data.mask_coarse, arr)
+        return arr
+
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.surface
     # plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.plot_var = 1
+    plotitem.plot_var = masked_var
     # plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.pcolor_cmap = plt.cm.Blues
-    plotitem.pcolor_cmin = -10 #topoconfig["lake_alt"]-2
-    plotitem.pcolor_cmax = 10 #topoconfig["lake_alt"]+2
+    plotitem.pcolor_cmap = "RdBu_water"
+    plotitem.pcolor_cmin = -3 #topoconfig["lake_alt"]-2
+    plotitem.pcolor_cmax = 3 #topoconfig["lake_alt"]+2
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,1]
     # plotitem.patchedges_show = 1
 
-    # Land
-    plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
-    plotitem.plot_var = geoplot.land
-    plotitem.pcolor_cmap = plt.cm.viridis
-    plotitem.pcolor_cmin = config["lake_alt"] - 120
-    plotitem.pcolor_cmax = config["lake_alt"] + 380
-    plotitem.add_colorbar = False
-    # plotitem.amr_celledges_show = [0,0,0]
-    # plotitem.patchedges_show = 1
+    if 0:
+        # Land
+        plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
+        plotitem.plot_var = geoplot.land
+        plotitem.pcolor_cmap = plt.cm.viridis
+        plotitem.pcolor_cmin = config["lake_alt"] - 120
+        plotitem.pcolor_cmax = config["lake_alt"] + 380
+        plotitem.add_colorbar = False
+        # plotitem.amr_celledges_show = [0,0,0]
+        # plotitem.patchedges_show = 1
 
-    # add contour lines of bathy if desired:
-    plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
-    plotitem.show = False
-    plotitem.plot_var = geoplot.topo
-    plotitem.contour_levels = np.linspace(-3000,-3000,1)
-    plotitem.amr_contour_colors = ['y']  # color on each level
-    plotitem.kwargs = {'linestyles':'solid','linewidths':2}
-    plotitem.amr_contour_show = [1,0,0]  
-    plotitem.celledges_show = 0
-    plotitem.patchedges_show = 0
+        # add contour lines of bathy if desired:
+        plotitem = plotaxes.new_plotitem(plot_type='2d_contour')
+        plotitem.show = False
+        plotitem.plot_var = geoplot.topo
+        plotitem.contour_levels = np.linspace(-3000,-3000,1)
+        plotitem.amr_contour_colors = ['y']  # color on each level
+        plotitem.kwargs = {'linestyles':'solid','linewidths':2}
+        plotitem.amr_contour_show = [1,0,0]  
+        plotitem.celledges_show = 0
+        plotitem.patchedges_show = 0
 
 
     #-----------------------------------------
@@ -101,8 +179,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     # # Set up for axes in this figure:
     # plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.xlimits = 'auto'
-    # plotaxes.ylimits = 'auto'
+    plotaxes.xlimits = xmin, xmax
+    plotaxes.ylimits = ymin, ymax
     # plotaxes.title = 'Surface'
 
     # # Plot surface as blue curve:
@@ -165,9 +243,17 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     return plotdata
 
 
+def parse_args():
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument("setplot", default="setplot.py", type=str, nargs="?")
+    parser.add_argument("outdir", default="./_output", type=str, nargs="?")
+    return parser.parse_args()
+
 def main():
+    args = parse_args()
     from clawpack.visclaw.Iplotclaw import Iplotclaw as IPC
-    ip = IPC()
+    ip = IPC(args.setplot, args.outdir)
     ip.plotloop()
 
 

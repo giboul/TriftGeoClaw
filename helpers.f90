@@ -42,7 +42,7 @@ contains
         integer :: unit
 
         unit = 2
-        fname = "../_bc_inflows/times.txt"
+        fname = "_bc_inflows/times.txt"
         print "(A,A)", "Reading ", trim(fname)
         open(unit, file=fname)
             n = 0
@@ -83,8 +83,8 @@ contains
    
         do mthbc = 1, 4
             do i = 1, size(times)
-                fname = "../_bc_inflows/"//trim(sides(mthbc))//"_"
-                write(fname,"(A,I0.4,A4)") fname, i-1, ".npy"
+                fname = "_bc_inflows/"//trim(sides(mthbc))//"_"
+                write(fname,"(A,I0.4,A4)") trim(fname), i-1, ".npy"
                 open(unit, file=fname, status="unknown", access="stream")
                     read(unit) q_avac(i, mthbc, :, :)
                 close(unit)

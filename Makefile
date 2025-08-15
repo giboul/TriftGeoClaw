@@ -83,6 +83,9 @@ data: $(MAKEFILE_LIST);
 	$(CLAW_PYTHON) $(SETRUN_FILE) $(CLAW_PKG) $(AVAC_DIR)
 	touch .data
 
+flows:
+	$(CLAW_PYTHON) bc_inflows.py
+
 empty:
 	rm -f *.data
 	rm -f *.o

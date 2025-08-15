@@ -1,13 +1,12 @@
 from pathlib import Path
 from argparse import ArgumentParser
-from yaml import safe_load
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.path import Path as mPath
-from clawpack.geoclaw import fgout_tools
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
+from utils import read_clawdata
 try:
     import scienceplots
     plt.style.use('science')
@@ -36,25 +35,6 @@ def parse_args():
     parser.add_argument("-s", "--save", action="store_true")
     parser.add_argument("-o", "--outdir", type=str, nargs="?", default="_output")
     return parser.parse_args()
-
-def read_clawdata(path, sep="=: ", comments="#", skiprows=0):
-    clawdata_trans = dict(T=True, F=False)
-    clawdata = dict()
-    with open(path) as file:
-        lines = [line for line in file.readlines()[skiprows:] if sep in line]
-        for line in lines:
-            value, key = [e for e in line.split(sep) if e]
-            key = key.strip()
-            if comments in key:
-                key = key[:key.find(comments)].strip()
-            value = [v for v in value.split() if v]
-            for e, element in enumerate(value):
-                try:
-                    value[e] = eval(element)
-                except Exception:
-                    value[e] = clawdata_trans.get(element, element)
-            clawdata[key] = value[0] if len(value)==1 else value
-    return clawdata
 
 def normal_vectors(x, y):
     dx = np.hstack((x[1]-x[-1], x[2:] - x[:-2], x[0]-x[-2]))/2

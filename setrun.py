@@ -319,7 +319,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
 
     if config["inflow_mode"] == "bc":
         extent = clawdata.lower[0], clawdata.upper[0], clawdata.lower[1], clawdata.upper[1]
-        bc_inflows.write(AVAC_outdir, extent, outdir)
+        bc_inflows.write(AVAC_outdir, extent, outdir, config.get("bc_size", 100))
 
     return rundata
 

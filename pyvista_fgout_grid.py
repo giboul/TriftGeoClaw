@@ -2,37 +2,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 import pyvista as pv
+from utils import read_times, read_clawdata, read_fgout_bin
 
-
-def read_clawdata(path, sep="=: ", comments="#", skiprows=0):
-    clawdata_trans = dict(T=True, F=False)
-    clawdata = dict()
-    with open(path) as file:
-        lines = [line for line in file.readlines()[skiprows:] if sep in line]
-        for line in lines:
-            value, key = [e for e in line.split(sep) if e]
-            key = key.strip()
-            if comments in key:
-                key = key[:key.find(comments)].strip()
-            value = [v for v in value.split() if v]
-            for e, element in enumerate(value):
-                try:
-                    value[e] = eval(element)
-                except Exception:
-                    value[e] = clawdata_trans.get(element, element)
-            clawdata[key] = value[0] if len(value)==1 else value
-    return clawdata
-
-def read_fgout_bin(outdir, nx, ny, frameno, gridno=1, nvars=4):
-    q = np.fromfile(outdir / f"fgout{gridno:0>4}.b{frameno+1:0>4}", np.float64)
-    q = q.reshape(nvars, nx, ny, order="F")
-    return  q
-
-def read_times(outdir, gridno):
-    return [
-        read_clawdata(p, sep=" ")["time"]
-        for p in sorted(outdir.glob(f"fgout{gridno:0>4}.t*"))
-    ]
 
 q0 = [0, 0, 0, 0]
 def dh(q, q0=q0): return q[0] - q0[0]
@@ -83,11 +54,22 @@ def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim
     surf[color_by] = color_func(q0, q0).T.flatten()
     p.add_mesh(surf, scalars=color_by, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
+    state = dict(i=0)
     def update(i):
         q = read_fgout_bin(outdir, nx, ny, frameno=i)
         bathy.points[:, 2] = b(q).T.flatten()
         surf.points[:, 2] = np.where(h(q)>0, z(q), np.nan).T.flatten()
         surf[color_by] = color_func(q, q0).T.flatten()
+
+    def next_frame():
+        state["i"] += 1
+        update(state["i"])
+        p.update()
+
+    def prev_frame():
+        state["i"] -= 1
+        update(state["i"])
+        p.update()
 
     if file_name:
         p.open_gif(file_name)
@@ -95,6 +77,10 @@ def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim
             update(i)
             p.write_frame()
         p.close()
+    elif 1:
+        p.add_key_event("k", next_frame)
+        p.add_key_event("j", prev_frame)
+        p.show()
     else:
         p.add_timer_event(max_steps=len(times), duration=500, callback=update)
         p.show()

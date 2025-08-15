@@ -1,25 +1,16 @@
 #!/usr/bin/env python
 """
 Module for writing the qinit.xyz describing
-the initial surface level of the lake in TSUL.
-
-Running
--------
-Either call `main(plot: bool=False)`
-or run this script with `python makeqinit_tsul.py [--plot]`
+the initial surface level of the lake.
 """
 from pathlib import Path
-from yaml import safe_load
 import topo_utils
 import numpy as np
 from matplotlib import pyplot as plt
+from utils import config
 
 
-with open("config.yaml") as file:
-    config = safe_load(file)
-
-
-def main(plot=False):
+def make_qinit(plot=False):
     # Read the bathymetry
     x, y, Z = topo_utils.read_asc(Path(config["bathymetry"]).expanduser())
     resolution = abs(x[1]-x[0])
@@ -40,12 +31,13 @@ def main(plot=False):
         flooded, dilated = topo_utils.pick_seed(Z, x, y, config['lake_alt'])
 
     # Save the qinit.xyz
-    print(f"Saving qinit.xyz", flush=True)
+    print(f"Saving qinit.xyz", end=" ... ", flush=True)
     Z[flooded] = config["lake_alt"]
     Z[~flooded] = 0.
     np.savetxt('qinit.xyz', np.column_stack((
         X.flatten(), Y.flatten(), np.where(dilated, config["lake_alt"], Z.min()).flatten()
     )), fmt="%.9e")
+    print("Done.")
 
     # Find the contour of the lake for later processing (energy and momentum analysis)
     contour = topo_utils.find_contour(dilated.T, extent, x.size, y.size)
@@ -55,11 +47,14 @@ def main(plot=False):
         plt.imshow(np.where(Z>0, Z, np.nan), extent=extent)
         plt.show()
 
-
-if __name__ == "__main__":
+def parse_args():
     from argparse import ArgumentParser
     parser = ArgumentParser() 
     parser.add_argument("-p", "--plot", action="store_true")
-    args = parser.parse_args()
-    main(**args.__dict__)
+    return parser.parse_args()
 
+def main():
+    make_qinit(**parse_args().__dict__)
+
+if __name__ == "__main__":
+    main()

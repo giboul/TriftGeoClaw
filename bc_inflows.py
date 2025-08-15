@@ -1,14 +1,10 @@
+from argparse import ArgumentParser
 from pathlib import Path
-from yaml import safe_load
 import numpy as np
 from clawpack.visclaw import gridtools
 from clawpack.pyclaw.solution import Solution
-from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
 
-
-with open("config.yaml") as file:
-    config = safe_load(file)
+from utils import config, read_clawdata
 
 def extract(i, x, y, outdir):
     frame_sol = Solution(i, path=outdir, file_format=config["output_format"])
@@ -21,14 +17,19 @@ def extract(i, x, y, outdir):
     )
     return q, frame_sol.t
 
-def write(AVAC_outdir, extent, outdir, n=config["bc_size"]):
+def write(AVAC_outdir, extent, outdir, n):
 
     outdir = Path(outdir)
     AVAC_outdir = Path(AVAC_outdir)
-    ntimes = len(list(AVAC_outdir.glob("fort.q*")))
+    ntimes = len(list(AVAC_outdir.expanduser().glob("fort.q*")))
 
     boundaries = ("bottom", "right", "top", "left")
-    xmin, xmax, ymin, ymax = extent
+    if extent is None:
+        clawdata = read_clawdata("claw.data")
+        xmin, ymin = clawdata["lower"]
+        xmax, ymax = clawdata["upper"]
+    else:
+        xmin, xmax, ymin, ymax = extent
     x = np.hstack((
         np.linspace(xmin, xmax, n, endpoint=True),  # South
         np.full(n, xmax),  # East
@@ -69,3 +70,17 @@ def write(AVAC_outdir, extent, outdir, n=config["bc_size"]):
 
     np.savetxt(inflows_dir / "times.txt", times)
 
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument("AVAC_outdir", default=config["AVAC_outdir"], type=str, nargs="?")
+    parser.add_argument("outdir", default="_output", type=str, nargs="?")
+    parser.add_argument("extent", default=None, nargs="?")
+    parser.add_argument("n", default=config["bc_size"], type=int, nargs="?")
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    write(**args.__dict__)
+
+if __name__ == "__main__":
+    main()

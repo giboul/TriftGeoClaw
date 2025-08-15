@@ -7,30 +7,11 @@ function setplot is called to set the plot parameters.
 """
 from matplotlib import pyplot as plt
 from pathlib import Path
-from yaml import safe_load
 import numpy as np
-
-from json import load
-
+import utils
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
-with open("config.yaml") as file:
-    config = safe_load(file)
-
-def read_geojson(path):
-    with open(path, "r") as file:
-        data = load(file)
-
-    coords = []
-    for e in data["features"]:
-        ix = e['properties']['id']
-        points = e['geometry']['coordinates'][0][0]
-        for x, y in points:
-            coords.append([ix, x, y])
-
-    avacs = np.array(coords).T
-    return avacs
 
 def mask_coarse(current_data):
     patch = current_data.framesoln.state.patch
@@ -60,14 +41,6 @@ def mask_coarse(current_data):
     current_data.add_attribute('mask_coarse',mask_coarse)
 
 
-def read_world_image(path):
-    path = Path(path)
-    im = plt.imread(path)
-    ny, nx, _ = im.shape
-    world_text = path.with_suffix(".pgw").read_text().strip().split("\n")
-    dx, _, _, dy, xul, yul = [float(f) for f in world_text]
-    return im, (xul, xul+nx*dx, yul+ny*dy, yul)
-
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """ 
     Specify what is to be plotted at each frame.
@@ -75,10 +48,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     Output: a modified version of plotdata.
     """ 
 
-    import cmap 
-    cmap.set_transparent_cmaps(eps=2e-1)
-    background, back_extent = read_world_image("topo.png")
-    dam = read_geojson("dam.geojson")[1:]
+    utils.set_transparent_cmaps(eps=2e-1)
+    background, back_extent = utils.read_world_image("topo_big.png")
+    dam = utils.read_geojson("dam.geojson")[1:]
     def background_image(_):
         plt.imshow(background, extent=back_extent, zorder=0)
         plt.fill(*dam, c="k", zorder=0)
@@ -87,7 +59,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = config["output_format"]  # 'ascii' or 'binary' to match setrun.py
+    plotdata.format = utils.config.get("output_format", "ascii")  # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -102,11 +74,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     #-----------------------------------------
     plotfigure = plotdata.new_plotfigure(name='Surface', figno=0)
     plotfigure.use_for_kml = True
-    xc, yc = np.loadtxt("contour.xy").T
-    xmin = xc.min()
-    xmax = xc.max()
-    ymin = yc.min()
-    ymax = yc.max()
+    clawdata = utils.read_clawdata(Path(plotdata.outdir) / "claw.data")
+    xmin, ymin = clawdata["lower"]
+    xmax, ymax = clawdata["upper"]
     plotfigure.kml_xlimits = xmin, xmax
     plotfigure.kml_ylimits = ymin, ymax
 
@@ -153,8 +123,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         plotitem.plot_var = geoplot.land
         plotitem.pcolor_cmap = plt.cm.viridis
-        plotitem.pcolor_cmin = config["lake_alt"] - 120
-        plotitem.pcolor_cmax = config["lake_alt"] + 380
+        plotitem.pcolor_cmin = utils.config.get("lake_alt",  0.) - 120
+        plotitem.pcolor_cmax = utils.config.get("lake_alt",  0.) + 380
         plotitem.add_colorbar = False
         # plotitem.amr_celledges_show = [0,0,0]
         # plotitem.patchedges_show = 1

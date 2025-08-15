@@ -25,7 +25,7 @@ FFLAGS = -O2 -fopenmp -llapack -lblas
 OMP_NUM_THREADS = 4
 
 # Which avac results to read
-AVAC_DIR ?= ""
+AVAC_DIR ?= 
 
 # ---------------------------------
 # package sources for this program:
@@ -76,7 +76,7 @@ topo:
 	$(CLAW_PYTHON) ../topm/maketopo.py
 
 qinit:
-	$(CLAW_PYTHON) makeqinit.py
+	$(CLAW_PYTHON) makeqinit.pyvista.py
 
 data: $(MAKEFILE_LIST);
 	-rm -f .data

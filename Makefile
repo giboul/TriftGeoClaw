@@ -72,9 +72,6 @@ all:
 	$(MAKE) .plots
 	$(MAKE) .htmls
 
-topo:
-	$(CLAW_PYTHON) ../topm/maketopo.py
-
 qinit:
 	$(CLAW_PYTHON) makeqinit.pyvista.py
 

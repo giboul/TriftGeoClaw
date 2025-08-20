@@ -48,7 +48,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     Output: a modified version of plotdata.
     """ 
 
-    utils.set_transparent_cmaps(eps=2e-1)
+    utils.set_transparent_cmaps()
     background, back_extent = utils.read_world_image("topo_big.png")
     dam = utils.read_geojson("dam.geojson")[1:]
     def background_image(_):

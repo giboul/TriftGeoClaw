@@ -8,6 +8,6 @@
 *.geojson
 *.log
 *.npy
-*.output
+.*
 _*
 xgeoclaw

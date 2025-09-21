@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" 
+"""
 Set up the plot figures, axes, and items to be done for each frame.
 
 This module is imported by the plotting routines and then the
@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import utils
 from clawpack.visclaw.data import ClawPlotData
+from clawpack.clawutil.data import ClawData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
 
 
@@ -22,31 +23,31 @@ def mask_coarse(current_data):
         # iterate over all patches, and find any finer level grids that are
         # sitting on top of this patch/grid/state.
         patch_fine = state_fine.patch
-    
+
         # Only look at patches one level finer
         if patch_fine.level != patch.level+1:
             continue
-    
+
         xlower_fine = patch_fine.dimensions[0].lower
         xupper_fine = patch_fine.dimensions[0].upper
         ylower_fine = patch_fine.dimensions[1].lower
         yupper_fine = patch_fine.dimensions[1].upper
-    
+
         m1 = (xc_centers > xlower_fine) & (xc_centers < xupper_fine)
         m2 = (yc_centers > ylower_fine) & (yc_centers < yupper_fine)
-    
+
         # Mask all fine grid regions
         mask_coarse = (m1 & m2) | mask_coarse
-    
+
     current_data.add_attribute('mask_coarse',mask_coarse)
 
 
 def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
-    """ 
+    """
     Specify what is to be plotted at each frame.
     Input:  plotdata, an instance of pyclaw.plotters.data.ClawPlotData.
     Output: a modified version of plotdata.
-    """ 
+    """
 
     utils.set_transparent_cmaps()
     background, back_extent = utils.read_world_image("topo_big.png")
@@ -59,7 +60,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotdata = ClawPlotData()
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = utils.config.get("output_format", "ascii")  # 'ascii' or 'binary' to match setrun.py
+    clawdata = ClawData()
+    clawdata.read(Path(plotdata.outdir)/"claw.data", force=True)
+    plotdata.format = ["ascii", "binary32", "binary64"][clawdata.output_format-1]  # 'ascii' or 'binary' to match setrun.py
 
     # To plot gauge locations on pcolor or contour plot, use this as
     # an afteraxis function:
@@ -136,7 +139,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotitem.contour_levels = np.linspace(-3000,-3000,1)
         plotitem.amr_contour_colors = ['y']  # color on each level
         plotitem.kwargs = {'linestyles':'solid','linewidths':2}
-        plotitem.amr_contour_show = [1,0,0]  
+        plotitem.amr_contour_show = [1,0,0]
         plotitem.celledges_show = 0
         plotitem.patchedges_show = 0
 
@@ -168,7 +171,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     #     eta = q[3,:]
     #     topo = eta - h
     #     return topo
-        
+
     # plotitem.plot_var = gaugetopo
     # plotitem.plotstyle = 'g-'
 
@@ -182,9 +185,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         timing_plotdir.mkdir(exist_ok=True)
         # adjust units for plots based on problem:
         units = dict(comptime="seconds", simtime="hours", cell="millions")
-        plot_timing_stats.make_plots(outdir=plotdata.outdir, 
+        plot_timing_stats.make_plots(outdir=plotdata.outdir,
                                      make_pngs=True,
-                                     plotdir=timing_plotdir, 
+                                     plotdir=timing_plotdir,
                                      units=units)
 
     otherfigure = plotdata.new_otherfigure(

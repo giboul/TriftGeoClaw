@@ -10,7 +10,7 @@ module helpers
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping, overhang
     real(kind=8) :: lake_alt
-    character(len=255) :: AVAC_DIR, inflow_mode
+    character(len=255) :: AVAC_DIR, inflow_mode, input_format
     type(fgout_grid) :: AVAC_fgrid
 
 contains
@@ -27,6 +27,7 @@ contains
             READ(unit,*) overhang
             READ(unit,*) AVAC_DIR
             READ(unit,*) bc_size
+            READ(unit,*) input_format
         CLOSE(unit)
 
         IF (TRIM(inflow_mode) == "None") then
@@ -214,7 +215,8 @@ contains
     SUBROUTINE init_src_fgout_bin()
 
         CHARACTER(len=255) :: file, ftemp
-        INTEGER :: i
+        INTEGER :: i, j, k, l
+        real(kind=4), allocatable :: q_real4(:,:,:)
 
         ftemp = trim(AVAC_DIR) // "/"
         call set_fgout(.false., 4, TRIM(ftemp) // "fgout_grids.data")
@@ -238,48 +240,58 @@ contains
             AVAC_fgrid%mx,&
             AVAC_fgrid%my&
         ))
+        IF (input_format == "binary32") THEN
+            ALLOCATE(q_real4(&
+                AVAC_fgrid%nqout,&
+                AVAC_fgrid%mx,&
+                AVAC_fgrid%my&
+            ))
+        END IF
 
         ftemp = TRIM(ftemp) // "fgout0001."
+        file = ""
+        PRINT *, "Input format: ", TRIM(input_format)
         DO i = 1, size(times)-1
-            WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
             PRINT *, "READING FGOUT: ", TRIM(file)
-            OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
-                READ(2) q_avac(i,:,:,:) ! ti,qi,xi,yj
-            CLOSE(2)
+            IF (TRIM(input_format) == "ascii") THEN  ! ASCII input
+                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "q", i
+                OPEN(2,FILE=file, STATUS="old", ACTION="read")
+                DO l=1,9
+                    READ(2,*)
+                END DO
+                DO l=1,AVAC_fgrid%my
+                    DO k=1,AVAC_fgrid%mx
+                        READ(2, "(50e26.16)") (q_avac(i,j,k,l), j=1,AVAC_fgrid%nqout)
+                    END DO
+                    READ(2,*)
+                END DO
+                CLOSE(2)
+            ELSE IF (TRIM(input_format) == "binary32") THEN  ! REAL(4) input
+                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
+                OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
+                    READ(2) q_real4(:,:,:)
+                CLOSE(2)
+                q_avac(i,:,:,:) = REAL(q_real4, kind=8)
+            ELSE IF (TRIM(input_format) == "binary64") THEN  ! REAL(8) input
+                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
+                OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
+                    READ(2) q_avac(i,:,:,:) ! ti,qi,xi,yj
+                CLOSE(2)
+            ELSE
+                WRITE(*, "(A,I0.1,A)") "Input fgout output_format",&
+                    input_format,&
+                    "not supported (2 or 3)."
+            END IF
             IF (ANY(ISNAN(q_avac(i,:,:,:))))  THEN
                 PRINT *, q_avac(i,:,:,:)
             END IF
         END DO
 
+        IF (input_format == "binary32") THEN
+            DEALLOCATE(q_real4)
+        END IF
+
     END SUBROUTINE init_src_fgout_bin
 
-
-!     REAL(KIND=8) FUNCTION fgoutinterp(fg, q, x, y)
-
-!         REAL(KIND=8), INTENT(IN) :: q(:,:), x, y
-!         TYPE(fgout_grid), INTENT(IN) :: fg
-!         REAL(KIND=8) :: xw, xe, ys, yn
-!         INTEGER :: w, s
-
-!         IF (fg%x_hi<x .or. x<fg%x_low .or. fg%y_hi<y .or. y<fg%y_low) THEN
-!             fgoutinterp = 0.d0
-!         ELSE
-
-!             w = MIN(fg%mx-1, 1+INT((x-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
-!             s = MIN(fg%my-1, 1+INT((y-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
-!             xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
-!             ys = fg%y_low + (s-1)*(fg%y_hi-fg%y_low)/(fg%my-1)
-!             xe = xw + (fg%x_hi-fg%x_low)/(fg%mx-1)
-!             yn = ys + (fg%y_hi-fg%y_low)/(fg%my-1)
-
-!             fgoutinterp = (&
-!                 + (x-xw) * (y-ys) * q(w+1,s+1) &
-!                 + (x-xw) * (yn-y) * q(w+1,s) &
-!                 + (xe-x) * (y-ys) * q(w,s+1) &
-!                 + (xe-x) * (yn-y) * q(w,s) &
-!             ) / ((xe-xw) * (yn-ys))
-!         END IF
-
-!     END FUNCTION fgoutinterp
 
 end module helpers

@@ -21,7 +21,7 @@ def make_qinit(plot=False):
 
     # Create the lake mask from the seed or fidget around with a GUI
     print("Filling lake", flush=True)
-    if 'flood_seed' in config:  # Directly fill 
+    if 'flood_seed' in config:  # Directly fill
         seed = (np.abs(y-config['flood_seed'][1]).argmin(),
                 np.abs(x-config['flood_seed'][0]).argmin())
         r = int(config["dilation_radius"]/resolution)
@@ -49,7 +49,7 @@ def make_qinit(plot=False):
 
 def parse_args():
     from argparse import ArgumentParser
-    parser = ArgumentParser() 
+    parser = ArgumentParser()
     parser.add_argument("-p", "--plot", action="store_true")
     return parser.parse_args()
 

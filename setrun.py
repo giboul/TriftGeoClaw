@@ -8,10 +8,11 @@ that will be read in by the Fortran code.
 from pathlib import Path
 from argparse import ArgumentParser
 import numpy as np
+from clawpack.clawutil.data import ClawData
 from clawpack.clawutil.data import ClawRunData
 from clawpack.geoclaw.fgout_tools import FGoutGrid
 import bc_inflows
-from utils import config, read_datafiles
+from utils import config
 
 
 def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=False) -> ClawRunData:
@@ -26,7 +27,10 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     if AVAC_outdir is None:
         raise ValueError("Please specify the AVAC output `AVAC_outdir` directory")
     AVAC_outdir = Path(AVAC_outdir).expanduser().absolute()
-    AVAC_data = read_datafiles(AVAC_outdir)
+    avacprobdata = ClawData()
+    avacprobdata.read(Path(AVAC_outdir) / "setprob.data", force=True)
+    avacfgrid = FGoutGrid(1, Path(AVAC_outdir))
+    avacfgrid.read_fgout_grids_data()
 
     num_dim = 2
     rundata = ClawRunData(claw_pkg, num_dim)
@@ -70,7 +74,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.t0 = 0.
     # Restart from checkpoint file of a previous run?
     # If restarting, t0 above should be from original run, and the
-    # restart_file 'fort.chkNNNNN' specified below should be in 
+    # restart_file 'fort.chkNNNNN' specified below should be in
     # the OUTDIR indicated in Makefile.
     clawdata.restart = False              # True to restart from prior results
     clawdata.restart_file = 'fort.chk00096'  # File to use for restart data
@@ -99,7 +103,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = config.get("output_format", "ascii")   # 'ascii' or 'binary' 
+    clawdata.output_format = config.get("output_format", "ascii")   # 'ascii' or 'binary'
     clawdata.output_q_components = "all"   # h, hu, hv, eta
     # clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -121,7 +125,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     # Use dimensional splitting? (not yet available for AMR)
     clawdata.dimensional_split = 'unsplit'
 
-    # For unsplit method, transverse_waves can be 
+    # For unsplit method, transverse_waves can be
     #  0 or 'none'      ==> donor cell (only normal solver used)
     #  1 or 'increment' ==> corner transport of waves
     #  2 or 'all'       ==> corner transport of 2nd order corrections too
@@ -130,7 +134,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     # Number of waves in the Riemann solution:
     clawdata.num_waves = 3
 
-    # List of limiters to use for each wave family:  
+    # List of limiters to use for each wave family:
     # Required:  len(limiter) == num_waves
     # Some options:
     #   0 or 'none'     ==> no limiter (Lax-Wendroff)
@@ -144,7 +148,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
 
     # Source terms splitting:
     #   src_split == 0 or 'none'    ==> no source term (src routine never called)
-    #   src_split == 1 or 'godunov' ==> Godunov (1st order) splitting used, 
+    #   src_split == 1 or 'godunov' ==> Godunov (1st order) splitting used,
     #   src_split == 2 or 'strang'  ==> Strang (2nd order) splitting used,  not recommended.
     clawdata.source_split = 'godunov'
 
@@ -181,7 +185,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.checkpt_style = 0
 
     if np.abs(clawdata.checkpt_style) == 2:
-        # Specify a list of checkpoint times.  
+        # Specify a list of checkpoint times.
         pass
         # clawdata.checkpt_times = [0.1,0.15]
 
@@ -253,9 +257,9 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     amrdata.clustering_cutoff = 0.7
 
     # print info about each regridding up to this level:
-    amrdata.verbosity_regrid = 0  
+    amrdata.verbosity_regrid = 0
 
-    #  ----- For developers ----- 
+    #  ----- For developers -----
     # Toggle debugging print statements:
     amrdata.dprint = False      # print domain flags
     amrdata.eprint = False      # print err est flags
@@ -267,7 +271,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     amrdata.sprint = False      # space/memory output
     amrdata.tprint = True       # time step reporting each level
     amrdata.uprint = False      # update/upbnd reporting
-    
+
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
 
     # --------
@@ -308,14 +312,15 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     fgout.tend = clawdata.tfinal
     fgout.nout = clawdata.num_output_times
     fgout_grids.append(fgout)
- 
+
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('mode', config["inflow_mode"], 'The method for introucing the avalanche')
-    probdata.add_param('damping', float(AVAC_data["voellmy"]['snow_density'])/rundata.geo_data.rho, 'rho_snow/rho_water')
+    probdata.add_param('damping', float(avacprobdata.rho)/rundata.geo_data.rho, 'rho_snow/rho_water')
     probdata.add_param('lake_alt', float(config.get('lake_alt', 0.)),  'Lake altitude')
     probdata.add_param('overhang', float(config.get('overhang', 0.)), 'Overhang of the contour over the lake')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
     probdata.add_param('bc_size', int(config.get("bc_size", 100)), 'Number of cells to interpolate from for each boundary.')
+    probdata.add_param('input_format', avacfgrid.output_format, 'Number of cells to interpolate from for each boundary.')
 
     if config["inflow_mode"] == "bc":
         extent = clawdata.lower[0], clawdata.upper[0], clawdata.lower[1], clawdata.upper[1]
@@ -358,7 +363,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, fname]
-    topo_data.topofiles = [[2, Path(config["bathymetry"]).expanduser()]]
+    topo_data.topofiles = [[config["topo_type"], Path(config["bathymetry"]).expanduser()]]
 
     # == setdtopo.data values ==
     # dtopo_data = rundata.dtopo_data
@@ -373,14 +378,15 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [fname]
     # Check if using qinit or boundary condition
-    rundata.qinit_data.qinit_type = 4
-    rundata.qinit_data.qinitfiles = [["qinit.xyz"]]
+    if "qinit" in config:
+        rundata.qinit_data.qinit_type = 4
+        rundata.qinit_data.qinitfiles = [config["qinit"]]
 
     if bouss is True:
         print("Adding BoussData")
         from clawpack.geoclaw.data import BoussData
         rundata.add_data(BoussData(), 'bouss_data')
-        
+
         rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN # TODO
         rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
         rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss

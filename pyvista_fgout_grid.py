@@ -1,55 +1,55 @@
+#!/usr/bin/env python
 from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 import pyvista as pv
-import utils
+from clawpack.geoclaw import fgout_tools
+from clawpack.clawutil.data import ClawData
 
 
-q0 = [0, 0, 0, 0]
-def dh(q, q0=q0): return q[0] - q0[0]
-def ds(q, q0=q0): return q[3] - q0[3]
-def h(q, q0=q0): return q[0]
-def hu(q, q0=q0): return q[1]
-def hv(q, q0=q0): return q[2]
-def b(q, q0=q0): return q[3]-q[0]
-def z(q, q0=q0): return q[3]
-
-color_functions = dict(dh=dh, ds=ds, h=h, hu=hu, hv=hv, b=b, z=z)
-utils.set_transparent_cmaps()
-
-def animation(outdir, color_by="dh", gridno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
+def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
 
     outdir = Path(outdir)
-    color_func = color_functions[color_by]
+    clawdata = ClawData()
+    clawdata.read(outdir / "claw.data", force=True)
+    geodata = ClawData()
+    geodata.read(outdir / "geoclaw.data", force=True)
+    probdata = ClawData()
+    probdata.read(outdir / "setprob.data", force=True)
+    fgout_grid = fgout_tools.FGoutGrid(fgno, outdir)
+    fgout_grid.read_fgout_grids_data()
 
-    times = utils.read_times(outdir, gridno)
+    x1 = fgout_grid.x1
+    x2 = fgout_grid.x2
+    y1 = fgout_grid.y1
+    y2 = fgout_grid.y2
+    nx = fgout_grid.nx
+    ny = fgout_grid.ny
 
-    data = utils.read_clawdata(outdir/"fgout_grids.data", sep="#", skiprows=7)
-    x1, y1 = data["x1, y1"]
-    x2, y2 = data["x2, y2"]
-    nx, ny = data["nx,ny"]
-    x = np.linspace(x1, x2, nx)
-    y = np.linspace(y1, y2, ny)
-    Y, X = np.meshgrid(y, x, copy=False)
+    X = fgout_grid.X
+    Y = fgout_grid.Y
 
-    q0 = utils.read_fgout_bin(outdir, nx, ny, frameno=0)
+    fgout_init = fgout_grid.read_frame(1)
+    fgout_init.dh = fgout_init.eta - fgout_init.eta
 
     p = pv.Plotter()
 
-    bathy = pv.StructuredGrid(X, Y, b(q0))
+    bathy = pv.StructuredGrid(X, Y, fgout_init.B)
     bathy["z"] = bathy.points[:, 2]
     p.add_mesh(bathy, scalars="z", cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
 
-    surf = pv.StructuredGrid(X, Y, np.where(h(q0)>0, z(q0), np.nan))
-    surf[color_by] = color_func(q0, q0).T.flatten()
+    surf = pv.StructuredGrid(X, Y, np.where(fgout_init.h>0, fgout_init.eta, np.nan))
+    surf[color_by] = getattr(fgout_init, color_by).T.flatten()
     p.add_mesh(surf, scalars=color_by, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
     state = dict(i=0)
     def update(i):
-        q = utils.read_fgout_bin(outdir, nx, ny, frameno=i)
-        bathy.points[:, 2] = b(q).T.flatten()
-        surf.points[:, 2] = np.where(h(q)>0, z(q), np.nan).T.flatten()
-        surf[color_by] = color_func(q, q0).T.flatten()
+        i += 1
+        fgout = fgout_grid.read_frame(i)
+        fgout.dh = fgout.eta - fgout_init.eta
+        bathy.points[:, 2] = fgout.B.T.flatten()
+        surf.points[:, 2] = np.where(fgout.h>0, fgout.eta, np.nan).T.flatten()
+        surf[color_by] = getattr(fgout, color_by).T.flatten()
 
     def next_frame():
         state["i"] += 1
@@ -79,8 +79,8 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("outdir", type=str, nargs="?", default="_output")
     parser.add_argument("--color_by", "-c", type=str, default="dh")
-    parser.add_argument("--gridno", "-g", type=int, default=1)
-    parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu_water"))
+    parser.add_argument("--fgno", "-n", type=int, default=1)
+    parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))
     parser.add_argument("--file_name", "-f", type=str, default="")
     args = parser.parse_args()

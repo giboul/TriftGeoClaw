@@ -2,6 +2,7 @@
 *.mod
 *.data
 *.asc
+*.tif
 *.tiff
 *.xyz
 *.xy
@@ -10,4 +11,5 @@
 *.npy
 .*
 _*
+*/
 xgeoclaw

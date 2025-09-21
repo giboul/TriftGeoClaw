@@ -14,7 +14,7 @@ pv.global_theme.allow_empty_mesh = True
 mpl.colormaps.register(mpl.colors.LinearSegmentedColormap("half_blue", {
     'red': ((0.0, 1.0, 1.0),
             (1.0, water_color[0], water_color[0]),),
-    'green': ((0.0, 0.0, 0.0), 
+    'green': ((0.0, 0.0, 0.0),
               (1.0, water_color[1], water_color[1]),),
     'blue': ((0.0, 0.0, 0.0),
              (1.0, water_color[1], water_color[1]),),

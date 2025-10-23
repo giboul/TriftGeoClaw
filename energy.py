@@ -1,40 +1,21 @@
 from pathlib import Path
 from argparse import ArgumentParser
 import numpy as np
-import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.path import Path as mPath
+from clawpack.clawutil.data import ClawData
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
-from utils import read_clawdata
-try:
-    import scienceplots
-    plt.style.use('science')
-except ImportError:
-    plt.style.use("seaborn-v0_8-paper")
-# matplotlib.use("pgf")
-matplotlib.rcParams.update({
-#     "pgf.texsystem": "pdflatex",
-#     'font.family': 'serif',
-    'text.usetex': True,
-#     'pgf.rcfonts': False,
-})
-np.seterr(all="raise", under="ignore")
+from clawpack.geoclaw import fgout_tools
 
 
 def divide(a, b, fill=0., rtol=1e-05, atol=1e-08):
     c = np.empty(a.shape, dtype=np.float64)
-    m = np.isclose(b, 0.)
+    m = np.isclose(b, 0., rtol, atol)
     c[m] = fill
     m = ~m
     c[m] = a[m] / b[m]
     return c
-
-def parse_args():
-    parser = ArgumentParser()
-    parser.add_argument("-s", "--save", action="store_true")
-    parser.add_argument("-o", "--outdir", type=str, nargs="?", default="_output")
-    return parser.parse_args()
 
 def normal_vectors(x, y):
     dx = np.hstack((x[1]-x[-1], x[2:] - x[:-2], x[0]-x[-2]))/2
@@ -44,18 +25,106 @@ def normal_vectors(x, y):
     ny = divide(+dx, dl)
     return nx, ny, dl
 
-args = parse_args()
-TSUL_outdir = Path(args.outdir).expanduser()
+def trapint(x, y):
+    ym = (y[1:] + y[:-1])/2
+    xm = (x[1:] + x[:-1])/2
+    return xm, np.cumsum(ym * np.diff(x))
 
-TSULdata = read_clawdata(TSUL_outdir / "fgout_grids.data", sep="#", skiprows=7)
-TSULsetprob = read_clawdata(TSUL_outdir / "setprob.data")
+def intdA(f, x=None, y=None):
+    return ((f*dx).T*dy).sum()
+
+def intdl(f, dl):
+    return (f*dl).sum()
+
+def read_contour(i, x, y, outdir, file_format):
+    frame_sol = Solution(int(i), path=outdir, file_format=file_format)
+    return grid_output_2d(frame_sol, lambda q: q, x, y, levels = "all", return_ma=True)
+
+def avalanche_energy_volume(q, rho, nx, ny, dl, h0=0):
+    h, hu, hv, s = q
+    hun = hu*nx + hv*ny
+    u2 = divide(hu**2 + hv**2, h**2)
+    pot = 1/2 * rho * g * (s-TSULsetprob["lake_alt"]) * hun
+    kin = 1/2 * rho * u2 * hun
+    return intdl(pot + kin, dl=dl), intdl(hun, dl=dl), (h-h0).max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
+
+def lake_energy_volume_alt(q, rho, h0=0):
+    h, hu, hv, _ = q
+    hu2 = divide(hu**2 + hv**2, h)
+    pot = 1/2 * rho * g * np.where(lake, (h-h0)**2, 0.)
+    kin = 1/2 * rho * np.where(lake, hu2, 0.)
+    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (h-h0)[lake0].max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
+
+def main():
+
+    args = parse_args()
+    wave_outdir = Path(args.outdir).expanduser()
+
+    probdata = ClawData()
+    probdata.read(wave_outdir / "setprob.data")
+
+    avacdata = ClawData()
+    avac_outdir = Path(probdata.AVAC_outdir).expanduser()
+    avacdata.read()
+
+    wave_fg = fgout_tools.FGoutGrid(args.fgno, wave_outdir)
+    wave_fg.read_fgout_grids_data()
+
+    avac_fg = fgout_tools.FGoutGrid(args.fgno, avac_outdir)
+    avac_fg.read_fgout_grids_data()
+
+    xc, yc = np.loadtxt("contour.xy").T
+    inside = (xmin <= xc) & (xc <= xmax) & (ymin <= yc) & (yc <= ymax)
+    xc = xc[inside]
+    yc = yc[inside]
+    nx, ny, dl = normal_vectors(xc, yc)
+
+    lake = mPath(np.column_stack(xc, yc)).contains_points(np.column_stack((
+        wave_fg.X.flatten(),
+        wave_fg.Y.flatten()
+    ))).reshape(X.shape)
+
+    for i, t in enumerate(avac_fg.times):
+        print(t)
+
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument("-s", "--save", action="store_true")
+    parser.add_argument("-o", "--outdir", type=str, nargs="?", default="_output")
+    parser.add_argument("--fgno", type=int, nargs="?", default=1)
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    main()
+exit()
+
+Elake = np.zeros(TSULdata["nout"], np.float64)
+Etsul = np.zeros(TSULdata["nout"], np.float64)
+Vtsul = np.zeros(TSULdata["nout"], np.float64)
+Vlake = np.zeros(TSULdata["nout"], np.float64)
+Eavac = np.zeros(AVACdata["nout"], np.float64)
+Vavac = np.zeros(AVACdata["nout"], np.float64)
+hlake = np.zeros(TSULdata["nout"], np.float64)
+havac = np.zeros(AVACdata["nout"], np.float64)
+htsul = np.zeros(TSULdata["nout"], np.float64)
+vlake = np.zeros(TSULdata["nout"], np.float64)
+vavac = np.zeros(AVACdata["nout"], np.float64)
+vtsul = np.zeros(TSULdata["nout"], np.float64)
+
+
+TSULdata = ClawData()
+TSULdata.read(TSUL_outdir / "fgout_grids.data", sep="#", skiprows=7)
+TSULsetprob = ClawData()
+TSULsetprob.read(TSUL_outdir / "setprob.data")
+AVACdata = ClawData()
 AVAC_outdir = Path(TSULsetprob["AVAC_outdir"]).expanduser()
-AVACdata = read_clawdata(AVAC_outdir / "fgout_grids.data", sep="#", skiprows=7)
+AVACdata.read(AVAC_outdir / "fgout_grids.data", sep="#", skiprows=7)
 
-output_formats = [None, "ascii", "binary32", "binary64", "HDF5"]  # TODO implement HDF5
 
-TSULgeodata = read_clawdata(TSUL_outdir / "geoclaw.data")
-voellmy = read_clawdata(AVAC_outdir / "voellmy.data")
+TSULgeodata = ClawData()
+voellmy = ClawData()
+TSULgeodata.read(TSUL_outdir / "geoclaw.data")
+voellmy.read(AVAC_outdir / "voellmy.data")
 dry_tolerance = TSULgeodata["dry_tolerance"]
 g = TSULgeodata["gravity"]
 rhow = TSULgeodata["rho"]
@@ -82,40 +151,6 @@ yc = yc[inside]
 nx, ny, dl = normal_vectors(xc, yc)
 
 
-def trapint(x, y):
-    ym = (y[1:] + y[:-1])/2
-    xm = (x[1:] + x[:-1])/2
-    return xm, np.cumsum(ym * np.diff(x))
-
-def intdA(f, x=None, y=None):
-    return ((f*dx).T*dy).sum()
-
-def intdl(f, dl):
-    return (f*dl).sum()
-
-def read_lake(i, outdir=TSUL_outdir, file_format=output_formats[TSULdata["output_format"]]):
-    fgout = np.fromfile(outdir / f"fgout0001.b{i+1:0>4}", np.float64)
-    fgout = fgout.reshape(4, numx, numy, order="F")
-    return np.swapaxes(fgout, 1, 2)
-
-def read_contour(i, x, y, outdir=TSUL_outdir, file_format=output_formats[TSULdata["output_format"]]):
-    frame_sol = Solution(int(i), path=outdir, file_format=file_format)
-    return grid_output_2d(frame_sol, lambda q: q, x, y, levels = "all", return_ma=True)
-
-def avalanche_energy_volume(q, rho, h0=0, nx=nx, ny=ny, dl=dl):
-    h, hu, hv, s = q
-    hun = hu*nx + hv*ny
-    u2 = divide(hu**2 + hv**2, h**2)
-    pot = 1/2 * rho * g * (s-TSULsetprob["lake_alt"]) * hun
-    kin = 1/2 * rho * u2 * hun
-    return intdl(pot + kin, dl=dl), intdl(hun, dl=dl), (h-h0).max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
-
-def lake_energy_volume_alt(q, rho=rhow, h0=0):
-    h, hu, hv, _ = q
-    hu2 = divide(hu**2 + hv**2, h)
-    pot = 1/2 * rho * g * np.where(lake, (h-h0)**2, 0.)
-    kin = 1/2 * rho * np.where(lake, hu2, 0.)
-    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (h-h0)[lake0].max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
 
 def uniform_grid_interp(x, y, Z, xZ=False, yZ=False):
     """Interpolate values on a line (x, y) on a grid Z(var, xZ, yZ)"""
@@ -152,7 +187,6 @@ vtsul = np.zeros(TSULdata["nout"], np.float64)
 
 AVACtimes = []
 for i in range(AVACdata["nout"]):
-    t = read_clawdata(AVAC_outdir/f"fgout0001.t{i+1:0>4}", sep=" ")["time"]
     AVACtimes.append(t)
     print(f"AVAC: {t = :.1f} ", end=f"({(i+1)/AVACdata['nout']:.1%})... \r", flush=True)
     Eavac[i], Vavac[i], havac[i], vavac[i] = avalanche_energy_volume(read_contour(i, xc, yc, outdir=AVAC_outdir), rhos)
@@ -161,11 +195,9 @@ t_start = AVACtimes[max(0, (havac > 0).argmax()-1)]
 
 q0 = read_lake(i)
 lake0 = (q0[0] > dry_tolerance) & lake
-# qi0 = uniform_grid_interp(xc, yc, q0, x, y)
 
 TSULtimes = []
 for i in range(TSULdata["nout"]):
-    t = read_clawdata(TSUL_outdir/f"fgout0001.t{i+1:0>4}", sep=" ")["time"]
     TSULtimes.append(t)
     print(f"TSUL: {t = :.1f} ", end=f"({(i+1)/TSULdata['nout']:.1%})... \r", flush=True)
     q = read_lake(i)

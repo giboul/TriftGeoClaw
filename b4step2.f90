@@ -28,7 +28,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
     use storm_module, only: set_storm_fields
 
     use helpers, only : qa=>q_avac, ts=>times, damping, &
-                        inflow_mode, overhang, lake_alt, &
+                        inflow_mode, overhang, dam_alt, &
                         fg=>AVAC_fgrid, closest_sup, closest_inf
     use helpers, only : interp_time, interp_src
     use fgout_module, only : fgout_grid
@@ -64,7 +64,7 @@ subroutine b4step2(mbc,mx,my,meqn,q,xlower,ylower,dx,dy,t,dt,maux,aux,actualstep
         do i = 1, mx
           xc = xlower + (i - 0.5d0) * dx
           ! lake_level + overhang < z => high enough
-          if (lake_alt+overhang<aux(1,i,j)) then
+          if (dam_alt+overhang<aux(1,i,j)) then
             ! if times are coherent (?) ! TODO check
             if (ts(inf)<t .and. t<ts(sup) .and. inf<sup) then
                 q(1:3,i,j) = interp_src( &

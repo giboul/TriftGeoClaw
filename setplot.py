@@ -51,10 +51,13 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     utils.set_transparent_cmaps()
     background, back_extent = utils.read_world_image("topo_big.png")
-    dam = utils.read_geojson("dam.geojson")[1:]
-    def background_image(_):
-        plt.imshow(background, extent=back_extent, zorder=0)
-        plt.fill(*dam, c="k", zorder=0)
+
+    dam_path = Path("dam.geojson")  # TODO: shapefiles as well
+    if dam_path.exists():
+        dam = utils.read_geojson(dam_path)[1:]
+        def background_image(_):
+            plt.imshow(background, extent=back_extent, zorder=0)
+            plt.fill(*dam, c="k", zorder=0)
 
     if plotdata is None:
         plotdata = ClawPlotData()
@@ -77,9 +80,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     #-----------------------------------------
     plotfigure = plotdata.new_plotfigure(name='Surface', figno=0)
     plotfigure.use_for_kml = True
-    clawdata = utils.read_clawdata(Path(plotdata.outdir) / "claw.data")
-    xmin, ymin = clawdata["lower"]
-    xmax, ymax = clawdata["upper"]
+    clawdata = ClawData()
+    clawdata.read(Path(plotdata.outdir) / "claw.data", force=True)
+    xmin, ymin = clawdata.lower
+    xmax, ymax = clawdata.upper
     plotfigure.kml_xlimits = xmin, xmax
     plotfigure.kml_ylimits = ymin, ymax
 
@@ -96,7 +100,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         # plt.xticks(fontsize=15)
         # plt.yticks(fontsize=15)
 
-    plotaxes.beforeaxes = background_image
+    if dam_path.exists():
+        plotaxes.beforeaxes = background_image
     plotaxes.afteraxes = fixup
 
     # Water
@@ -121,7 +126,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # plotitem.amr_celledges_show = [1,1,1]
     # plotitem.patchedges_show = 1
 
-    if 0:
+    if 1:
         # Land
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         plotitem.plot_var = geoplot.land

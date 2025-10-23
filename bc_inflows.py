@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 from clawpack.visclaw import gridtools
+from clawpack.clawutil.data import ClawData
 from clawpack.pyclaw.solution import Solution
 
-from utils import config, read_clawdata
+from utils import config
 
 def extract(i, x, y, outdir):
     frame_sol = Solution(i, path=outdir, file_format=config["output_format"])
@@ -25,7 +26,8 @@ def write(AVAC_outdir, extent, outdir, n):
 
     boundaries = ("bottom", "right", "top", "left")
     if extent is None:
-        clawdata = read_clawdata("claw.data")
+        clawdata = ClawData()
+        clawdata.read("claw.data", force=True)
         xmin, ymin = clawdata["lower"]
         xmax, ymax = clawdata["upper"]
     else:

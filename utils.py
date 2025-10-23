@@ -17,37 +17,6 @@ def read_fgout_bin(outdir, nx, ny, frameno, gridno=1, nvars=4):
     return  q
 
 
-def read_times(outdir, gridno):
-    outdir = Path(outdir)
-    return [
-        read_clawdata(p, sep=" ")["time"]
-        for p in sorted(outdir.glob(f"fgout{gridno:0>4}.t*"))
-    ]
-
-
-def read_clawdata(path: Path, sep="=: ", comments="#", skiprows=0): # TODO read grids correctly (e.g. with fgno)
-    path = Path(path)
-    clawdata_trans = dict(T=True, F=False)
-    clawdata = dict()
-    lines = [line for line in path.read_text().split("\n")[skiprows:] if sep in line]
-    for line in lines:
-        value, key = [e for e in line.split(sep) if e]
-        key = key.strip()
-        if comments in key:
-            key = key[:key.find(comments)].strip()
-        value = [v for v in value.split() if v]
-        for e, element in enumerate(value):
-            try:
-                value[e] = eval(element)
-            except Exception:
-                value[e] = clawdata_trans.get(element, element)
-        clawdata[key] = value[0] if len(value)==1 else value
-    return clawdata
-
-
-def read_datafiles(outdir: Path, ext=".data", *args, **kwargs):
-    return {f.stem: read_clawdata(f, *args, **kwargs) for f in outdir.glob(f"*{ext}")}
-
 
 def read_geojson(path):
     with open(path, "r") as file:

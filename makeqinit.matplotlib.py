@@ -31,7 +31,7 @@ def make_qinit(plot=False):
         flooded, dilated = topo_utils.pick_seed(Z, x, y, config['lake_alt'])
 
     # Save the qinit.xyz
-    print(f"Saving qinit.xyz", end=" ... ", flush=True)
+    print("Saving qinit.xyz", end=" ... ", flush=True)
     Z[flooded] = config["lake_alt"]
     Z[~flooded] = 0.
     np.savetxt('qinit.xyz', np.column_stack((

@@ -9,7 +9,7 @@ module helpers
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping, overhang
-    real(kind=8) :: lake_alt
+    real(kind=8) :: dam_alt
     character(len=255) :: AVAC_DIR, inflow_mode, input_format
     type(fgout_grid) :: AVAC_fgrid
 
@@ -23,7 +23,7 @@ contains
         call opendatafile(unit, "setprob.data")
             READ(unit,*) inflow_mode
             READ(unit,*) damping
-            READ(unit,*) lake_alt
+            READ(unit,*) dam_alt
             READ(unit,*) overhang
             READ(unit,*) AVAC_DIR
             READ(unit,*) bc_size

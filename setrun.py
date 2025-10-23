@@ -49,14 +49,12 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = 2.66979e+06
-    clawdata.upper[0] = 2.67095e+06
-    clawdata.lower[1] = 1.17022e+06
-    clawdata.upper[1] = 1.17204e+06
+    clawdata.lower = config["lower"]
+    clawdata.upper = config["upper"]
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/60)
-    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/60)
+    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/30)#/60
+    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/30)#/60
 
     # ---------------
     # Size of system:
@@ -90,7 +88,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 100
-        clawdata.tfinal = clawdata.t0 + 300
+        clawdata.tfinal = clawdata.t0 + 20
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -316,7 +314,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('mode', config["inflow_mode"], 'The method for introucing the avalanche')
     probdata.add_param('damping', float(avacprobdata.rho)/rundata.geo_data.rho, 'rho_snow/rho_water')
-    probdata.add_param('lake_alt', float(config.get('lake_alt', 0.)),  'Lake altitude')
+    probdata.add_param('dam_alt', float(config.get('dam_alt', 0.)),  'Lake altitude')
     probdata.add_param('overhang', float(config.get('overhang', 0.)), 'Overhang of the contour over the lake')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
     probdata.add_param('bc_size', int(config.get("bc_size", 100)), 'Number of cells to interpolate from for each boundary.')

@@ -19,13 +19,6 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
     fgout_grid = fgout_tools.FGoutGrid(fgno, outdir)
     fgout_grid.read_fgout_grids_data()
 
-    x1 = fgout_grid.x1
-    x2 = fgout_grid.x2
-    y1 = fgout_grid.y1
-    y2 = fgout_grid.y2
-    nx = fgout_grid.nx
-    ny = fgout_grid.ny
-
     X = fgout_grid.X
     Y = fgout_grid.Y
 
@@ -63,7 +56,7 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
 
     if file_name:
         p.open_gif(file_name)
-        for i, t in enumerate(times[:20]):
+        for i, t in enumerate(fgout_grid.times):
             update(i)
             p.write_frame()
         p.close()
@@ -72,7 +65,7 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
         p.add_key_event("j", prev_frame)
         p.show()
     else:
-        p.add_timer_event(max_steps=len(times), duration=500, callback=update)
+        p.add_timer_event(max_steps=len(fgout_grid.times), duration=500, callback=update)
         p.show()
 
 def parse_args():

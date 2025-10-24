@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from pathlib import Path
-from json import load
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import TextBox
@@ -8,6 +7,8 @@ from matplotlib.lines import Line2D
 from tifffile import TiffFile
 from skimage.morphology import flood
 from skimage.measure import find_contours
+import geopandas as gpd
+import shapely
 
 
 def read_asc_dataline(file):
@@ -36,7 +37,7 @@ def read_asc(path, dtype=np.float16):
         xmin = float(read_asc_dataline(datafile)[0])
         ymin = float(read_asc_dataline(datafile)[0])
         resolution = float(read_asc_dataline(datafile)[0])
-        nodatavalue = float(read_asc_dataline(datafile)[0])
+        _ = float(read_asc_dataline(datafile)[0])
     
     x = xmin + np.arange(nx)*resolution
     y = (ymin + np.arange(ny)*resolution)[::-1]
@@ -78,12 +79,19 @@ def read_tiff(path):
         x_res, y_res, z_res = tif.pages[0].tags["ModelPixelScaleTag"].value
         xmin = tif.pages[0].tags["ModelTiepointTag"].value[3]
         ymax = tif.pages[0].tags["ModelTiepointTag"].value[4]
-        tifres = tif.pages[0].tags["ModelPixelScaleTag"].value[0]
+        _ = tif.pages[0].tags["ModelPixelScaleTag"].value[0]
     x = xmin + (np.arange(nx) + 0.5)*x_res
     y = ymax - (np.arange(ny) + 0.5)*y_res
     print("Done.")
     return x, y, Z
 
+def read_poly(path):
+    geom = gpd.read_file(path).geometry
+    if len(geom) == 0:
+        raise ValueError(f"No polygon was found in {path}")
+    if isinstance(geom[0], shapely.MultiPolygon):
+        return [np.array(g.exterior.coords) for poly in geom for g in poly.geoms]
+    return [np.array(poly.exterior.coords) for poly in geom]
 
 def flood_mask(topo, seed, max_level=0):
     mask = topo < max_level
@@ -92,21 +100,6 @@ def flood_mask(topo, seed, max_level=0):
     flooded = flood(mask, seed)
     flooded[*seed] = initial_value
     return flooded
-
-
-def read_geojson(path):
-    with open(path, "r") as file:
-        data = load(file)
-
-    coords = []
-    for e in data["features"]:
-        ix = e['properties']['id']
-        points = e['geometry']['coordinates'][0][0]
-        for x, y in points:
-            coords.append([ix, x, y])
-
-    avacs = np.array(coords).T
-    return avacs
 
 
 def pick_seed(z_im, x, y, lake_alt=0):
@@ -202,6 +195,15 @@ def uniform_grid_interp(x, y, Z, xZ=None, yZ=None):
     )
 
 
+def read_world_image(path):
+    path = Path(path)
+    im = plt.imread(path)
+    ny, nx, _ = im.shape
+    world_text = path.with_suffix(".pgw").read_text().strip().split("\n")
+    dx, _, _, dy, xul, yul = [float(f) for f in world_text]
+    return im, (xul, xul+nx*dx, yul+ny*dy, yul)
+
+
 def find_contour(mask, extent, nx, ny):
     xmin, xmax, ymin, ymax = extent
     x, y = find_contours(mask, 0.5)[0].T
@@ -220,9 +222,9 @@ def expand_bounds(x1, x2, y1, y2, rel_margin=1/50, abs_margin=0):
     return xmin, xmax, ymin, ymax
 
 
-def gkern(l, sig):
-    """creates gaussian kernel with side length `l` and a sigma of `sig`"""
-    ax = np.linspace(-(l - 1) / 2., (l - 1) / 2., l)
+def gkern(n, sig):
+    """creates gaussian kernel with side length `n` and a sigma of `sig`"""
+    ax = np.linspace(-(n - 1) / 2., (n - 1) / 2., n)
     gauss = np.exp(-0.5 * np.square(ax) / np.square(sig))
     kernel = np.outer(gauss, gauss)
     return kernel / np.sum(kernel)

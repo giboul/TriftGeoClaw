@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from utils import config, read_world_image, water_color
+from config import config, water_color
 import topo_utils
 import numpy as np
 from skimage.morphology import flood, isotropic_dilation
@@ -47,7 +47,7 @@ def iflood(bathy_path, lake_alt=0, dilation_radius=0, world_png="", dry=False):
     water = pv.StructuredGrid(X[s], Y[s], np.full_like(Z[s], zmin))
     water["wet"] = np.zeros(Z[s].size)
     if world_png != "":
-        _, extent = read_world_image(world_png)
+        _, extent = topo_utils.read_world_image(world_png)
         world_png = pv.read_texture(Path(world_png).expanduser())
         bathy = bathy.clip_box(extent+(0, 9000), invert=False)
         o = extent[0], extent[2], 0.

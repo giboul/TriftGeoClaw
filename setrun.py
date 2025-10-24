@@ -12,7 +12,8 @@ from clawpack.clawutil.data import ClawData
 from clawpack.clawutil.data import ClawRunData
 from clawpack.geoclaw.fgout_tools import FGoutGrid
 import bc_inflows
-from utils import config
+from config import config
+from topo_utils import read_poly
 
 
 def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=False) -> ClawRunData:
@@ -53,8 +54,8 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.upper = config["upper"]
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/30)#/60
-    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/30)#/60
+    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/60)
+    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/60)
 
     # ---------------
     # Size of system:
@@ -64,7 +65,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     # Number of auxiliary variables in the aux array (initialized in setaux)
     clawdata.num_aux = 1
     # Index of aux array corresponding to capacity function, if there is one:
-    clawdata.capa_index = 0  # TODO: Add comment to error 'mcapa should be nonzero'
+    clawdata.capa_index = 0  # TODO: Add error 'mcapa should be nonzero' should mention 'capa_index'
 
     # -------------
     # Initial time:
@@ -278,11 +279,13 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    rundata.regiondata.regions.append([
-        3, 4, clawdata.t0, clawdata.tfinal/5,
-        2.67e6, 2.67e6+400,
-        1.171e6+650, 1.171e6+950
-    ])
+    rundata.regiondata.regions += [
+            (3, 4,
+             clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/5,
+             np.min(d[0]), np.max(d[0]),
+             np.min(d[1]), np.max(d[1]))
+            for d in read_poly(config["dams"])
+        ]
     # -------
     # Gauges:
     # -------

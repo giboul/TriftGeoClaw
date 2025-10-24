@@ -4,8 +4,7 @@ import numpy as np
 from clawpack.visclaw import gridtools
 from clawpack.clawutil.data import ClawData
 from clawpack.pyclaw.solution import Solution
-
-from utils import config
+from config import config
 
 def extract(i, x, y, outdir):
     frame_sol = Solution(i, path=outdir, file_format=config["output_format"])

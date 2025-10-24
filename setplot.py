@@ -8,7 +8,9 @@ function setplot is called to set the plot parameters.
 from matplotlib import pyplot as plt
 from pathlib import Path
 import numpy as np
-import utils
+from config import config
+import mpl_colormaps
+from topo_utils import read_poly, read_world_image
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.clawutil.data import ClawData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
@@ -49,15 +51,16 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     Output: a modified version of plotdata.
     """
 
-    utils.set_transparent_cmaps()
-    background, back_extent = utils.read_world_image("topo_big.png")
+    mpl_colormaps.set_transparent_cmaps()
+    background, back_extent = read_world_image("topo_big.png")
 
     dam_path = Path("dam.geojson")  # TODO: shapefiles as well
     if dam_path.exists():
-        dam = utils.read_geojson(dam_path)[1:]
+        dams = read_poly(dam_path)
         def background_image(_):
             plt.imshow(background, extent=back_extent, zorder=0)
-            plt.fill(*dam, c="k", zorder=0)
+            for dam in dams:
+                plt.fill(*dam, c="k", zorder=0)
 
     if plotdata is None:
         plotdata = ClawPlotData()
@@ -120,8 +123,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     plotitem.plot_var = masked_var
     # plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = "RdBu_water"
-    plotitem.pcolor_cmin = -3 #topoconfig["lake_alt"]-2
-    plotitem.pcolor_cmax = 3 #topoconfig["lake_alt"]+2
+    plotitem.pcolor_cmin = -3
+    plotitem.pcolor_cmax = 3
     plotitem.add_colorbar = True
     # plotitem.amr_celledges_show = [1,1,1]
     # plotitem.patchedges_show = 1
@@ -131,8 +134,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         plotitem.plot_var = geoplot.land
         plotitem.pcolor_cmap = plt.cm.viridis
-        plotitem.pcolor_cmin = utils.config.get("lake_alt",  0.) - 120
-        plotitem.pcolor_cmax = utils.config.get("lake_alt",  0.) + 380
+        plotitem.pcolor_cmin = config.get("lake_alt",  0.) - 120
+        plotitem.pcolor_cmax = config.get("lake_alt",  0.) + 380
         plotitem.add_colorbar = False
         # plotitem.amr_celledges_show = [0,0,0]
         # plotitem.patchedges_show = 1

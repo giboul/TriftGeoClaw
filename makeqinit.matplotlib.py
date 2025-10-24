@@ -7,7 +7,7 @@ from pathlib import Path
 import topo_utils
 import numpy as np
 from matplotlib import pyplot as plt
-from utils import config
+from config import config
 
 
 def make_qinit(plot=False):

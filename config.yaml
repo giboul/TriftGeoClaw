@@ -13,13 +13,14 @@ qinit:
   - qinit.xyz
 
 # Dam
-dam: "dam.shp"
+dams: "dam.geojson"
 dam_alt: 1820
 
 # Boundries
 lower:
-  - 989655.
-  - 6482096.
+  # - 989680.
+  - 990000
+  - 6482100.
 upper:
-  - 990816.
-  - 6482674.
+  - 990800.
+  - 6482650.

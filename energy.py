@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.path import Path as mPath
+from topo_utils import find_contour
 from clawpack.clawutil.data import ClawData
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
@@ -30,42 +31,64 @@ def trapint(x, y):
     xm = (x[1:] + x[:-1])/2
     return xm, np.cumsum(ym * np.diff(x))
 
-def intdA(f, x=None, y=None):
-    return ((f*dx).T*dy).sum()
-
-def intdl(f, dl):
-    return (f*dl).sum()
-
 def read_contour(i, x, y, outdir, file_format):
     frame_sol = Solution(int(i), path=outdir, file_format=file_format)
     return grid_output_2d(frame_sol, lambda q: q, x, y, levels = "all", return_ma=True)
 
-def avalanche_energy_volume(q, rho, nx, ny, dl, h0=0):
+def avalanche_energy_volume(q, rho, ref_alt, nx, ny, dl, h0=0, g=9.81):
     h, hu, hv, s = q
     hun = hu*nx + hv*ny
     u2 = divide(hu**2 + hv**2, h**2)
-    pot = 1/2 * rho * g * (s-TSULsetprob["lake_alt"]) * hun
+    pot = 1/2 * rho * g * (s-ref_alt) * hun
     kin = 1/2 * rho * u2 * hun
-    return intdl(pot + kin, dl=dl), intdl(hun, dl=dl), (h-h0).max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
+    return np.nansum((pot + kin)*dl), np.nansum(hun*dl)
 
-def lake_energy_volume_alt(q, rho, h0=0):
+def lake_energy_volume(q, rho, dx, dy, h0=0, g=9.81):
     h, hu, hv, _ = q
     hu2 = divide(hu**2 + hv**2, h)
-    pot = 1/2 * rho * g * np.where(lake, (h-h0)**2, 0.)
-    kin = 1/2 * rho * np.where(lake, hu2, 0.)
-    return intdA(pot + kin), intdA(np.where(lake, h, 0.)), (h-h0)[lake0].max(), np.sqrt(divide((hu**2+hv**2), h**2)).max()
+    pot = 1/2 * rho * g * (h-h0)**2
+    kin = 1/2 * rho * np.where(h>0, hu2, 0.)
+    return np.nansum((pot + kin)*dx*dy), np.nansum(h*dx*dy)
+
+class Data:
+    """Read all datafiles in an output directory at once."""
+    def __init__(self, outdir: Path):
+        datafiles = list(Path(outdir).glob("*.data"))
+        for path in datafiles:
+            data = ClawData()
+            data.read(path, force=True)
+            setattr(self, path.stem, data)
+
+
+def uniform_grid_interp(x, y, Z, xZ=False, yZ=False):
+    """Interpolate values on a line (x, y) on a grid Z(var, xZ, yZ)"""
+    if xZ is not None:
+        x = (x-xZ[0])/(xZ[-1]-xZ[0])*(Z.shape[2]-1)
+    if yZ is not None:
+        y = (y-yZ[0])/(yZ[-1]-yZ[0])*(Z.shape[1]-1)
+    x = np.clip(0., Z.shape[2], x)
+    y = np.clip(0., Z.shape[1], y)
+    w = np.clip(x.astype(int), 0, Z.shape[2]-2)
+    s = np.clip(y.astype(int), 0, Z.shape[1]-2)
+    e = w + 1
+    n = s + 1
+    return (
+        + (x-w)*(y-s)*Z[:, n, e]
+        + (x-w)*(n-y)*Z[:, s, e]
+        + (e-x)*(y-s)*Z[:, n, w]
+        + (e-x)*(n-y)*Z[:, s, w]
+    )
+
 
 def main():
 
     args = parse_args()
     wave_outdir = Path(args.outdir).expanduser()
 
-    probdata = ClawData()
-    probdata.read(wave_outdir / "setprob.data")
+    wave_data = Data(wave_outdir)
+    avac_outdir = Path(wave_data.setprob.AVAC_outdir.strip("'")).expanduser()
 
-    avacdata = ClawData()
-    avac_outdir = Path(probdata.AVAC_outdir).expanduser()
-    avacdata.read()
+    avac_data = Data(avac_outdir)
 
     wave_fg = fgout_tools.FGoutGrid(args.fgno, wave_outdir)
     wave_fg.read_fgout_grids_data()
@@ -73,19 +96,38 @@ def main():
     avac_fg = fgout_tools.FGoutGrid(args.fgno, avac_outdir)
     avac_fg.read_fgout_grids_data()
 
-    xc, yc = np.loadtxt("contour.xy").T
-    inside = (xmin <= xc) & (xc <= xmax) & (ymin <= yc) & (yc <= ymax)
-    xc = xc[inside]
-    yc = yc[inside]
+    wave_fgout_init = wave_fg.read_frame(1)
+    lake = wave_fgout_init.h > 0
+    lake = wave_fgout_init.B > wave_data.setprob.min_alt_avac
+    lake_alt = wave_fgout_init.eta[wave_fgout_init.h>0].mean()
+    wave_fg.extent = wave_fg.x1, wave_fg.x2, wave_fg.y1, wave_fg.y2
+    xc, yc = find_contour(lake, wave_fg.extent, wave_fg.nx, wave_fg.ny).T
     nx, ny, dl = normal_vectors(xc, yc)
 
-    lake = mPath(np.column_stack(xc, yc)).contains_points(np.column_stack((
-        wave_fg.X.flatten(),
-        wave_fg.Y.flatten()
-    ))).reshape(X.shape)
-
+    Ea = np.zeros(avac_fg.nout, np.float64)
+    Va = np.zeros(avac_fg.nout, np.float64)
     for i, t in enumerate(avac_fg.times):
-        print(t)
+        q = avac_fg.read_frame(i+1).q
+        qc = uniform_grid_interp(xc, yc, q, avac_fg.x, avac_fg.y)
+        Ea[i], Va[i] = avalanche_energy_volume(qc, avac_data.geoclaw.rho, lake_alt, nx, ny, dl)
+    print(Ea)
+    print(Va)
+
+    Ew = np.zeros(wave_fg.nout, np.float64)
+    Vw = np.zeros(wave_fg.nout, np.float64)
+    El = np.zeros(wave_fg.nout, np.float64)
+    Vl = np.zeros(wave_fg.nout, np.float64)
+    dx = (wave_fg.x2 - wave_fg.x1) / wave_fg.nx
+    dy = (wave_fg.y2 - wave_fg.y1) / wave_fg.ny
+    for i, t in enumerate(wave_fg.times):
+        q = wave_fg.read_frame(i+1).q
+        qc = uniform_grid_interp(xc, yc, q, wave_fg.x, wave_fg.y)
+        Ew[i], Vw[i] = avalanche_energy_volume(qc, wave_data.geoclaw.rho, lake_alt, nx, ny, dl)
+        El[i], Vl[i] = lake_energy_volume(qc, wave_data.geoclaw.rho, lake_alt, dx, dy)
+    print(Ew)
+    print(Vw)
+    print(El)
+    print(Vl)
 
 def parse_args():
     parser = ArgumentParser()

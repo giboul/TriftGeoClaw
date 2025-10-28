@@ -11,19 +11,19 @@ qinit:
   - qinit.xyz
 
 mode: src  # src or bc
-min_alt_avac: 1795
+min_alt_avac: 1776
 
 # Lake
-lake_alt: 1790
+lake_alt: 1767
 
 # Dam
 dams: "dam.geojson"
-dam_alt: 1820
+dam_alt: 1771.2
 
 # Boundries
 lower:
-  - 2669800
-  - 1170230
+  - 2669915
+  - 1170345
 upper:
-  - 2670940
-  - 1172030
+  - 2670825
+  - 1171005

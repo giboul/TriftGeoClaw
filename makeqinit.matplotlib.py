@@ -44,7 +44,7 @@ def make_qinit(plot=False):
     Z[~flooded] = 0.
     np.savetxt('qinit.xyz', np.column_stack((
         X.flatten(), Y.flatten(), np.where(dilated, config["lake_alt"], Z.min()).flatten()
-    )), fmt="%.9e")
+    )), fmt="%.2f")
     print("Done.")
 
     if plot:

@@ -68,8 +68,9 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
         avacfgrid.y2 > clawdata.upper[1] +2*cell_size[1]
     ), (
         "AVAC fgout must contain the current bounds (including ghost cells).\n"
-        f"{avacfgrid.x1:.3e}, {avacfgrid.x2:.3e}, {avacfgrid.y1:.3e}, {avacfgrid.y2:.3e}"
-        f"{clawdata.lower[0]:.3e}, {clawdata.upper[0]:.3e}, {clawdata.lower[0]:.3e}, {clawdata.upper[1]:.3e}."
+        f"{avacfgrid.x1:.1f}, {avacfgrid.x2:.1f}, {avacfgrid.y1:.1f}, {avacfgrid.y2:.1f}\n"
+        f"{clawdata.lower[0]:.1f}, {clawdata.upper[0]:.1f}, {clawdata.lower[0]:.1f}, {clawdata.upper[1]:.1f}\n"
+        f"{cell_size[0] = :.3f} {cell_size[1]:.3f}"
     )
 
     # ---------------

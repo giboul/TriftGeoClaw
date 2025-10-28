@@ -30,6 +30,14 @@ def make_qinit(plot=False):
     else:  # Interactive fill with mpl figure
         flooded, dilated = topo_utils.pick_seed(Z, x, y, config['lake_alt'])
 
+    print("Saving free_domain.npy", end="... ")
+    np.save("free_domain.npy", Z>config["min_alt_avac"])
+    print("Done")
+
+    print("Saving lake.npy", end="... ")
+    np.save("lake.npy", flooded)
+    print("Done")
+
     # Save the qinit.xyz
     print("Saving qinit.xyz", end=" ... ", flush=True)
     Z[flooded] = config["lake_alt"]
@@ -38,10 +46,6 @@ def make_qinit(plot=False):
         X.flatten(), Y.flatten(), np.where(dilated, config["lake_alt"], Z.min()).flatten()
     )), fmt="%.9e")
     print("Done.")
-
-    # Find the contour of the lake for later processing (energy and momentum analysis)
-    contour = topo_utils.find_contour(dilated.T, extent, x.size, y.size)
-    np.savetxt("contour.xy", contour)
 
     if plot:
         plt.imshow(np.where(Z>0, Z, np.nan), extent=extent)

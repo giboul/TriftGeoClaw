@@ -40,7 +40,7 @@ The dilation is needed because of an interpolation error, causing waves at the e
 
 ## Flux introduction
 
-The mode of mass and momentum introduction can be chosen in `config.yaml:inflow_mode`. It can be either `bc` (the boundary conditions) or `src` (through the source term, acting like curvilinear boundary conditions).
+The mode of mass and momentum introduction can be chosen in `config.yaml:mode`. It can be either `bc` (the boundary conditions) or `src` (through the source term, acting like curvilinear boundary conditions).
 
 ### From the boundary conditions (`bc`)
 

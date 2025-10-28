@@ -7,7 +7,7 @@ from clawpack.geoclaw import fgout_tools
 from clawpack.clawutil.data import ClawData
 
 
-def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
+def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
 
     outdir = Path(outdir)
     clawdata = ClawData()
@@ -32,8 +32,8 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
     p.add_mesh(bathy, scalars="z", cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
 
     surf = pv.StructuredGrid(X, Y, np.where(fgout_init.h>0, fgout_init.eta, np.nan))
-    surf[color_by] = getattr(fgout_init, color_by).T.flatten()
-    p.add_mesh(surf, scalars=color_by, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
+    surf[color_var] = get_value(fgout_init, fgout_init, color_var).T.flatten()
+    p.add_mesh(surf, scalars=color_var, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
     state = dict(i=0)
     def update(i):
@@ -42,17 +42,24 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
         fgout.dh = fgout.eta - fgout_init.eta
         bathy.points[:, 2] = fgout.B.T.flatten()
         surf.points[:, 2] = np.where(fgout.h>0, fgout.eta, np.nan).T.flatten()
-        surf[color_by] = getattr(fgout, color_by).T.flatten()
+        surf[color_var] = get_value(fgout, fgout_init, color_var).T.flatten()
 
-    def next_frame():
-        state["i"] += 1
+    def update_index(increment=None, value=None):
+        if increment is not None:
+            state["i"] += increment
+        else:
+            state["i"] = value
         update(state["i"])
         p.update()
 
     def prev_frame():
-        state["i"] -= 1
-        update(state["i"])
-        p.update()
+        update_index(increment=-1)
+    def next_frame():
+        update_index(increment=+1)
+    def prevv_frame():
+        update_index(increment=-10)
+    def nextt_frame():
+        update_index(increment=+10)
 
     if file_name:
         p.open_gif(file_name)
@@ -61,17 +68,26 @@ def animation(outdir, color_by="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(
             p.write_frame()
         p.close()
     elif 1:
-        p.add_key_event("k", next_frame)
+        p.add_key_event("h", prevv_frame)
         p.add_key_event("j", prev_frame)
+        p.add_key_event("k", next_frame)
+        p.add_key_event("l", nextt_frame)
         p.show()
     else:
         p.add_timer_event(max_steps=len(fgout_grid.times), duration=500, callback=update)
         p.show()
 
+
+def get_value(fgout, fgout0, name):
+    if name[0] == "d" and hasattr(fgout, name[1:]):
+        return getattr(fgout, name[1:]) - getattr(fgout0, name[1:])
+    return getattr(fgout, name)
+
+
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("outdir", type=str, nargs="?", default="_output")
-    parser.add_argument("--color_by", "-c", type=str, default="dh")
+    parser.add_argument("--color_var", "-c", type=str, default="dh")
     parser.add_argument("--fgno", "-n", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))

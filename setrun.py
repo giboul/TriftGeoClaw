@@ -11,6 +11,7 @@ import numpy as np
 from clawpack.clawutil.data import ClawData
 from clawpack.clawutil.data import ClawRunData
 from clawpack.geoclaw.fgout_tools import FGoutGrid
+from clawpack.geoclaw.fgmax_tools import FGmaxGrid
 import bc_inflows
 from config import config
 from topo_utils import read_poly
@@ -163,18 +164,18 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     #   1 => extrapolation (non-reflecting outflow)
     #   2 => periodic (must specify this at both boundaries)
     #   3 => solid wall for systems where q(2) is normal velocity
-    if config["inflow_mode"] == "src":
+    if config["mode"] == "src":
         clawdata.bc_lower[0] = 'wall'
         clawdata.bc_upper[0] = 'wall'
         clawdata.bc_lower[1] = 'wall'
         clawdata.bc_upper[1] = 'wall'
-    elif config["inflow_mode"] == "bc":
+    elif config["mode"] == "bc":
         clawdata.bc_lower[0] = 'user'
         clawdata.bc_upper[0] = 'user'
         clawdata.bc_lower[1] = 'user'
         clawdata.bc_upper[1] = 'user'
     else:
-        raise ValueError(f"inflow mode '{config['inflow_mode']}' is not 'bc' or 'src'")
+        raise ValueError(f"Inflow mode '{config['mode']}' is not 'bc' or 'src'")
 
     # --------------
     # Checkpointing:
@@ -314,16 +315,36 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     fgout.nout = clawdata.num_output_times
     fgout_grids.append(fgout)
 
+    # == fgmax grids ==
+    rundata.fgmax_data.num_fgmax_val = 1  # Save depth, see https://www.clawpack.org/fgmax.html
+    fgmax_grids = rundata.fgmax_data.fgmax_grids
+
+    fgmax = FGmaxGrid()
+    fgmax.point_style = 2  # uniform rectangular x-y grid
+    fgmax.x1 = fgout.x1
+    fgmax.x2 = fgout.x2
+    fgmax.y1 = fgout.y1
+    fgmax.y2 = fgout.y2
+    fgmax.dx = (fgout.x2-fgout.x1) / fgout.nx
+    fgmax.tstart_max = fgout.tstart      # when to start monitoring max values
+    fgmax.tend_max   = fgout.tend       # when to stop monitoring max values
+    fgmax.dt_check   = (fgout.tend-fgout.tstart) / fgout.nout     # target time (sec) increment between updating
+    fgmax.min_level_check = amrdata.amr_levels_max    # which levels to monitor max on
+    fgmax.arrival_tol = 1.e-2    # tolerance for flagging arrival
+    fgmax.interp_method = 0      # 0 ==> pw const in cells, recommended
+    fgmax_grids.append(fgmax)    # written to fgmax_grids.data
+
+    # == setoprob data ==
+    # Interacting with AVAC
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
-    probdata.add_param('mode', config["inflow_mode"], 'The method for introucing the avalanche')
+    probdata.add_param('mode', config["mode"], 'The method for introucing the avalanche')
     probdata.add_param('damping', float(avacprobdata.rho)/rundata.geo_data.rho, 'rho_snow/rho_water')
-    probdata.add_param('dam_alt', float(config.get('dam_alt', 0.)),  'Lake altitude')
-    probdata.add_param('overhang', float(config.get('overhang', 0.)), 'Overhang of the contour over the lake')
+    probdata.add_param('min_alt_avac', float(config.get('min_alt_avac', 0.)),  'Lake altitude')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
     probdata.add_param('bc_size', int(config.get("bc_size", 100)), 'Number of cells to interpolate from for each boundary.')
     probdata.add_param('input_format', avacfgrid.output_format, 'Number of cells to interpolate from for each boundary.')
 
-    if config["inflow_mode"] == "bc":
+    if config["mode"] == "bc":
         extent = clawdata.lower[0], clawdata.upper[0], clawdata.lower[1], clawdata.upper[1]
         bc_inflows.write(AVAC_outdir, extent, outdir, config.get("bc_size", 100))
 

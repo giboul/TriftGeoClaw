@@ -8,9 +8,8 @@ module helpers
     integer :: bc_size
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
-    real(kind=8) :: damping, overhang
-    real(kind=8) :: dam_alt
-    character(len=255) :: AVAC_DIR, inflow_mode, input_format
+    real(kind=8) :: damping, min_alt_avac
+    character(len=255) :: AVAC_DIR, mode, input_format
     type(fgout_grid) :: AVAC_fgrid
 
 contains
@@ -21,17 +20,16 @@ contains
         INTEGER :: unit=2
 
         call opendatafile(unit, "setprob.data")
-            READ(unit,*) inflow_mode
+            READ(unit,*) mode
             READ(unit,*) damping
-            READ(unit,*) dam_alt
-            READ(unit,*) overhang
+            READ(unit,*) min_alt_avac
             READ(unit,*) AVAC_DIR
             READ(unit,*) bc_size
             READ(unit,*) input_format
         CLOSE(unit)
 
-        IF (TRIM(inflow_mode) == "None") then
-            inflow_mode = "bc"
+        IF (TRIM(mode) == "None") then
+            mode = "bc"
         END IF
 
     END SUBROUTINE read_data
@@ -189,8 +187,10 @@ contains
         ! finding the indices of position that's closest to (xc, yc)
         ! 'w' for west, 'w+1' for east,
         ! 's' for south and 's+1' for north
-        w = MIN(fg%mx-1, 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1)))
-        s = MIN(fg%my-1, 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1)))
+        w = 1+INT((xc-fg%x_low)/(fg%x_hi-fg%x_low)*(fg%mx-1))
+        s = 1+INT((yc-fg%y_low)/(fg%y_hi-fg%y_low)*(fg%my-1))
+        w = MIN(fg%mx-1, MAX(w, 1))
+        s = MIN(fg%my-1, MAX(s, 1))
 
         ! computing the positions of the 4 closest points
         xw = fg%x_low + (w-1)*(fg%x_hi-fg%x_low)/(fg%mx-1)
@@ -212,9 +212,9 @@ contains
     END FUNCTION interp_src
 
 
-    SUBROUTINE init_src_fgout_bin()
+    SUBROUTINE init_src_fgout()
 
-        CHARACTER(len=255) :: file, ftemp
+        CHARACTER(len=255) :: fname, ftemp
         INTEGER :: i, j, k, l
         real(kind=4), allocatable :: q_real4(:,:,:)
 
@@ -249,13 +249,13 @@ contains
         END IF
 
         ftemp = TRIM(ftemp) // "fgout0001."
-        file = ""
+        fname = ""
         PRINT *, "Input format: ", TRIM(input_format)
-        DO i = 1, size(times)-1
-            PRINT *, "READING FGOUT: ", TRIM(file)
+        DO i = 1, size(times)
+            PRINT *, "READING FGOUT GRID", i
             IF (TRIM(input_format) == "ascii") THEN  ! ASCII input
-                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "q", i
-                OPEN(2,FILE=file, STATUS="old", ACTION="read")
+                WRITE(fname,"(A,A,I0.4)") TRIM(ftemp), "q", i
+                OPEN(2,FILE=fname, STATUS="old", ACTION="read")
                 DO l=1,9
                     READ(2,*)
                 END DO
@@ -267,14 +267,14 @@ contains
                 END DO
                 CLOSE(2)
             ELSE IF (TRIM(input_format) == "binary32") THEN  ! REAL(4) input
-                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
-                OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
+                WRITE(fname,"(A,A,I0.4)") TRIM(ftemp), "b", i
+                OPEN(2,FILE=fname,ACCESS="stream", STATUS="old", ACTION="read")
                     READ(2) q_real4(:,:,:)
                 CLOSE(2)
                 q_avac(i,:,:,:) = REAL(q_real4, kind=8)
             ELSE IF (TRIM(input_format) == "binary64") THEN  ! REAL(8) input
-                WRITE(file,"(A,A,I0.4)") TRIM(ftemp), "b", i
-                OPEN(2,FILE=file,ACCESS="stream", STATUS="old", ACTION="read")
+                WRITE(fname,"(A,A,I0.4)") TRIM(ftemp), "b", i
+                OPEN(2,FILE=fname,ACCESS="stream", STATUS="old", ACTION="read")
                     READ(2) q_avac(i,:,:,:) ! ti,qi,xi,yj
                 CLOSE(2)
             ELSE
@@ -291,7 +291,7 @@ contains
             DEALLOCATE(q_real4)
         END IF
 
-    END SUBROUTINE init_src_fgout_bin
+    END SUBROUTINE init_src_fgout
 
 
 end module helpers

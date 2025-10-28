@@ -93,7 +93,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: xperdom, yperdom, spheredom
 
     use helpers, only: q_avac, times, damping, interp_time, interp_bc_space, &
-        inflow_mode
+        mode
 
     implicit none
 
@@ -120,7 +120,7 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     end if
 
 ! Interpolate AVAC state in time before interpolating in space
-    if (inflow_mode=="bc") then
+    if (mode=="bc") then
         qt = interp_time(time, times, q_avac)
     end if
 

@@ -1,10 +1,10 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from config import config, water_color
+from config import config
+from mpl_colormaps import water_color
 import topo_utils
 import numpy as np
 from skimage.morphology import flood, isotropic_dilation
-from skimage.measure import find_contours
 import matplotlib as mpl
 import pyvista as pv
 
@@ -92,15 +92,17 @@ def iflood(bathy_path, lake_alt=0, dilation_radius=0, world_png="", dry=False):
     pl.add_key_event("j", decrease_dilation)
     pl.show()
 
+    print("Saving free_domain.npy", end="... ")
+    np.save("free_domain.npy", Z>config["min_alt_avac"])
+    print("Done")
+
+    print("Saving lake.npy", end="... ")
+    np.save("lake.npy", water["wet"])
+    print("Done")
+
     print("Saving qinit.xyz", end=" ... ", flush=True)
     np.savetxt("qinit.xyz", water.points.T.reshape(3, nx, ny).reshape(3, -1, order="F").T)
     print("Done")
-
-    if dry is False:
-        xc, yc = find_contours(water["wet"].reshape(Z[s].shape, order="F").T, 0.5)[0].T
-        xc = xmin + xc * res_x
-        yc = ymax - yc * res_y
-        np.savetxt("contour.xy", np.column_stack((xc, yc)))
 
 
 def parse_args():

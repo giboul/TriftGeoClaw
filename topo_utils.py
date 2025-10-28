@@ -106,13 +106,11 @@ def pick_seed(z_im, x, y, lake_alt=0):
 
     res = abs(x[1]-x[0])
     extent = x.min(), x.max(), y.min(), y.max()
-    fig, (axbox, ax) = plt.subplots(nrows=2, gridspec_kw=dict(height_ratios=(1, 5)), layout="tight")
-    text_box = TextBox(axbox, "Lake elevation: ", textalignment="center")
-    text_box.set_val(lake_alt)
+    fig, ax = plt.subplots(layout="tight")
     imb = ax.imshow(z_im, extent=extent)
     imd = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Reds")
     imf = ax.imshow(np.ma.MaskedArray([[1]], mask=True), extent=extent, cmap="Blues")
-    title = "Max altitude: %s   Dilation radius: %i"
+    title = "Max altitude: %.1f   Dilation radius: %i   Status: %s"
     ax.legend(
         [Line2D([0], [0], color=imb.get_cmap()(0.5), lw=4),
          Line2D([0], [0], color=imf.get_cmap()(0.), lw=4),
@@ -120,23 +118,20 @@ def pick_seed(z_im, x, y, lake_alt=0):
         ("Bathymetry", "Flooded region", "Dilated flood")
     )
 
-    data = dict(alt=str(lake_alt), x=0, y=0, r=0, status="waiting")
-    keys = dict(up=1, right=1, down=-1, left=-1)
-    ax.set_title(title % (data["alt"], data["r"]))
+    data = dict(alt=lake_alt, x=0, y=0, r=0, status="waiting")
+    dilation_keys = dict(right=+1, left=-1)
+    altitude_keys = dict(up=+1, down=-1)
 
     def on_submit(expression):
         try:
             data["alt"] = float(expression)
         except Exception as e:
             print(e)
-    text_box.on_submit(on_submit)
 
     flooded = np.full(z_im.shape, False, dtype=bool)
     dilated = flooded.copy()
 
     def redraw(ignore_pause=False):
-        if data["status"] == "pause" and ignore_pause is False:
-            return None
         fig.canvas.manager.set_window_title("Flooding...")
         flooded[:,:] = flood_mask(z_im, (data["y"], data["x"]), float(data.get("alt") or 0))
         dilated[:,:] = isotropic_dilation(flooded, data["r"])
@@ -147,22 +142,21 @@ def pick_seed(z_im, x, y, lake_alt=0):
         fig.canvas.draw()
         fig.canvas.manager.set_window_title(f"Status: {data['status']}")
 
-    def key_events(event):
-        if event.key in keys:
-            data["r"] += keys[event.key]
-            redraw(ignore_pause=False)
+    def key_events(event, draw=True):
+        if event.key in dilation_keys:
+            data["r"] += dilation_keys[event.key]
+        if event.key in altitude_keys:
+            data["alt"] += altitude_keys[event.key]
         elif event.key == "enter":
-            redraw(ignore_pause=True)
+            redraw()
         elif event.key == " ":
             if data["status"] == "pause":
                 data["status"] = "waiting"
-                fig.canvas.manager.set_window_title(f"Status: {data['status']}")
                 redraw()
             else:
                 data["status"] = "pause"
-                fig.canvas.manager.set_window_title(f"Status: {data['status']}")
-        ax.set_title(title % (data["alt"], data["r"]))
-        fig.canvas.draw()
+        fig.canvas.manager.set_window_title(title % (data["alt"], data["r"], data["status"]))
+
     fig.canvas.mpl_connect("key_press_event", key_events)
 
     def flood_pick(event):

@@ -4,10 +4,10 @@ subroutine setprob
     save
 
     call read_data()
-    if (trim(inflow_mode) == "bc") then
+    if (trim(mode) == "bc") then
         call init_bc()
-    else if (trim(inflow_mode) == "src") then
-        call init_src_fgout_bin()
+    else if (trim(mode) == "src") then
+        call init_src_fgout()
     end if
 
 end subroutine setprob

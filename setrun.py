@@ -58,6 +58,20 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/60)
     clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/60)
 
+    # Check that bounds are inside the fixed grid
+    # Else it can cause discontinuities, causing large CFLs
+    cell_size = np.divide(np.subtract(clawdata.upper, clawdata.lower), clawdata.num_cells)
+    assert (
+        avacfgrid.x1 < clawdata.lower[0] -2*cell_size[0] and 
+        avacfgrid.x2 > clawdata.upper[0] +2*cell_size[0] and 
+        avacfgrid.y1 < clawdata.lower[1] -2*cell_size[1] and 
+        avacfgrid.y2 > clawdata.upper[1] +2*cell_size[1]
+    ), (
+        "AVAC fgout must contain the current bounds (including ghost cells).\n"
+        f"{avacfgrid.x1:.3e}, {avacfgrid.x2:.3e}, {avacfgrid.y1:.3e}, {avacfgrid.y2:.3e}"
+        f"{clawdata.lower[0]:.3e}, {clawdata.upper[0]:.3e}, {clawdata.lower[0]:.3e}, {clawdata.upper[1]:.3e}."
+    )
+
     # ---------------
     # Size of system:
     # ---------------
@@ -206,9 +220,8 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     amrdata.refinement_ratios_y = [2, 4, 5]
     amrdata.refinement_ratios_t = [2, 4, 5]
 
-    cell_size_x = (clawdata.upper[0] - clawdata.lower[0])/clawdata.num_cells[0]
-    min_cell_size_x = cell_size_x / np.prod(amrdata.refinement_ratios_x)
-    print(f"Minimum cells size (x): {min_cell_size_x:.2f}")
+    min_cell_size = cell_size / np.prod([amrdata.refinement_ratios_x, amrdata.refinement_ratios_y], axis=1)
+    print(f"Minimum cells size : {min_cell_size[0]:.2f}, {min_cell_size[1]:.2f}")
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 4
@@ -222,7 +235,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = float(min_cell_size_x) / 300.
+    clawdata.dt_initial = (min_cell_size).min() / 300.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -282,7 +295,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     rundata.regiondata.regions += [
             (3, 4,
-             clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/5,
+             clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
              np.min(d[0]), np.max(d[0]),
              np.min(d[1]), np.max(d[1]))
             for d in read_poly(config["dams"])

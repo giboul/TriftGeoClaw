@@ -14,6 +14,7 @@
 *.qix
 *.shp
 *.shx
+*.qmd
 *.log
 *.npy
 .*

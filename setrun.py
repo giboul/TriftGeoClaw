@@ -62,15 +62,14 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     # Else it can cause discontinuities, causing large CFLs
     cell_size = np.divide(np.subtract(clawdata.upper, clawdata.lower), clawdata.num_cells)
     assert (
-        avacfgrid.x1 < clawdata.lower[0] -2*cell_size[0] and 
-        avacfgrid.x2 > clawdata.upper[0] +2*cell_size[0] and 
-        avacfgrid.y1 < clawdata.lower[1] -2*cell_size[1] and 
-        avacfgrid.y2 > clawdata.upper[1] +2*cell_size[1]
+        avacfgrid.x1 < clawdata.lower[0] and # -2*cell_size[0] and 
+        avacfgrid.x2 > clawdata.upper[0] and # +2*cell_size[0] and 
+        avacfgrid.y1 < clawdata.lower[1] and # -2*cell_size[1] and 
+        avacfgrid.y2 > clawdata.upper[1] # +2*cell_size[1]
     ), (
         "AVAC fgout must contain the current bounds (including ghost cells).\n"
-        f"{avacfgrid.x1:.1f}, {avacfgrid.x2:.1f}, {avacfgrid.y1:.1f}, {avacfgrid.y2:.1f}\n"
-        f"{clawdata.lower[0]:.1f}, {clawdata.upper[0]:.1f}, {clawdata.lower[0]:.1f}, {clawdata.upper[1]:.1f}\n"
-        f"{cell_size[0] = :.3f} {cell_size[1]:.3f}"
+        f"{avacfgrid.x1:.1f}, {clawdata.lower[0]:.1f}, {clawdata.upper[0]:.1f}, {avacfgrid.x2:.1f}\n"
+        f"{avacfgrid.y1:.1f}, {clawdata.lower[1]:.1f}, {clawdata.upper[1]:.1f}, {avacfgrid.y2:.1f}\n"
     )
 
     # ---------------

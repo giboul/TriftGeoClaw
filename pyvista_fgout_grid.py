@@ -7,7 +7,10 @@ from clawpack.geoclaw import fgout_tools
 from clawpack.clawutil.data import ClawData
 
 
-def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
+pv.global_theme.allow_empty_mesh = True
+
+
+def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name="", init_frame=1):
 
     outdir = Path(outdir)
     clawdata = ClawData()
@@ -22,7 +25,7 @@ def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=
     X = fgout_grid.X
     Y = fgout_grid.Y
 
-    fgout_init = fgout_grid.read_frame(1)
+    fgout_init = fgout_grid.read_frame(init_frame)
     fgout_init.dh = fgout_init.eta - fgout_init.eta
 
     p = pv.Plotter()
@@ -35,7 +38,7 @@ def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=
     surf[color_var] = get_value(fgout_init, fgout_init, color_var).T.flatten()
     p.add_mesh(surf, scalars=color_var, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
-    state = dict(i=0)
+    state = dict(i=init_frame-1)
     def update(i):
         i += 1
         fgout = fgout_grid.read_frame(i)
@@ -92,6 +95,7 @@ def parse_args():
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))
     parser.add_argument("--file_name", "-f", type=str, default="")
+    parser.add_argument("--init_frame", "-i", type=int, default=1)
     args = parser.parse_args()
     return args
 

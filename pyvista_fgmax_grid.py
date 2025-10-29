@@ -7,6 +7,9 @@ from clawpack.geoclaw import fgmax_tools
 from clawpack.clawutil.data import ClawData
 
 
+pv.global_theme.allow_empty_mesh = True
+
+
 def view3d(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
 
     outdir = Path(outdir)

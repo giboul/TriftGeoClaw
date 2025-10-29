@@ -8,7 +8,6 @@ function setplot is called to set the plot parameters.
 from matplotlib import pyplot as plt
 from pathlib import Path
 import numpy as np
-from config import config
 import mpl_colormaps
 from topo_utils import read_poly, read_world_image
 from clawpack.visclaw.data import ClawPlotData
@@ -52,11 +51,12 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     """
 
     mpl_colormaps.set_transparent_cmaps()
-    background, back_extent = read_world_image("topo_big.png")
 
     dam_path = Path("dam.geojson")  # TODO: shapefiles as well
     if dam_path.exists():
         dams = read_poly(dam_path)
+    if Path("topo.png").exists():
+        background, back_extent = read_world_image("topo.png")
         def background_image(_):
             plt.imshow(background, extent=back_extent, zorder=0)
             for dam in dams:
@@ -103,7 +103,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         # plt.xticks(fontsize=15)
         # plt.yticks(fontsize=15)
 
-    if dam_path.exists():
+    if Path("topo.png").exists():
         plotaxes.beforeaxes = background_image
     plotaxes.afteraxes = fixup
 
@@ -134,8 +134,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         plotitem.plot_var = geoplot.land
         plotitem.pcolor_cmap = plt.cm.viridis
-        plotitem.pcolor_cmin = config.get("lake_alt",  0.) - 120
-        plotitem.pcolor_cmax = config.get("lake_alt",  0.) + 380
+        plotitem.pcolor_cmin = 1769-120
+        plotitem.pcolor_cmax = 1769+380
         plotitem.add_colorbar = False
         # plotitem.amr_celledges_show = [0,0,0]
         # plotitem.patchedges_show = 1

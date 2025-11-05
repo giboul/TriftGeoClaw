@@ -4,13 +4,12 @@ bathymetry: topo_trift.asc
 topo_type: 3
 output_format: binary64
 bc_size: 100
-# world_png: topo_big.png
 flood_dilation: 5  # px
 qinit:
   - qinit.xyz
 
 mode: src  # either src or bc
-min_alt_avac: 1776  # for mode="src" only
+min_alt_avac: 1772  # for mode="src" only
 
 # Lake
 lake_alt: 1767
@@ -27,5 +26,11 @@ upper:
   - 2670835
   - 1172005
 
-fgout_fgno: 2  # from AVAC, for mode="src" only
-fgmax_fgno: 4
+amr_levels:
+  x: [2, 4, 8]
+  y: [2, 4, 8]
+  t: [2, 4, 8]
+
+# from AVAC, for mode="src" only
+fgmax_fgno: 1
+fgout_fgno: 2

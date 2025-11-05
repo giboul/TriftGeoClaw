@@ -36,9 +36,11 @@ make data AVAC_outdir=../avac/_output  # Prepare the datafiles,
 make output  # compute
 ```
 
-## Lake as initial solution: `makeqinit.py`
+## Lake as initial solution: `makeqinit.matplotlib.py`
 
-The `skimage.morphology.flood` is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input ([makeqinit.py](makeqinit.py)). The lake level, the flood seed and the dilation radius can also be specified in `config.yaml`:
+(or `makeqinit.pyvista.py` if the file is not too large)
+
+The `skimage.morphology.flood` function is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input ([makeqinit.py](makeqinit.py)). The lake level, the flood seed and the dilation radius can also be specified in `config.yaml`:
 
 The dilation is needed because of an interpolation error, causing waves at the edge of steep borders.
 

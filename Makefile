@@ -88,3 +88,16 @@ empty:
 	rm -f *.o
 	rm -f *.mod
 	rm -rf __pycache__
+
+fgmaxno ?= 1
+fgoutno ?= 1
+fgoutnoa ?= 1
+
+energy:
+	$(CLAW_PYTHON) energy.py -w $(fgoutno)
+
+fgout:
+	$(CLAW_PYTHON) pyvista_fgout_grid.py -o $(OUTDIR) -n $(fgoutno)
+
+fgmax:
+	$(CLAW_PYTHON) pyvista_fgmax_grid.py -o $(OUTDIR) -n $(fgmaxno)

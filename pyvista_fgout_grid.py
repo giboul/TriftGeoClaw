@@ -4,21 +4,21 @@ from pathlib import Path
 import numpy as np
 import pyvista as pv
 from clawpack.geoclaw import fgout_tools
-from clawpack.clawutil.data import ClawData
 
 
 pv.global_theme.allow_empty_mesh = True
 
 
-def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name="", init_frame=1):
+def animation(outdir,
+              color_var="dh",
+              fgno=1,
+              cmaps=("qist_earth", "jet"),
+              clim=(-1, 1),
+              file_name="",
+              init_frame=1,
+              animate=False):
 
     outdir = Path(outdir)
-    clawdata = ClawData()
-    clawdata.read(outdir / "claw.data", force=True)
-    geodata = ClawData()
-    geodata.read(outdir / "geoclaw.data", force=True)
-    probdata = ClawData()
-    probdata.read(outdir / "setprob.data", force=True)
     fgout_grid = fgout_tools.FGoutGrid(fgno, outdir)
     fgout_grid.read_fgout_grids_data()
 
@@ -38,9 +38,8 @@ def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=
     surf[color_var] = get_value(fgout_init, fgout_init, color_var).T.flatten()
     p.add_mesh(surf, scalars=color_var, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
-    state = dict(i=init_frame-1)
+    state = dict(i=init_frame)
     def update(i):
-        i += 1
         fgout = fgout_grid.read_frame(i)
         fgout.dh = fgout.eta - fgout_init.eta
         bathy.points[:, 2] = fgout.B.T.flatten()
@@ -64,20 +63,22 @@ def animation(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=
     def nextt_frame():
         update_index(increment=+10)
 
-    if file_name:
+    def save_movie():
         p.open_gif(file_name)
-        for i, t in enumerate(fgout_grid.times):
+        s = state["i"]
+        for i, t in enumerate(fgout_grid.times[s:], start=s):
             update(i)
             p.write_frame()
-        p.close()
-    elif 1:
+
+    if animate is True:
+        p.add_timer_event(max_steps=len(fgout_grid.times), duration=500, callback=update)
+        p.show()
+    else:
         p.add_key_event("h", prevv_frame)
         p.add_key_event("j", prev_frame)
         p.add_key_event("k", next_frame)
         p.add_key_event("l", nextt_frame)
-        p.show()
-    else:
-        p.add_timer_event(max_steps=len(fgout_grid.times), duration=500, callback=update)
+        p.add_key_event("m", save_movie)
         p.show()
 
 
@@ -89,13 +90,14 @@ def get_value(fgout, fgout0, name):
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("outdir", type=str, nargs="?", default="_output")
+    parser.add_argument("--outdir", "-o", type=str, nargs="?", default="_output")
     parser.add_argument("--color_var", "-c", type=str, default="dh")
     parser.add_argument("--fgno", "-n", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))
-    parser.add_argument("--file_name", "-f", type=str, default="")
+    parser.add_argument("--file_name", "-f", type=str, default="fgout.gif")
     parser.add_argument("--init_frame", "-i", type=int, default=1)
+    parser.add_argument("--animate", "-a", action="store_true")
     args = parser.parse_args()
     return args
 

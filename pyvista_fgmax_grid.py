@@ -3,26 +3,28 @@ from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 import pyvista as pv
+try:
+    from config import config
+except ImportError:
+    config = dict()
 from clawpack.geoclaw import fgmax_tools
-from clawpack.clawutil.data import ClawData
 
 
 pv.global_theme.allow_empty_mesh = True
 
 
-def view3d(outdir, color_var="dh", fgno=1, cmaps=("qist_earth", "jet"), clim=(-1, 1), file_name=""):
+def view3d(outdir,
+           color_var="dh",
+           fgno=1,
+           cmaps=("qist_earth", "jet"),
+           clim=(-1, 1),
+           grid_filename="avac_fgmax_grids.data"):
 
     outdir = Path(outdir)
-    clawdata = ClawData()
-    clawdata.read(outdir / "claw.data", force=True)
-    geodata = ClawData()
-    geodata.read(outdir / "geoclaw.data", force=True)
-    probdata = ClawData()
-    probdata.read(outdir / "setprob.data", force=True)
 
     fg = fgmax_tools.FGmaxGrid()
     fg.outdir = outdir
-    fg.read_fgmax_grids_data(fgno, outdir / "fgmax_grids.data")
+    fg.read_fgmax_grids_data(fgno, outdir / grid_filename)
     fg.read_output()
 
     X = fg.X
@@ -49,12 +51,12 @@ def get_value(fgmax, fgmax0, name):
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("outdir", type=str, nargs="?", default="_output")
+    parser.add_argument("--outdir", "-o", type=str, nargs="?", default=config.get("AVAC_outdir", "_output"))
     parser.add_argument("--color_var", "-c", type=str, default="h")
     parser.add_argument("--fgno", "-n", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))
-    parser.add_argument("--file_name", "-f", type=str, default="")
+    parser.add_argument("--grid_filename", "-g", type=str, default="fgmax_grids.data")
     args = parser.parse_args()
     return args
 

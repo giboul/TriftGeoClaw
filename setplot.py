@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 import numpy as np
 import mpl_colormaps
-from topo_utils import read_poly, read_world_image
+from topo_utils import read_world_image
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.clawutil.data import ClawData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
@@ -52,15 +52,10 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     mpl_colormaps.set_transparent_cmaps()
 
-    dam_path = Path("dam.geojson")  # TODO: shapefiles as well
-    if dam_path.exists():
-        dams = read_poly(dam_path)
     if Path("topo.png").exists():
         background, back_extent = read_world_image("topo.png")
         def background_image(_):
             plt.imshow(background, extent=back_extent, zorder=0)
-            for dam in dams:
-                plt.fill(*dam, c="k", zorder=0)
 
     if plotdata is None:
         plotdata = ClawPlotData()

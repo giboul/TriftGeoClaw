@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument("--outdir", "-o", type=str, nargs="?", default=config.get("AVAC_outdir", "_output"))
     parser.add_argument("--color_var", "-c", type=str, default="h")
     parser.add_argument("--fgno", "-n", type=int, default=1)
-    parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu"))
+    parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu_r"))
     parser.add_argument("--clim", "-l", type=float, nargs=2, default=(-0.5, 0.5))
     parser.add_argument("--grid_filename", "-g", type=str, default="fgmax_grids.data")
     args = parser.parse_args()

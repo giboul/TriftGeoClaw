@@ -7,3 +7,4 @@ ninja
 pyyaml
 matplotlib
 scikit-image  # tifffile is included
+scipy

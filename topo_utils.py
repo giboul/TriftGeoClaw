@@ -2,7 +2,6 @@
 from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.widgets import TextBox
 from matplotlib.lines import Line2D
 from tifffile import TiffFile
 from skimage.morphology import flood
@@ -256,7 +255,7 @@ def isodil(M):
     return M
 
 
-def isotropic_dilation(M, r):
+def isotropic_dilation(M, r=1):
     for _ in range(r):
         M = isodil(M)
     return M

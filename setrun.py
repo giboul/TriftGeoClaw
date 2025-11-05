@@ -55,12 +55,16 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     clawdata.upper = config["upper"]
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0])/60)
-    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1])/60)
+    cell_size = config["cell_size"]
+    coarse_dx = cell_size * np.prod(config["amr_ratios"]["x"])
+    coarse_dy = cell_size * np.prod(config["amr_ratios"]["y"])
+    nx = int((clawdata.upper[0]-clawdata.lower[0])/coarse_dx)
+    ny = int((clawdata.upper[1]-clawdata.lower[1])/coarse_dy)
+    clawdata.num_cells[0] = nx
+    clawdata.num_cells[1] = ny
 
     # Check that bounds are inside the fixed grid
     # Else it can cause discontinuities, causing large CFLs
-    cell_size = np.divide(np.subtract(clawdata.upper, clawdata.lower), clawdata.num_cells)
     assert (
         avacfgrid.x1 < clawdata.lower[0] and # -2*cell_size[0] and 
         avacfgrid.x2 > clawdata.upper[0] and # +2*cell_size[0] and 
@@ -216,9 +220,9 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     amrdata.max1d = 60
 
     # List of refinement ratios at each level (length at least mxnest-1)
-    amrdata.refinement_ratios_x = [2, 4, 5]
-    amrdata.refinement_ratios_y = [2, 4, 5]
-    amrdata.refinement_ratios_t = [2, 4, 5]
+    amrdata.refinement_ratios_x = config["amr_ratios"]["x"]
+    amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
+    amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
 
     min_cell_size = cell_size / np.prod([amrdata.refinement_ratios_x, amrdata.refinement_ratios_y], axis=1)
     print(f"Minimum cells size : {min_cell_size[0]:.2f}, {min_cell_size[1]:.2f}")
@@ -294,12 +298,12 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     rundata.regiondata.regions += [
-            (3, 4,
-             clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
-             np.min(d[0]), np.max(d[0]),
-             np.min(d[1]), np.max(d[1]))
-            for d in read_poly(config["dams"])
-        ]
+        (3, 4,
+            clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
+            np.min(d[0]), np.max(d[0]),
+            np.min(d[1]), np.max(d[1]))
+        for d in read_poly(config["dams"])
+    ]
     # -------
     # Gauges:
     # -------
@@ -356,6 +360,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
     probdata.add_param('bc_size', int(config.get("bc_size", 100)), 'Number of cells to interpolate from for each boundary.')
     probdata.add_param('input_format', avacfgrid.output_format, 'Number of cells to interpolate from for each boundary.')
+    probdata.add_param('fgout_fgno', int(config.get("fgout_fgno", 1)), 'Fixed grid output id to read in AVAC.')
 
     if config["mode"] == "bc":
         extent = clawdata.lower[0], clawdata.upper[0], clawdata.lower[1], clawdata.upper[1]
@@ -422,7 +427,7 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
         from clawpack.geoclaw.data import BoussData
         rundata.add_data(BoussData(), 'bouss_data')
 
-        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN # TODO
+        rundata.bouss_data.bouss_equations = 2    # 0=SWE, 1=MS, 2=SGN
         rundata.bouss_data.bouss_min_level = 1    # coarsest level to apply bouss
         rundata.bouss_data.bouss_max_level = 10   # finest level to apply bouss
         rundata.bouss_data.bouss_min_depth = 1.   # depth to switch to SWE

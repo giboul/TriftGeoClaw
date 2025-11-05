@@ -1,7 +1,7 @@
 from pathlib import Path
 from yaml import safe_load
 
-with open("_defaults.yaml") as file:
+with open("defaults.yaml") as file:
     config = safe_load(file)
 
 if Path("config.yaml").exists():

@@ -26,10 +26,12 @@ upper:
   - 2670835
   - 1172005
 
-amr_levels:
+amr_ratios:
   x: [2, 4, 8]
   y: [2, 4, 8]
   t: [2, 4, 8]
+
+cell_size: 2  # m
 
 # from AVAC, for mode="src" only
 fgmax_fgno: 1

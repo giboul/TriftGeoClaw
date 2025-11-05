@@ -127,7 +127,8 @@ def compute_energies_masses(outdir: str="_output",
     avac_fg = fgout_tools.FGoutGrid(avac_fgout_fgno, avac_outdir)
     avac_fg.read_fgout_grids_data()
 
-    if avac_fgmax_fgno > 0:
+    avac_fgmax_file = avac_outdir / f"fgmax{avac_fgmax_fgno:0>4.0f}.txt"
+    if avac_fgmax_fgno > 0 and avac_fgmax_file.exists():
         avac_hmax = interpolate_avac_fgmax(avac_outdir, wave_fg.x, wave_fg.y, avac_fgmax_fgno)
     else:
         avac_hmax = interpolate_avac_fgout(avac_fg, wave_fg.x, wave_fg.y)
@@ -210,8 +211,8 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("-o", "--outdir", type=str, nargs="?", default="_output")
     parser.add_argument("--wave_fgout_fgno", "-w", type=int, nargs="?", default=1)
-    parser.add_argument("--avac_fgout_fgno", "-a", type=int, nargs="?", default=1)
-    parser.add_argument("--avac_fgmax_fgno", "-m", type=int, nargs="?", default=0)
+    parser.add_argument("--avac_fgout_fgno", "-a", type=int, nargs="?", default=config["fgout_fgno"])
+    parser.add_argument("--avac_fgmax_fgno", "-m", type=int, nargs="?", default=config["fgmax_fgno"])
     return parser.parse_args()
 
 

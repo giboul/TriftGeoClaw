@@ -5,7 +5,7 @@ module helpers
     implicit none
     save
 
-    integer :: bc_size
+    integer :: bc_size, avac_fgno
     real(kind=8), allocatable :: q_avac(:,:,:,:)
     real(kind=8), allocatable :: times(:)
     real(kind=8) :: damping, min_alt_avac
@@ -26,6 +26,7 @@ contains
             READ(unit,*) AVAC_DIR
             READ(unit,*) bc_size
             READ(unit,*) input_format
+            READ(unit,*) avac_fgno
         CLOSE(unit)
 
         IF (TRIM(mode) == "None") then
@@ -221,7 +222,7 @@ contains
         ftemp = trim(AVAC_DIR) // "/"
         call set_fgout(.false., 4, TRIM(ftemp) // "fgout_grids.data")
 
-        AVAC_fgrid = FGOUT_fgrids(1)
+        AVAC_fgrid = FGOUT_fgrids(avac_fgno)
         PRINT *, AVAC_fgrid%mx
         PRINT *, AVAC_fgrid%my
         PRINT *, AVAC_fgrid%x_low
@@ -248,7 +249,8 @@ contains
             ))
         END IF
 
-        ftemp = TRIM(ftemp) // "fgout0001."
+        !ftemp = TRIM(ftemp) // "fgout0001."
+        write(ftemp, "(A,A,I0.4,A)") TRIM(ftemp), "fgout", avac_fgno,"."
         fname = ""
         PRINT *, "Input format: ", TRIM(input_format)
         DO i = 1, size(times)

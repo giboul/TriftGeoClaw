@@ -58,10 +58,8 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     cell_size = config["cell_size"]
     coarse_dx = cell_size * np.prod(config["amr_ratios"]["x"])
     coarse_dy = cell_size * np.prod(config["amr_ratios"]["y"])
-    nx = int((clawdata.upper[0]-clawdata.lower[0])/coarse_dx)
-    ny = int((clawdata.upper[1]-clawdata.lower[1])/coarse_dy)
-    clawdata.num_cells[0] = nx
-    clawdata.num_cells[1] = ny
+    clawdata.num_cells[0] = int((clawdata.upper[0]-clawdata.lower[0]) / coarse_dx)
+    clawdata.num_cells[1] = int((clawdata.upper[1]-clawdata.lower[1]) / coarse_dy)
 
     # Check that bounds are inside the fixed grid
     # Else it can cause discontinuities, causing large CFLs
@@ -224,8 +222,10 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     amrdata.refinement_ratios_y = config["amr_ratios"]["y"]
     amrdata.refinement_ratios_t = config["amr_ratios"]["t"]
 
-    min_cell_size = cell_size / np.prod([amrdata.refinement_ratios_x, amrdata.refinement_ratios_y], axis=1)
-    print(f"Minimum cells size : {min_cell_size[0]:.2f}, {min_cell_size[1]:.2f}")
+    coarse_cell_size = np.subtract(clawdata.upper, clawdata.lower) / clawdata.num_cells
+    fine_cell_size = coarse_cell_size / np.prod([amrdata.refinement_ratios_x, amrdata.refinement_ratios_y], axis=1)
+    print(f"Coarsest cells size : {coarse_cell_size[0]:.2f}, {coarse_cell_size[1]:.2f}")
+    print(f"Finest cells size : {fine_cell_size[0]:.2f}, {fine_cell_size[1]:.2f}")
 
     # max number of refinement levels:
     amrdata.amr_levels_max = 4
@@ -239,7 +239,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = (min_cell_size).min() / 300.
+    clawdata.dt_initial = 0.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -299,7 +299,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     rundata.regiondata.regions += [
         (3, 4,
-            clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
+            clawdata.t0-1, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
             np.min(d[0]), np.max(d[0]),
             np.min(d[1]), np.max(d[1]))
         for d in read_poly(config["dams"])
@@ -437,19 +437,25 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     return rundata
 
 
-def main():
-    # Treating command line arguments
+def parse_args():
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
     parser.add_argument('AVAC_outdir', default=config["AVAC_outdir"], nargs='?')
     parser.add_argument('--bouss', action='store_true')
     parser.add_argument('-o', '--outdir', type=str, nargs='?', default="_output")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+
+    args = parse_args()
 
     data = Path(".data")
     data.unlink(missing_ok=True)
+
     rundata = setrun(**args.__dict__)
     rundata.write()
+
     data.touch()
 
 

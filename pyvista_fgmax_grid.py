@@ -3,10 +3,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 import pyvista as pv
-try:
-    from config import config
-except ImportError:
-    config = dict()
 from clawpack.geoclaw import fgmax_tools
 
 
@@ -51,7 +47,7 @@ def get_value(fgmax, fgmax0, name):
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--outdir", "-o", type=str, nargs="?", default=config.get("AVAC_outdir", "_output"))
+    parser.add_argument("--outdir", "-o", type=str, default="_output")
     parser.add_argument("--color_var", "-c", type=str, default="h")
     parser.add_argument("--fgno", "-n", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu_r"))

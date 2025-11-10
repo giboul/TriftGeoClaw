@@ -1,3 +1,6 @@
+"""
+Module 
+"""
 from pathlib import Path
 from argparse import ArgumentParser
 import numpy as np
@@ -191,7 +194,6 @@ def compute_energies_masses(outdir: str="_output",
 
 
 def plot(ta, Ea, Ma, tw, Ew, Mw, tl, El, Ml):
-
     fig, axes = plt.subplots(nrows=2, sharex="all")
     axes[0].plot(ta, Ea/1e9, label="AVAC")
     axes[0].plot(tw, Ew/1e9, label="Avalanche")
@@ -209,16 +211,16 @@ def plot(ta, Ea, Ma, tw, Ew, Mw, tl, El, Ml):
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("-o", "--outdir", type=str, nargs="?", default="_output")
-    parser.add_argument("--wave_fgout_fgno", "-w", type=int, nargs="?", default=1)
-    parser.add_argument("--avac_fgout_fgno", "-a", type=int, nargs="?", default=config["fgout_fgno"])
-    parser.add_argument("--avac_fgmax_fgno", "-m", type=int, nargs="?", default=config["fgmax_fgno"])
+    parser.add_argument("-o", "--outdir", type=str, default="_output")
+    parser.add_argument("--wave_fgout_fgno", "-w", type=int, default=1)
+    parser.add_argument("--avac_fgout_fgno", "-a", type=int, default=config["fgout_fgno"])
+    parser.add_argument("--avac_fgmax_fgno", "-m", type=int, default=config["fgmax_fgno"])
     return parser.parse_args()
 
 
 def main(*args, **kwargs):
     data = compute_energies_masses(*args, **kwargs)
-    fig, axes = plot(*[v for d in data for v in d])
+    plot(*[v for d in data for v in d])
     plt.show()
 
 

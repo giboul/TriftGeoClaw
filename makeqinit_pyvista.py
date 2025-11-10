@@ -1,9 +1,8 @@
-from argparse import ArgumentParser
 from pathlib import Path
-from config import config
 from mpl_colormaps import water_color
 import topo_utils
 import numpy as np
+from numpy.typing import ArrayLike
 from skimage.morphology import flood, isotropic_dilation
 import matplotlib as mpl
 import pyvista as pv
@@ -33,9 +32,15 @@ def flood_mask(topo, seed, max_level=0):
     return flooded
 
 
-def iflood(bathy_path, lake_alt=0, dilation_radius=0, world_png="", dry=False):
+def iflood(x: ArrayLike,
+           y: ArrayLike,
+           bathymetry: ArrayLike,
+           lake_alt: float,
+           dilation_radius: int=0,
+           world_png: str="",
+           dry: bool=False):
 
-    x, y, Z = topo_utils.read_asc(Path(bathy_path).expanduser())
+    Z = bathymetry
     Zmin = Z.min()
 
     pl = pv.Plotter()
@@ -92,30 +97,26 @@ def iflood(bathy_path, lake_alt=0, dilation_radius=0, world_png="", dry=False):
     pl.add_key_event("j", decrease_dilation)
     pl.show()
 
-    print("Saving free_domain.npy", end="... ")
-    np.save("free_domain.npy", Z>config["min_alt_avac"])
-    print("Done")
-
-    print("Saving lake.npy", end="... ")
-    np.save("lake.npy", water["wet"])
-    print("Done")
-
     print("Saving qinit.xyz", end=" ... ", flush=True)
     np.savetxt("qinit.xyz", water.points.T.reshape(3, nx, ny).reshape(3, -1, order="F").T)
     print("Done")
 
 
 def parse_args():
+    from config import config
+    from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("bathy_path", default=config.get("bathymetry", "bathymetry.asc"), type=str, nargs="?")
-    parser.add_argument("lake_alt", default=config.get("lake_alt", 0.), type=int, nargs="?")
-    parser.add_argument("dilation_radius", default=config.get("flood_dilation", 0), type=int, nargs="?")
-    parser.add_argument("world_png", default=config.get("world_png", ""), type=str, nargs="?")
-    parser.add_argument("dry", default=True, type=bool, nargs="?")
+    parser.add_argument("--bathymetry", "-b", default=config["bathymetry"], type=Path)
+    parser.add_argument("--lake_alt", "-a", default=config["lake_alt"], type=int)
+    parser.add_argument("--dilation_radius", "-r", default=config["flood_dilation"], type=int)
+    parser.add_argument("--world_png", "-w", default=config.get("world_png", ""), type=str)
+    parser.add_argument("--dry", "-d", action="store_true")
     return parser.parse_args()
 
 def main():
-    iflood(**parse_args().__dict__)
+    args = parse_args()
+    args.x, args.y, args.bathymetry = topo_utils.read_raster(args.bathymetry)
+    iflood(**args.__dict__)
 
 if __name__ == "__main__":
     main()

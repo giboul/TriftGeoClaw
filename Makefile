@@ -73,7 +73,7 @@ all:
 	$(MAKE) .htmls
 
 qinit:
-	$(CLAW_PYTHON) makeqinit.pyvista.py
+	$(CLAW_PYTHON) makeqinit_matplotlib.py
 
 data: $(MAKEFILE_LIST);
 	-rm -f .data

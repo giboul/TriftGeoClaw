@@ -90,7 +90,7 @@ def get_value(fgout, fgout0, name):
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--outdir", "-o", type=str, nargs="?", default="_output")
+    parser.add_argument("--outdir", "-o", type=str, default="_output")
     parser.add_argument("--color_var", "-c", type=str, default="dh")
     parser.add_argument("--fgno", "-n", type=int, default=1)
     parser.add_argument("--cmaps", "-m", type=str, nargs=2, default=("gist_earth", "RdBu_r"))

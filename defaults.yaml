@@ -1,38 +1,29 @@
-AVAC_outdir: ../avac_trift/_output
-base_bathymetry: ../avac_trift/topography.asc
-bathymetry: topo_trift.asc
+AVAC_outdir: avac/_output
+base_bathymetry: base_topo.asc
+bathymetry: topo.asc
 topo_type: 3
-output_format: binary64
-bc_size: 100
-flood_dilation: 5  # px
+
+output_format: ascii
+
+world_png: ""
 qinit:
   - qinit.xyz
+flood_dilation: 0  # px
 
 mode: src  # either src or bc
-min_alt_avac: 1772  # for mode="src" only
 
-# Lake
-lake_alt: 1767
+# src
+fgout_fgno: 1
+min_alt_avac: 0.  # for mode="src" only
+lake_alt: 0.
+# bc
+bc_size: 100
 
-# Dam
-dams: dam_trift.shp
-dam_alt: 1771.2
-
-# Boundaries
-lower:
-  - 2669915
-  - 1170345
-upper:
-  - 2670835
-  - 1172005
+cell_size: 2  # m
 
 amr_ratios:
   x: [2, 4, 8]
   y: [2, 4, 8]
   t: [2, 4, 8]
 
-cell_size: 2  # m
-
-# from AVAC, for mode="src" only
-fgmax_fgno: 1
-fgout_fgno: 2
+dry_tolerance: 1e-3

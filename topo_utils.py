@@ -8,6 +8,45 @@ from skimage.morphology import flood
 from skimage.measure import find_contours
 import geopandas as gpd
 import shapely
+import rasterio
+from clawpack.geoclaw import topotools
+
+
+def read_raster(path: Path, bbox=None, cellsize=None):
+    with rasterio.open(path) as file:
+        if bbox is not None:
+            w, s, e, n = bbox
+            bbox = rasterio.windows.from_bounds(*bbox, transform=file.transform)
+        else:
+            w, s, e, n = file.bounds
+        if cellsize is None:
+            out_shape = None
+            nx = file.width
+            ny = file.height
+        else:
+            nx = int((e-w)/cellsize)
+            ny = int((n-s)/cellsize)
+            out_shape = file.count, ny, nx
+        Z = file.read(window=bbox, out_shape=out_shape)[0]
+    x = np.linspace(w, e, num=nx, endpoint=True)
+    y = np.linspace(n, s, num=ny, endpoint=True)
+    return x, y, Z
+
+
+def write_raster(path: Path, Z, bbox, i=1):
+    height, width = Z.shape
+    w, s, e, n = bbox
+    csx = (e - w)/width
+    csy = (n - s)/height
+    transform = rasterio.transform.Affine(csx, 0, w, 0, -csy, n)
+    with rasterio.open(path, "w",
+                       height=height,
+                       width=width,
+                       dtype=Z.dtype,
+                       count=1,
+                       driver="GTiff",
+                       transform=transform) as file:
+        file.write(Z, indexes=i)
 
 
 def read_asc_dataline(file):
@@ -46,7 +85,15 @@ def read_asc(path, dtype=np.float16):
     return x, y, Z.reshape(ny, nx, order=order)
 
 
-def write_asc(path, Z, xmin, ymin, resolution, nodatavalue=999999, fmt="%.16e", dtype=np.float16):
+def write_geoclaw_topo(path, Z, x, y, topo_type=3):
+    topo = topotools.Topography()
+    topo.x = x
+    topo.y = y
+    topo.Z = Z
+    topo.write(path, topo_type=topo_type)
+
+
+def _write_asc(path, Z, xmin, ymin, resolution, nodatavalue=999999, fmt="%.16e", dtype=np.float16):
     path = Path(path)
     print(f"{__name__}.write_asc: Writing to {path}", end="... ", flush=True)
     asc_header = f"""
@@ -136,8 +183,9 @@ def pick_seed(z_im, x, y, lake_alt=0):
         dilated[:,:] = isotropic_dilation(flooded, data["r"])
         imf.set_data(np.where(flooded, z_im, np.nan))
         imd.set_data(np.where(dilated, z_im, np.nan))
-        imf.set(clim=(z_im[flooded].min(), z_im[flooded].max()))
-        imd.set(clim=(z_im[dilated].min(), z_im[dilated].max()))
+        if flooded.sum() != 0:
+            imf.set(clim=(z_im[flooded].min(), z_im[flooded].max()))
+            imd.set(clim=(z_im[dilated].min(), z_im[dilated].max()))
         fig.canvas.draw()
         fig.canvas.manager.set_window_title(f"Status: {data['status']}")
 

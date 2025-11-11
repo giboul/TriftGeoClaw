@@ -223,12 +223,13 @@ contains
         call set_fgout(.false., 4, TRIM(ftemp) // "fgout_grids.data")
 
         AVAC_fgrid = FGOUT_fgrids(avac_fgno)
-        PRINT *, AVAC_fgrid%mx
-        PRINT *, AVAC_fgrid%my
-        PRINT *, AVAC_fgrid%x_low
-        PRINT *, AVAC_fgrid%x_hi
-        PRINT *, AVAC_fgrid%y_low
-        PRINT *, AVAC_fgrid%y_hi
+        PRINT *, "mx    ", AVAC_fgrid%mx
+        PRINT *, "my    ", AVAC_fgrid%my
+        PRINT *, "x_low ", AVAC_fgrid%x_low
+        PRINT *, "x_hi  ", AVAC_fgrid%x_hi
+        PRINT *, "y_low ", AVAC_fgrid%y_low
+        PRINT *, "y_hi  ", AVAC_fgrid%y_hi
+        PRINT *, "times ", SIZE(AVAC_fgrid%output_times)
 
         ALLOCATE(times(SIZE(AVAC_fgrid%output_times)))
         times = AVAC_fgrid%output_times

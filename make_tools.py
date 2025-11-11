@@ -10,5 +10,8 @@ def make(cmd, *args, **kwargs):
 def make_new(*args, **kwargs):
     return make("new", *args, **kwargs)
 
+def make_data(*args, **kwargs):
+    return make("data", *args, **kwargs)
+
 def make_output(*args, **kwargs):
     return make("output", *args, **kwargs)

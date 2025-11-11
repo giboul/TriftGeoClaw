@@ -17,7 +17,11 @@ from config import config
 from topo_utils import read_poly
 
 
-def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=False) -> ClawRunData:
+def setrun(claw_pkg='geoclaw',
+           AVAC_outdir: str=None,
+           outdir="_output",
+           bouss=False,
+           qinit_extent=[0,0,0,0]) -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -106,7 +110,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
         clawdata.num_output_times = 100
-        clawdata.tfinal = clawdata.t0 + 20
+        clawdata.tfinal = clawdata.t0 + config["duration"]
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -297,13 +301,21 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    rundata.regiondata.regions += [
-        (3, 4,
-            clawdata.t0-1, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
-            np.min(d[0]), np.max(d[0]),
-            np.min(d[1]), np.max(d[1]))
-        for d in read_poly(config["dams"])
-    ]
+    if qinit_extent == [0, 0, 0, 0]:  # Meaning no extent was specified throgh command-line
+        rundata.regiondata.regions += [[
+            len(amrdata.refinement_ratios_x), 4,
+            clawdata.t0,
+            clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
+            *np.loadtxt(file)
+        ] for file in Path().glob("qinit*.extent")]
+    else:
+        rundata.regiondata.regions += [[
+            3, 4,
+            clawdata.t0,
+            clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
+            *qinit_extent
+        ]]
+
     # -------
     # Gauges:
     # -------
@@ -333,7 +345,7 @@ def setrun(claw_pkg='geoclaw', AVAC_outdir: str=None, outdir="_output", bouss=Fa
     fgout_grids.append(fgout)
 
     # == fgmax grids ==
-    rundata.fgmax_data.num_fgmax_val = 1  # Save depth, see https://www.clawpack.org/fgmax.html
+    rundata.fgmax_data.num_fgmax_val = 1  # Save depth and speed see https://www.clawpack.org/fgmax.html
     fgmax_grids = rundata.fgmax_data.fgmax_grids
 
     fgmax = FGmaxGrid()
@@ -440,22 +452,18 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('claw_pkg', default='geoclaw', nargs='?')
-    parser.add_argument('AVAC_outdir', default=config["AVAC_outdir"], nargs='?')
-    parser.add_argument('--bouss', action='store_true')
-    parser.add_argument('-o', '--outdir', type=str, nargs='?', default="_output")
+    parser.add_argument('-a', '--AVAC_outdir', default=config["AVAC_outdir"])
+    parser.add_argument('-b', '--bouss', action='store_true')
+    parser.add_argument('-o', '--outdir', type=str, default="_output")
+    parser.add_argument('-q', '--qinit_extent', type=float, nargs=4, default=[0,0,0,0])
     return parser.parse_args()
 
 
 def main():
-
-    args = parse_args()
-
     data = Path(".data")
     data.unlink(missing_ok=True)
-
-    rundata = setrun(**args.__dict__)
+    rundata = setrun(**parse_args().__dict__)
     rundata.write()
-
     data.touch()
 
 

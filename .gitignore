@@ -17,6 +17,7 @@
 *.qmd
 *.log
 *.npy
+*.extent
 .*
 _*
 */

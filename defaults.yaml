@@ -5,6 +5,8 @@ topo_type: 3
 
 output_format: ascii
 
+t0: 0.
+
 world_png: ""
 qinit:
   - qinit.xyz

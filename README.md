@@ -1,6 +1,6 @@
 <img src="drawing.png"/>
 
-# TriftGeoclaw
+# Computing impulse waves with GeoClaw
 
 This repository computes the impulse waves induced by snow avalanches. It was developped for the future [Trift reservoir](https://www.researchgate.net/publication/313646761_L'amenagement_hydroelectrique_de_Trift) (Gadmen, Bern, Switerland).
 
@@ -36,7 +36,7 @@ The data in the AVAC output directory (specified in `config.yaml:AVAC_outdir`) i
 To run the simulation, simply use `make`. The directory from which to read the AVAC results can be specified in `make data` as follows:
 
 ```Makefile
-echo $PWD  # You should be in the TriftGeoClaw directory
+echo $PWD  # You this project's directory
 make new  # Compile fortran codes, you only need to do this once
 make qinit  # Create qinit.xyz (initial surface)
 make data AVAC_outdir=../avac/_output  # Prepare the datafiles,

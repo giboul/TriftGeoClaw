@@ -109,7 +109,7 @@ def parse_args():
     parser.add_argument("--bathymetry", "-b", default=config["bathymetry"], type=Path)
     parser.add_argument("--lake_alt", "-a", default=config["lake_alt"], type=int)
     parser.add_argument("--dilation_radius", "-r", default=config["flood_dilation"], type=int)
-    parser.add_argument("--world_png", "-w", default=config.get("world_png", ""), type=str)
+    parser.add_argument("--world_png", "-w", default=config["world_png"], type=str)
     parser.add_argument("--dry", "-d", action="store_true")
     return parser.parse_args()
 

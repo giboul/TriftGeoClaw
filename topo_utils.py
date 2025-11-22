@@ -179,7 +179,7 @@ def pick_seed(z_im, x, y, lake_alt=0):
 
     def redraw(ignore_pause=False):
         fig.canvas.manager.set_window_title("Flooding...")
-        flooded[:,:] = flood_mask(z_im, (data["y"], data["x"]), float(data.get("alt") or 0))
+        flooded[:,:] = flood_mask(z_im, (data["y"], data["x"]), float(data["alt"]))
         dilated[:,:] = isotropic_dilation(flooded, data["r"])
         imf.set_data(np.where(flooded, z_im, np.nan))
         imd.set_data(np.where(dilated, z_im, np.nan))

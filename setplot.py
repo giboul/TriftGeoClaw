@@ -105,7 +105,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # Water
     def masked_var(data):
         # mask_coarse(data)
-        drytol = data.user.get("dry_tolerance", 1e-3)
+        print(data._attributes)
+        print(data.user.keys())
+        drytol = data.user["dry_tolerance"]
         h, hu, hv, eta = np.ma.masked_where(np.tile(data.q[0], (4,1,1))<=drytol, data.q)
         # arr = np.sqrt(hu**2 + hv**2)
         arr = eta - np.maximum(1767, eta-h)
@@ -115,8 +117,8 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
     # plotitem.plot_var = geoplot.surface_or_depth
-    plotitem.plot_var = masked_var
-    # plotitem.plot_var = geoplot.surface_or_depth
+    # plotitem.plot_var = masked_var
+    plotitem.plot_var = geoplot.surface_or_depth
     plotitem.pcolor_cmap = "RdBu_water"
     plotitem.pcolor_cmin = -3
     plotitem.pcolor_cmax = 3

@@ -27,11 +27,17 @@ def insert_dam(dams: ArrayLike,
     Y = Y.flatten()
     XY = np.column_stack((X, Y))
 
+    bboxes = []
+
     for dam, dam_alt in zip(dams, dam_alts):
         in_dam = mPath(dam).contains_points(XY)
         Z[in_dam] = np.maximum(Z[in_dam], dam_alt)
+        bboxes.append([
+            X[in_dam].min(), X[in_dam].max(),
+            Y[in_dam].min(), Y[in_dam].max()
+        ])
 
-    return Z.reshape(shape)
+    return Z.reshape(shape), bboxes
 
 
 def parse_args():
@@ -55,10 +61,12 @@ def main():
     dams = topo_utils.read_poly(Path(args.dams).expanduser())
     x, y, Z = topo_utils.read_raster(args.base_bathymetry, args.bbox, args.cell_size)
 
-    Z = insert_dam(dams, args.dam_alts, x, y, Z)
+    Z, bboxes = insert_dam(dams, args.dam_alts, x, y, Z)
 
     bbox = x.min(), y.min(), x.max(), y.max()
     topo_utils.write_raster(Path(args.bathymetry).expanduser(), Z, bbox)
+    for i, bbox in enumerate(bboxes):
+        np.savetxt(f"dam{i}.bbox", bbox)
 
     if args.no_plot is False:
         plt.imshow(Z, extent=(x.min(), x.max(), y.min(), y.max()))

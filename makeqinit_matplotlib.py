@@ -24,8 +24,8 @@ def make_qinit(x: ArrayLike,
     resolution = abs(x[1]-x[0])
 
     # Create the lake mask from the seed or fidget around with a GUI
-    print("Filling lake", flush=True)
-    if flood_seed is not None:  # Directly fill
+    if np.isfinite(flood_seed).all():  # Directly fill
+        print("Filling lake", flush=True)
         seed = (np.abs(y-flood_seed[1]+resolution/2).argmin(),
                 np.abs(x-flood_seed[0]+resolution/2).argmin())
         r = int(dilation_radius/resolution)
@@ -57,19 +57,20 @@ def parse_args():
     from config import config
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("-b", "--bathymetry", default=config["base_bathymetry"])
-    parser.add_argument("-l", "--lake_alt", default=config["lake_alt"])
-    parser.add_argument("-s", "--flood_seed", default=config.get("flood_seed", None))
-    parser.add_argument("-d", "--dilation_radius", default=config["flood_dilation"])
+    parser.add_argument("-b", "--bathymetry", default=config["base_bathymetry"], type=Path)
+    parser.add_argument("-l", "--lake_alt", default=config["lake_alt"], type=float)
+    parser.add_argument("-s", "--flood_seed", default=config["flood_seed"], type=float, nargs=2)
+    parser.add_argument("-d", "--dilation_radius", default=config["flood_dilation"], type=int)
     parser.add_argument("-p", "--plot", action="store_true")
     return parser.parse_args()
 
 def main():
     args = parse_args()
+    args.flood_seed = float(args.flood_seed[0]), float(args.flood_seed[1])
 
     x, y, Z = topo_utils.read_raster(Path(args.bathymetry).expanduser())
-    x, y, Z, qinit_extent = make_qinit(x, y, Z, args.lake_alt, args.flood_seed, args.dilation_radius)
-    np.savetxt("qinit.extent", qinit_extent)
+    x, y, Z, qinit_bbox = make_qinit(x, y, Z, args.lake_alt, args.flood_seed, args.dilation_radius)
+    np.savetxt("qinit.bbox", qinit_bbox)
     save_qinit(x, y, Z)
 
     if args.plot:

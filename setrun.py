@@ -14,14 +14,12 @@ from clawpack.geoclaw.fgout_tools import FGoutGrid
 from clawpack.geoclaw.fgmax_tools import FGmaxGrid
 import bc_inflows
 from config import config
-from topo_utils import read_poly
 
 
 def setrun(claw_pkg='geoclaw',
            AVAC_outdir: str=None,
            outdir="_output",
-           bouss=False,
-           qinit_extent=[0,0,0,0]) -> ClawRunData:
+           bouss=False) -> ClawRunData:
     """
     Define the parameters used for running Clawpack.
 
@@ -123,7 +121,7 @@ def setrun(claw_pkg='geoclaw',
         clawdata.total_steps = 3
         clawdata.output_t0 = True
 
-    clawdata.output_format = config.get("output_format", "ascii")   # 'ascii' or 'binary'
+    clawdata.output_format = config["output_format"]   # 'ascii' or 'binary'
     clawdata.output_q_components = "all"   # h, hu, hv, eta
     # clawdata.output_aux_components = 'none'  # eta=h+B is in q
     clawdata.output_aux_onlyonce = False    # output aux arrays each frame
@@ -232,7 +230,10 @@ def setrun(claw_pkg='geoclaw',
     print(f"Finest cells size : {fine_cell_size[0]:.2f}, {fine_cell_size[1]:.2f}")
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 4
+    if config["max_refinement"] >= 0:
+        amrdata.amr_levels_max = config["max_refinement"]
+    else:
+        amrdata.amr_levels_max = len(amrdata.refinement_ratios_x)+1
 
     # --------------
     # Time stepping:
@@ -298,23 +299,13 @@ def setrun(claw_pkg='geoclaw',
     # --------
     # Regions:
     # --------
-    rundata.regiondata.regions = []
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    if qinit_extent == [0, 0, 0, 0]:  # Meaning no extent was specified throgh command-line
-        rundata.regiondata.regions += [[
-            len(amrdata.refinement_ratios_x), 4,
-            clawdata.t0,
-            clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
-            *np.loadtxt(file)
-        ] for file in Path().glob("qinit*.extent")]
-    else:
-        rundata.regiondata.regions += [[
-            3, 4,
-            clawdata.t0,
-            clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
-            *qinit_extent
-        ]]
+    rundata.regiondata.regions = [[
+        amrdata.amr_levels_max-1, amrdata.amr_levels_max,
+        clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
+        *np.loadtxt(p)
+    ] for p in Path().glob("qinit*.bbox")]
 
     # -------
     # Gauges:
@@ -333,10 +324,10 @@ def setrun(claw_pkg='geoclaw',
     fgout.fgno = 1
     fgout.point_style = 2       # will specify a 2d grid of points
     fgout.output_format = 'binary64'  # ascii, binary32 4-byte, float32
-    fgout.x1 = clawdata.lower[0] - 10
-    fgout.x2 = clawdata.upper[0] + 10
-    fgout.y1 = clawdata.lower[1] - 10
-    fgout.y2 = clawdata.upper[1] + 10
+    fgout.x1 = clawdata.lower[0]#  - 10
+    fgout.x2 = clawdata.upper[0]#  + 10
+    fgout.y1 = clawdata.lower[1]#  - 10
+    fgout.y2 = clawdata.upper[1]#  + 10
     fgout.nx = int((fgout.x2 - fgout.x1)/1.)
     fgout.ny = int((fgout.y2 - fgout.y1)/1.)
     fgout.tstart = clawdata.t0
@@ -363,20 +354,20 @@ def setrun(claw_pkg='geoclaw',
     fgmax.interp_method = 0      # 0 ==> pw const in cells, recommended
     fgmax_grids.append(fgmax)    # written to fgmax_grids.data
 
-    # == setoprob data ==
+    # == setprob data ==
     # Interacting with AVAC
     probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
     probdata.add_param('mode', config["mode"], 'The method for introucing the avalanche')
     probdata.add_param('damping', float(avacprobdata.rho)/rundata.geo_data.rho, 'rho_snow/rho_water')
-    probdata.add_param('min_alt_avac', float(config.get('min_alt_avac', 0.)),  'Lake altitude')
+    probdata.add_param('min_alt_avac', float(config['min_alt_avac']),  'Lake altitude')
     probdata.add_param('AVAC_outdir', str(AVAC_outdir), 'The directory containing the fixed grid output of AVAC.')
-    probdata.add_param('bc_size', int(config.get("bc_size", 100)), 'Number of cells to interpolate from for each boundary.')
+    probdata.add_param('bc_size', int(config["bc_size"]), 'Number of cells to interpolate from for each boundary.')
     probdata.add_param('input_format', avacfgrid.output_format, 'Number of cells to interpolate from for each boundary.')
-    probdata.add_param('fgout_fgno', int(config.get("fgout_fgno", 1)), 'Fixed grid output id to read in AVAC.')
+    probdata.add_param('fgout_fgno', int(config["fgout_fgno"]), 'Fixed grid output id to read in AVAC.')
 
     if config["mode"] == "bc":
         extent = clawdata.lower[0], clawdata.upper[0], clawdata.lower[1], clawdata.upper[1]
-        bc_inflows.write(AVAC_outdir, extent, outdir, config.get("bc_size", 100))
+        bc_inflows.write(AVAC_outdir, extent, outdir, config["bc_size"])
 
     return rundata
 
@@ -395,8 +386,9 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     geo_data.gravity = 9.81
     geo_data.coordinate_system = 1
     geo_data.earth_radius = 6367.5e3
-    geo_data.sea_level = 0.
-
+    geo_data.sea_level = 0. if Path(config["qinit"][0]).is_file() else config["lake_alt"]
+    rundata.geo_data.speed_limit = 100.
+    
     # == Forcing Options ==
     geo_data.coriolis_forcing = False
 
@@ -430,9 +422,11 @@ def setgeo(rundata: ClawRunData, bouss=False) -> ClawRunData:
     # for qinit perturbations, append lines of the form: (<= 1 allowed for now!)
     #   [fname]
     # Check if using qinit or boundary condition
-    if "qinit" in config:
+    if Path(config["qinit"][0]).is_file():
         rundata.qinit_data.qinit_type = 4
         rundata.qinit_data.qinitfiles = [config["qinit"]]
+    else:
+        print(f"\n\tWARNING: No qinit file was specified ! ({config['qinit'][0] = })\n")
 
     if bouss is True:
         print("Adding BoussData")
@@ -455,7 +449,6 @@ def parse_args():
     parser.add_argument('-a', '--AVAC_outdir', default=config["AVAC_outdir"])
     parser.add_argument('-b', '--bouss', action='store_true')
     parser.add_argument('-o', '--outdir', type=str, default="_output")
-    parser.add_argument('-q', '--qinit_extent', type=float, nargs=4, default=[0,0,0,0])
     return parser.parse_args()
 
 

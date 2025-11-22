@@ -7,10 +7,14 @@ output_format: ascii
 
 t0: 0.
 
-world_png: ""
 qinit:
-  - qinit.xyz
+  - ""
+
+world_png: ""
 flood_dilation: 0  # px
+flood_seed:
+  - nan
+  - nan
 
 mode: src  # either src or bc
 
@@ -27,5 +31,7 @@ amr_ratios:
   x: [2, 4, 8]
   y: [2, 4, 8]
   t: [2, 4, 8]
+
+max_refinement: -1
 
 dry_tolerance: 1e-3

@@ -138,7 +138,7 @@ def compute_energies_masses(outdir: str="_output",
 
     wave_fgout_init = wave_fg.read_frame(1)
     avalanche = isotropic_dilation(avac_hmax > 0, 2) & ~isotropic_dilation(wave_fgout_init.h > 0, 2)
-    lake_alt = config.get("lake_alt", wave_fgout_init.eta[wave_fgout_init.h>0].mean())
+    lake_alt = config["lake_alt"]
 
     avac_fg.extent = avac_fg.x1, avac_fg.x2, avac_fg.y1, avac_fg.y2
     wave_fg.extent = wave_fg.x1, wave_fg.x2, wave_fg.y1, wave_fg.y2

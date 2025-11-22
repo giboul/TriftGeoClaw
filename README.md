@@ -100,13 +100,18 @@ python pyvista_fgout_grid.py \
 [--animate -a]
 ```
 
-Shortcuts:
+> Shortcuts:
 
 > `h`: Jump 10 frames back
+>
 > `j`: Jump 1 frame back
+>
 > `k`: Jump 1 frame
+>
 > `h`: Jump 10 frames
+>
 > `m`: Record a movie into `--file_name` (`fgout.gif` by default)
+>
 > `q`: Close the window
 
 ### Plotting a fixed grid output (fgmax_grid) with pyvista

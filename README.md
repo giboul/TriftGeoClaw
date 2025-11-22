@@ -52,7 +52,7 @@ You can include a dam in the topography by setting the path to the shapefile of 
 
 (or [`makeqinit_pyvista.py`](makeqinit_pyvista.py) if the file is not too large)
 
-The `skimage.morphology.flood` function is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input ([makeqinit.py](makeqinit.py)). The lake level, the flood seed and the dilation radius can also be specified in `config.yaml:lake_alt` and `config.yaml:flood_dilation`.
+The `skimage.morphology.flood` function is used to fill the dam's bassin up to some altitude from a given seed point. To easen up the usage, an interactive matplotlib figure is used to click on some location which will be the seed and fill up to any altitude entered through text input. The lake level, the flood seed and the dilation radius can also be specified in `config.yaml:lake_alt` and `config.yaml:flood_dilation`.
 
 The dilation is needed because of an interpolation error, causing waves at the edge of steep borders.
 
@@ -62,7 +62,7 @@ The mode of mass and momentum introduction can be chosen in `config.yaml:mode`. 
 
 #### From the boundary conditions (`bc`)
 
-The saved files from the AVAC results are read by the `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient, interpolated in time then in space.
+The saved files (from the AVAC fgout) are read by `setprob.f90` through the `helpers.f90` module. During the simulation, the `bc2amr.f90` subroutine then reads the appropriate section of the data to introduce the flow with a damping coefficient, interpolated in time then in space.
 
 With this mode of flux introcution, the variable `q_avac` has 4 dimensions: `q_avac(time, side, i, variable)` where
 
@@ -71,7 +71,7 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions: `q_a
 - `i` is the index along a side, it goes from 1 to `config.yaml:bc_size`,
 - `variable` is the index that specifies wich of `x`, `y`, `h`, `hu` or `hv` to get.
 
-The initialization of this array is done in [helpers](helpers.f90): `init_bc()`.
+The initialization of this array is done in `[helpers.f90](helpers.f90):init_bc()`.
 
 #### From the source term (`src`)
 
@@ -84,9 +84,7 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions again
 - `x` is the index along the x-position on the AVAC fgout grid,
 - `y` is the index along the y-direction ont he AVAC fgout grid,
 
-The initialization of this array is done in [helpers](helpers.f90): `init_src_fgout_bin()`.
-
-<!-- ## Flowchart <img src=flowchart.png> -->
+The initialization of this array is done in `[helpers.f90](helpers.f90):init_src_fgout_bin()`.
 
 ### Plotting a fixed grid output (fgmax_grid) with pyvista
 

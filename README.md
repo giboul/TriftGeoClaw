@@ -101,7 +101,7 @@ python pyvista_fgout_grid.py \
 ```
 
 > Shortcuts:
-
+>
 > `h`: Jump 10 frames back
 >
 > `j`: Jump 1 frame back

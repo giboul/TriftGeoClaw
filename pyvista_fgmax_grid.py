@@ -33,15 +33,15 @@ def view3d(outdir,
     p.add_mesh(bathy, scalars="z", cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
 
     surf = pv.StructuredGrid(X, Y, np.where(fg.h>0, fg.B+fg.h, np.nan))
-    surf[color_var] = getattr(fg, color_var).T.flatten()
+    surf[color_var] = get_value(fg, color_var).T.flatten()
     p.add_mesh(surf, scalars=color_var, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
     p.show()
 
 
-def get_value(fgmax, fgmax0, name):
-    if name[0] == "d" and hasattr(fgmax, name[1:]):
-        return getattr(fgmax, name[1:]) - getattr(fgmax0, name[1:])
+def get_value(fgmax, name):
+    if name == "V":
+        return np.sqrt((fgmax.hu/(1e-10+fgmax.h))**2 + (fgmax.hv/(1e-10+fgmax.h))**2)
     return getattr(fgmax, name)
 
 

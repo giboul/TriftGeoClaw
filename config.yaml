@@ -9,7 +9,7 @@ max_refinement: 4
 
 flood_dilation: 20  # px
 
-duration: 10  # time of the simulation [s]
+duration: 80  # time of the simulation [s]
 
 qinit:
   - qinit.xyz

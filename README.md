@@ -71,7 +71,7 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions: `q_a
 - `i` is the index along a side, it goes from 1 to `config.yaml:bc_size`,
 - `variable` is the index that specifies wich of `x`, `y`, `h`, `hu` or `hv` to get.
 
-The initialization of this array is done in `[helpers.f90](helpers.f90):init_bc()`.
+The initialization of this array is done in [`helpers.f90:init_bc()`](helpers.f90#L65).
 
 #### From the source term (`src`)
 
@@ -84,7 +84,7 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions again
 - `x` is the index along the x-position on the AVAC fgout grid,
 - `y` is the index along the y-direction ont he AVAC fgout grid,
 
-The initialization of this array is done in `[helpers.f90](helpers.f90):init_src_fgout_bin()`.
+The initialization of this array is done in [`helpers.f90:init_src_fgout_bin()`](helpers.f90#L177).
 
 ### Plotting a fixed grid output (fgmax_grid) with pyvista
 

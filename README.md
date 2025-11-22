@@ -84,7 +84,7 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions again
 - `x` is the index along the x-position on the AVAC fgout grid,
 - `y` is the index along the y-direction ont he AVAC fgout grid,
 
-The initialization of this array is done in [`helpers.f90:init_src_fgout_bin()`](helpers.f90#L177).
+The initialization of this array is done in [`helpers.f90:init_src_fgout()`](helpers.f90#L216).
 
 ### Plotting a fixed grid output (fgmax_grid) with pyvista
 

@@ -86,27 +86,6 @@ With this mode of flux introcution, the variable `q_avac` has 4 dimensions again
 
 The initialization of this array is done in [`helpers.f90:init_src_fgout()`](helpers.f90#L216).
 
-### Plotting a fixed grid output (fgmax_grid) with pyvista
-
-```bash
-python pyvista_fgmax_grid.py \
-[--outdir -o outdir="_output"] \
-[--color_var -c variable="dh" ] \ # variable can be h, u, v, hu, hv, B, s or dh, du, ...
-[--fgno -g fgno=1] \
-[--cmaps -m mpl_colormap_bathy mpl_colormap_variable=("gist_earth", "RdBu")] \
-[--clim -l mpl_colormap_variable_lower mpl_colormap_variable_upper=(-0.5, 0.5)] \
-[--grid_file_name -g grid_file_name="fgmax_grids.data"]
-```
-
-Shortcuts:
-
-> `h`: Jump 10 frames back
-> `j`: Jump 1 frame back
-> `k`: Jump 1 frame
-> `h`: Jump 10 frames
-> `m`: Record a movie into `--file_name` (`fgout.gif` by default)
-> `q`: Close the window
-
 ### Plotting a fixed grid output (fgout_grid) with pyvista
 
 ```bash
@@ -119,4 +98,25 @@ python pyvista_fgout_grid.py \
 [--file_name -f output_gif_movie_file_name=fgout.gif] \
 [--init_frame -i init_frame_index=0] \
 [--animate -a]
+```
+
+Shortcuts:
+
+> `h`: Jump 10 frames back
+> `j`: Jump 1 frame back
+> `k`: Jump 1 frame
+> `h`: Jump 10 frames
+> `m`: Record a movie into `--file_name` (`fgout.gif` by default)
+> `q`: Close the window
+
+### Plotting a fixed grid output (fgmax_grid) with pyvista
+
+```bash
+python pyvista_fgmax_grid.py \
+[--outdir -o outdir="_output"] \
+[--color_var -c variable="dh" ] \ # variable can be h, u, v, hu, hv, B, s or dh, du, ...
+[--fgno -g fgno=1] \
+[--cmaps -m mpl_colormap_bathy mpl_colormap_variable=("gist_earth", "RdBu")] \
+[--clim -l mpl_colormap_variable_lower mpl_colormap_variable_upper=(-0.5, 0.5)] \
+[--grid_file_name -g grid_file_name="fgmax_grids.data"]
 ```

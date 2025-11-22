@@ -10,7 +10,7 @@ t0: 0.
 qinit:
   - ""
 
-world_png: ""
+world_png: topo.png
 flood_dilation: 0  # px
 flood_seed:
   - nan

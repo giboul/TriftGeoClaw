@@ -13,6 +13,7 @@ from topo_utils import read_world_image
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.clawutil.data import ClawData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
+from config import config
 
 
 def mask_coarse(current_data):
@@ -52,8 +53,9 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
 
     mpl_colormaps.set_transparent_cmaps()
 
-    if Path("topo.png").exists():
-        background, back_extent = read_world_image("topo.png")
+    world_png = Path(config["world_png"])
+    if world_png.is_file():
+        background, back_extent = read_world_image(world_png)
         def background_image(_):
             plt.imshow(background, extent=back_extent, zorder=0)
 
@@ -98,7 +100,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
         # plt.xticks(fontsize=15)
         # plt.yticks(fontsize=15)
 
-    if Path("topo.png").exists():
+    if world_png.is_file():
         plotaxes.beforeaxes = background_image
     plotaxes.afteraxes = fixup
 
@@ -126,7 +128,7 @@ def setplot(plotdata: ClawPlotData = None) -> ClawPlotData:
     # plotitem.amr_celledges_show = [1,1,1]
     # plotitem.patchedges_show = 1
 
-    if 1:
+    if not world_png.is_file():
         # Land
         plotitem = plotaxes.new_plotitem(plot_type='2d_pcolor')
         plotitem.plot_var = geoplot.land

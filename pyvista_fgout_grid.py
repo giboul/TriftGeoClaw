@@ -16,7 +16,8 @@ def animation(outdir,
               clim=(-1, 1),
               file_name="",
               init_frame=1,
-              animate=False):
+              animate=False,
+              world_png=""):
 
     outdir = Path(outdir)
     fgout_grid = fgout_tools.FGoutGrid(fgno, outdir)
@@ -31,8 +32,24 @@ def animation(outdir,
     p = pv.Plotter()
 
     bathy = pv.StructuredGrid(X, Y, fgout_init.B)
-    bathy["z"] = bathy.points[:, 2]
-    p.add_mesh(bathy, scalars="z", cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
+    if world_png:
+        tex = pv.read_texture(world_png)
+        tex.repeat = False
+        nx, ny, nc = tex.to_image().dimensions
+        
+        dx, r1, r2, dy, xmin, ymax = np.loadtxt(Path(world_png).with_suffix(".pgw"))
+        xmax = xmin + nx * dx
+        ymin = ymax + ny * dy
+        o = xmin, ymin, 0
+        u = xmax, ymin, 0
+        v = xmin, ymax, 0
+        bathy.texture_map_to_plane(origin=o, point_u=u, point_v=v, inplace=True)
+        scalars=None
+    else:
+        scalars = "z"
+        bathy["z"] = bathy.points[:, 2]
+        tex = None
+    p.add_mesh(bathy, texture=tex, scalars=scalars, cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
 
     surf = pv.StructuredGrid(X, Y, np.where(fgout_init.h>0, fgout_init.eta, np.nan))
     surf[color_var] = get_value(fgout_init, fgout_init, color_var).T.flatten()
@@ -98,6 +115,7 @@ def parse_args():
     parser.add_argument("--file_name", "-f", type=str, default="fgout.gif")
     parser.add_argument("--init_frame", "-i", type=int, default=1)
     parser.add_argument("--animate", "-a", action="store_true")
+    parser.add_argument("--world_png", "-w", type=Path)
     args = parser.parse_args()
     return args
 

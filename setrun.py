@@ -343,7 +343,7 @@ def setrun(claw_pkg='geoclaw',
     fgout_grids.append(fgout)
 
     # == fgmax grids ==
-    rundata.fgmax_data.num_fgmax_val = 1  # Save depth and speed see https://www.clawpack.org/fgmax.html
+    rundata.fgmax_data.num_fgmax_val = 5  # Save depth and speed see https://www.clawpack.org/fgmax.html
     fgmax_grids = rundata.fgmax_data.fgmax_grids
 
     fgmax = FGmaxGrid()

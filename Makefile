@@ -84,6 +84,7 @@ flows:
 	$(CLAW_PYTHON) bc_inflows.py
 
 empty:
+	rm *.log
 	rm -f *.data
 	rm -f *.o
 	rm -f *.mod

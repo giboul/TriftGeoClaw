@@ -192,6 +192,12 @@ def setrun(claw_pkg='geoclaw',
         clawdata.bc_upper[0] = 'user'
         clawdata.bc_lower[1] = 'user'
         clawdata.bc_upper[1] = 'user'
+    elif config["mode"] == "debug":
+        print(f"NO FLUX INTRODUCTION FROM AVAC ({config['mode'] = })")
+        clawdata.bc_lower[0] = 'wall'
+        clawdata.bc_upper[0] = 'wall'
+        clawdata.bc_lower[1] = 'wall'
+        clawdata.bc_upper[1] = 'wall'
     else:
         raise ValueError(f"Inflow mode '{config['mode']}' is not 'bc' or 'src'")
 
@@ -244,7 +250,7 @@ def setrun(claw_pkg='geoclaw',
 
     # Initial time step for variable dt.
     # If dt_variable==0 then dt=dt_initial for all steps:
-    clawdata.dt_initial = 0.
+    clawdata.dt_initial = 1.
 
     # Max time step to be allowed if variable dt used:
     clawdata.dt_max = 1e+99
@@ -302,10 +308,11 @@ def setrun(claw_pkg='geoclaw',
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
     rundata.regiondata.regions = [[
-        amrdata.amr_levels_max-1, amrdata.amr_levels_max,
-        clawdata.t0, clawdata.t0+(clawdata.tfinal-clawdata.t0)/10,
-        *np.loadtxt(p)
-    ] for p in Path().glob("qinit*.bbox")]
+        amrdata.amr_levels_max, amrdata.amr_levels_max,
+        clawdata.t0, clawdata.tfinal,
+        clawdata.lower[0], clawdata.upper[0],
+        clawdata.lower[1], clawdata.upper[1],
+    ]]
 
     # -------
     # Gauges:

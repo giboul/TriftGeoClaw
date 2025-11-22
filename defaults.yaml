@@ -20,6 +20,7 @@ mode: src  # either src or bc
 
 # src
 fgout_fgno: 1
+fgmax_fgno: 0
 min_alt_avac: 0.  # for mode="src" only
 lake_alt: 0.
 # bc

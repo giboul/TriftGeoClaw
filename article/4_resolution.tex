@@ -79,3 +79,10 @@ Par exemple, un paramètre absent est la cohésion de l'écoulement qui a son im
 La complexité du mélange neige-eau est également délaissé car la résolution d'un mélange peut être lourd\footnote{
 Le projet D-claw \citep{dclaw} traite la résolution des équations de Saint-Venant biphasiques.
 }.
+
+\section{Conclusion}
+
+Alors que l'interaction entre deux phases autour de la vague d'impulsion posait problème,
+les hypothèses d'une transformation subite de la neige en eau et d'un écoulement supercritique ont suffi à approcher le problème puis à l'implémenter\footnote{\href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}}.
+La méthode proposée permet finalement de simuler une vague d'impulsion à condition d'avoir un relevé topographique et d'avoir simulé l'avalanche au préalable.
+Bien que les détails de l'interaction entre les deux phases soient négligés, la méthode offre une alternative crédible aux relations empiriques.

@@ -1,4 +1,4 @@
-AVAC_outdir: ../avac_trift/_output
+AVAC_outdir: /media/giboul/Data/Trift/AVAC/_output10
 base_bathymetry: ../avac_trift/topo.asc
 bathymetry: topo_trift.asc
 topo_type: 3
@@ -10,6 +10,7 @@ max_refinement: 4
 flood_dilation: 20  # px
 
 duration: 80  # time of the simulation [s]
+nout: 200
 
 qinit:
   - qinit.xyz

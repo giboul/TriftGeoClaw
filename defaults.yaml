@@ -16,6 +16,8 @@ flood_seed:
   - nan
   - nan
 
+nout: 50
+
 mode: src  # either src or bc
 
 # src

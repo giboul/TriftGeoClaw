@@ -1,0 +1,81 @@
+\section{Mise en pratique:\\Insertion de l'avalanche équivalente}
+
+Dans le cadre des vagues d'impulsion causées par les avalanches, l'avalanche de référence est faite de neige (de masse volumique $\SI{300}{\kilo\gram\per\meter\cubed}<\varrho_\text{neige}<\SI{500}{\kilo\gram\per\meter\cubed}$) et l'avalanche équivalente est faite d'eau ($\varrho_\text{eau}=\SI{1000}{\kilo\gram\per\meter\cubed}$).
+La hauteur d'écoulement $h_\text{neige}$ doit donc être corrigée par $\kappa=\varrho_\text{eau}/\varrho_\text{neige}$ pour obtenir $h_\text{eau}=\kappa h_\text{neige}$ selon l'\autoref{eq:equiv}.
+
+La rhéologie de l'avalanche et de l'eau étant différentes, il faut minimiser la distance parcourue par la vague sous forme d'eau afin que les propriétés de l'avalanche (flux de masse et de quantité de mouvement) au moment de l'impact soient fidèles aux résultats du modèle de neige.
+En d'autres termes, le niveau de la condition de bord $z_b$ doit être supérieur à celui du lac $z_l$ d'un léger surplomb $\delta z=z_b-z_l$.
+Ce surplomb doit être suffisant pour laisser libre cours à une éventuelle interaction entre l'avalanche et la vague.
+
+Pour éviter de restreindre le runup\footnote{Le runup est la montée de l'eau sur les berges} au niveau $z_b$, il faut laisser libres les zones qui ne sont pas traversées par l'avalanche.
+La condition de bord longe finalement le domaine du calcul en faisant un détour par l'avalanche sans passer sous le niveau $z_b$. Un schéma récapitulatif est donné à la \autoref{fig:resume}.
+
+\begin{figure}
+    \centering
+    \includesvg[width=\linewidth]{media/simulations.svg}
+    \caption{Schémas des simulations.
+    \textit{(a)} L'avalanche est d'abord simulée avec le modèle de neige puis ses quantités $(h, hu, hv)^\intercal$ sont pondérés par $\kappa=\varrho_\text{eau}/\varrho_\text{neige}$.
+    \textit{(b)} L'avalanche équivalente est ensuite insérée dans le modèle d'eau au-dessus d'une ligne de niveau surplombant le lac.
+    Cette ligne doit être à un niveau proche de celui du lac pour minimiser la distance parcourue par l'avalanche sous forme d'eau.
+    \textit{(c)} L'avalanche équivalente peut aussi être introduite par une condition de bord curviligne (suivant la ligne de niveau) pour alléger les calculs, ce qui limite l'espace laissé au runup en contrepartie.
+    Une implémentation de \textit{(b)} avec \textsc{GeoClaw} est disponible en ligne : \href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}.}
+    \label{fig:resume}
+\end{figure}
+
+
+\section{Étude de cas à Trift}
+
+Suite au retrait de plus de \SI{2}{\kilo\meter} du glacier de Trift,
+il est prévu de mettre un barrage à l'aval direct du glacier \citep{manso}.
+Posé à \SI{1767}{\msm} et entouré de pentes raides, le réservoir sera exposé aux avalanches,
+ce qui en fait un cas d'étude pour essayer la méthode proposée.
+Un exemple de résultat est donné à la \autoref{fig:Trift} où les avalanches sont calculées au préalable avec AVAC\footnote{
+    AVAC est un code GeoClaw pour simuler des avalanches lourdes. Il est disponible en ligne:
+    \href{https://github.com/cancey/AVAC}{https://github.com/cancey/AVAC}.
+}.
+La vague d'impulsion mesure \SI{5}{\meter} au maximum et se diffuse avant d'atteindre le barrage.
+
+Le débordement est causé par une combinaison de deux phénomènes :
+\begin{itemize}
+    \item en percutant le barrage, la vague transforme son énergie cinétique en énergie potentielle, augmentant considérablement sa hauteur et
+    \item les réfléctions des vagues sur les berges peuvent occasionnellement s'additionner et former une vague éphémère.
+\end{itemize}
+
+Ce dernier phénomène ne pourrait pas être estimé simplement par une méthode analytique car il dépend directement de la topographie, en deux dimensions.
+%Par ailleurs, pour qu'un modèle physique puise reproduire ces réfléctions fidèlement sans être affecté par la tension de surface, l'échelle de l'expérience (et donc le coût) serait considérable.
+%Par ailleurs, un modèle physique serait difficilement fidèle aux runup et à la réflection des vagues sans avoir des dimensions excessives pour avoir les nombres de Froude et de Reynolds voulus.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.33\linewidth]{media/output_01.png}%
+    \includegraphics[width=0.33\linewidth]{media/output_02.png}%
+    \includegraphics[width=0.33\linewidth]{media/output_03.png}
+    \caption{Résultats de la simulation d'une vague d'impulsion à Trift.
+    L'image de gauche représente l'avalanche au temps initial ($t=0$),
+    celle du milieu met en valeur l'impulsion ($t=\SI{9}{\second}$)
+    et celle de droite montre l'état final ($t=\SI{1}{\minute}~\SI{20}{\second}$).}
+    \label{fig:Trift}
+\end{figure}
+
+La solution est satisfaisante visuellement.
+Physiquement, on sait par l'expérience que le maximum de l'énergie mécanique de la vague d'impulsion vaut environ \SI{15}{\percent} de celle de l'avalanche \citep{zitti,zhenzu}.
+
+Cette relation permet de voir que les résultats obtenus sont réalistes alors que la formule empirique, elle, prédit une vague de \SI{20}{\meter}.
+La \autoref{fig:energie} compare les régressions de \cite{zitti} et \cite{zhenzu} aux énergies obtenues.
+
+\begin{figure}
+    \centering
+    \resizebox{0.8\textwidth}{!}{\input{media/energies.pgf}}
+    \caption{Rapports entre l'énergie mécanique de la vague et l'énergie mécanique de l'avalanche.}
+    \label{fig:energie}
+\end{figure}
+
+\section{Limites de la méthode}
+
+En effet, on ne fait ici qu'introduire les flux de masse et de quantité de mouvement
+avec une correction de la densité de l'écoulement.
+L'effet de toute autre quantité plus subtile échappe à ce modèle.
+Par exemple, un paramètre absent est la cohésion de l'écoulement qui a son importance dans la formation de la vague \citep{zhenzu}.
+La complexité du mélange neige-eau est également délaissé car la résolution d'un mélange peut être lourd\footnote{
+Le projet D-claw \citep{dclaw} traite la résolution des équations de Saint-Venant biphasiques.
+}.

@@ -6,6 +6,8 @@ This repository computes the impulse waves induced by snow avalanches. It was de
 
 This work relies on Christophe Ancey's [@cancey](https://github.com/cancey)/[AVAC](https://github.com/cancey/avac.git) code's results files and depends on David George's [@dlgeorge](https://github.com/dlgeorge)/[Geoclaw](https://www.clawpack.org/geoclaw) module from Randall J. Leveque's [@rjleveque](https://github.com/rjleveque)/[Clawpack](https://www.clawpack.org/).
 
+A quick article is [avalaible here](article/ImpulsionAvalanches.pdf) (in french).
+
 ## Goal
 
 Let's say you have the results of an AVAC simulation on a fixed grid output ([`fgout`](https://www.clawpack.org/fgout.html)).

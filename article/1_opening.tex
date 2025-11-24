@@ -1,0 +1,33 @@
+% Opening
+% \section*{Abstract - EN}
+
+% The Shallow Water Equations are used by practitioners to simulate both waves and avalanches. Since they assume a constant unit weight, they cannot be used as such to model impulse waves induced by snow avalanches diving into a lake. To keep using the existing numerical models to impulse waves, we suggest implementing an equivalent water avalanche whose mass and momentum are that of the snow avalanche.
+
+\section*{Résumé}
+
+Les vagues d'impulsion\footnote{Une vague d'impulsion est une vague créée suite à la pénétration d'un écoulement (avalanche, glissement de terrain ou autre) dans un corps d'eau (tel qu'un lac, une mer ou un océan).}
+ont provoqué par le passé des catastrophes dont les victimes se comptent par milliers \citep{Vajont, Palcacocha}.
+Alors que des écoulements lourds sont à l'origine de ces événements (glissement de terrain et chute de sérac),
+la vidange du Trützisee \citep{Trutzisee} par une avalanche laisse penser que les avalanches en sont tout aussi capables.
+
+La seule méthode disponible à ce jour pour estimer la hauteur d'une vague d'impulsion est une relation empirique, tirée d'une analyse dimensionnelle \citep{heller}.
+Cette relation a conduit à des prédictions irréalistes dans la pratique et des expériences en laboratoire ont montré qu'elle sous-estime les effets de la densité \citep{zitti}.% et que la cohésion de l'écoulement (absente dans la relation empirique) a son importance \citep{zhenzu}.
+Face à ces limites, il est nécessaire de trouver une alternative pour estimer la hauteur de la vague d'impulsion, en particulier pour les avalanches.
+
+La proposition faite ici est de supposer une transformation subite de la neige en eau.
+Ainsi, il suffit d'imposer l'avalanche dans le modèle de tsunami après correction des flux (de masse et de quantité de mouvement) par la densité de la neige.
+Cela permet d'employer les modèles numériques d'avalanches et de tsunamis existants, séparément.
+
+Cette méthode a l'avantage d'avoir une base physique (les équations de Saint-Venant) et d'être conservatrice car la dissipation énergétique liée à la transformation neige-eau est négligée.
+L'énergie de la vague se limite en conséquence à celle transmise par l'avalanche et les vagues résultantes en sont d'autant plus réalistes.
+
+Le cas du futur barrage de Trift \citep{manso} est traité ici car l'exposition de sa retenue aux avalanches en fait un parfait cas d'étude.
+
+% Background
+\section{Introduction}
+
+Une avalanche provoque une \emph{vague d'impulsion} lorsqu'elle percute un corps d'eau comme un lac.
+Cette vague peut éventuellement endommager le voisinage ou l'aval du lac selon son amplitude.
+Alors que les événements connus furent provoqués par des écoulements lourds comme des glissements de terrain \citep{Vajont} et des chutes de sérac \citep{Palcacocha},
+la question qui se pose pour le barrage Trift est de savoir si les avalanches peuvent également causer des vagues de grande ampleur.
+Cette question est ici généralisée : comment peut-on approcher la vague d'impulsion dans le cas des avalanches ?

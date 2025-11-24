@@ -1,6 +1,13 @@
+# Fortran and datafiles
 *.o
 *.mod
 *.data
+*.npy
+*.extent
+*.bbox
+*.log
+xgeoclaw
+# Topo
 *.asc
 *.tif
 *.tiff
@@ -15,11 +22,15 @@
 *.shp
 *.shx
 *.qmd
-*.log
-*.npy
-*.extent
-*.bbox
+# Hidden files
 .*
+# Outputs
 _*
-*/
-xgeoclaw
+_*/
+# Latex
+*.aux
+*.toc
+*.out
+*.bbl
+*.blg
+svg-inkscape

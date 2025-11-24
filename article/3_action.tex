@@ -1,0 +1,52 @@
+\section{Transformation subite de la neige en eau:\\une avalanche équivalente}
+
+Le principe des modèles de Saint-Venant est de moyenner sur toute la hauteur les équations locales de la conservation de la masse et de la quantité de mouvement pour un fluide incompressible puis de supprimer les termes de faible influence.
+Les inconnues pour chaque parcelle d'aire $\mathrm dA$ sont finalement la masse $\varrho h~\mathrm dA$ et la quantité de mouvement $\varrho h\bm u~\mathrm dA$ de la colonne associée.
+Définissons les critères d'équivalence entre deux avalanches $\mathcal A$ et $\mathcal A'$ comme l'égalité de leur masse $m$ et $m'$ et de leur quantité de mouvement $\bm q$ et $\bm q'$ en tout point de l'espace.
+Pour deux avalanches équivalentes mais de masses volumiques différentes $\varrho$ et $\varrho'$,
+il apparaît alors que leur hauteurs d'écoulement sont reliées par un facteur $\kappa\doteq\varrho/\varrho'$.
+Lorsque $\varrho'=\varrho_\text{eau}$, $\kappa$ n'est autre que l'inverse  de la densité de l'avalanche $\mathcal A$. 
+
+$$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}$$
+$$\Rightarrow\begin{pmatrix}\varrho h\\\varrho h \bm u\end{pmatrix} = \begin{pmatrix}\varrho' h'\\\varrho' h' \bm u'\end{pmatrix}$$
+
+\begin{equation}\label{eq:equiv}
+    \Rightarrow \begin{pmatrix}h\varrho/\varrho' \\\bm u\end{pmatrix} = \begin{pmatrix}h'\\\bm u'\end{pmatrix}
+\end{equation}
+
+% Ce résultat est important car les solveurs numériques des équations de Saint-Venant ont pour inconnue le vecteur $\bm q_n\mathrm dA = (h, hu, hv)^\intercal~\mathrm dA$; la masse volumique constante est retranchée au vecteur des inconnues $\bm q=\varrho \bm q_n$. Changer la masse volumique et migrer les quantités $\bm q$ d'un modèle à l'autre ne suffit donc pas à insérer une avalanche équivalente; la correction de la hauteur par $\kappa\doteq\varrho/\varrho'$ reste nécessaire. Un exemple pour $\kappa=1/2$ est donnée à la \autoref{fig:avalanches_equivalentes}.
+
+Pour que l'avalanche $\mathcal A'$ de masse volumique $\varrho'$ soit équivalente à l'avalanche $\mathcal A$ de masse volumique $\varrho$, il faut donc corriger la hauteur d'écoulement par la densité relative $\kappa=\varrho/\varrho'$.
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\linewidth]{media/avalanche_equivalente.svg}
+    \caption{Deux avalanches de masse volumique différente mais de masse $\left(m=\iint\varrho h~\mathrm dA=\iiint2\varrho h/2~\mathrm dA\right)$ et quantité de mouvement $\left(q=\iint\varrho hu~\mathrm dA=\iint2\varrho h/2 u~\mathrm dA\right)$ égales.}
+    \label{fig:avalanches_equivalentes}
+\end{figure}
+
+
+\section{Condition de bord et conflit d'information}
+
+Une fois l'avalanche équivalente définie, elle doit être introduite correctement par les conditions de bord.
+En général, coupler deux modèles numériques implique une interaction entre eux : le premier donne des informations au deuxième et vice-versa.
+Cependant, les avalanches coulantes sont typiquement un écoulement supercritique.
+Cela veut dire qu'avec une condition de bord \emph{bien orientée}, le modèle de vague n'a pas besoin de communiquer ses résultats au modèle de neige car l'information ne remonte pas.
+C'est un avantage considérable car il suffirait d'extraire les résultats de la simulation de l'avalanche pour les nourrir au modèle de vagues au lieu de coupler les deux modèles.
+
+Pour préciser ce qu'est une condition de bord \emph{bien orientée}, il faut observer la zone d'influence d'une perturbation.
+En considérant une advection-diffusion au premier ordre, une perturbation se propage durant un incrément de temps $~\delta t$ par une translation $\bm u ~\delta t$ et une diffusion $\sqrt{gh} ~\delta t$.
+Lorsque le régime d'écoulement est subcritique ($u<\sqrt{gh}$), la perturbation se propage dans toutes les directions.
+Lorsqu'il est supercritique ($u>\sqrt{gh}$), la zone perturbée forme un cône dont l'ampleur dépend de l'angle de Froude $\varphi\doteq\arcsin(1/\mathrm{Fr})$ comme illustré à la \autoref{fig:cone_propagation}.
+Il y a conflit lorsque cette zone d'influence coupe la condition de bord.
+Une manière d'écarter ce risque est d'imposer une condition de bord curviligne suivant une ligne de niveau.
+Les avalanches ayant tendance à suivre la pente, elles coulent perpendiculairement aux lignes de niveau et donc à la condition de bord, évitant ainsi les conflits d'information pour peu que le régime soit supercritique.
+%: leur vitesse peut monter à \SI{60}{\meter\per\second} alors que la hauteur n'est que de quelques mètres. Par exemple, une avalanche de \SI{3}{\meter} de hauteur est en régime supercritique dès que la vitesse dépasse \SI{6}{\meter\per\second} ($\mathrm{Fr}=u/\sqrt{gh}=\num{1,11}>1$). 
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.7\linewidth]{media/froude.svg}
+    \caption{Cône de propagation de l'information pour une advection linéaire en régime supercritique. Les cercles représentent l'étendue de la perturbation à un instant $t_0+~\delta t$. Le régime est supercritique tant que $\varphi=\arcsin\left(\sqrt{gh}/u\right)<\SI{90}{\degree}$, ce qui implique bien que $\mathrm{Fr}>1$.
+    Il y a conflit d'information entre la condition de bord et la zone de perturbation quand $\beta_1=\pi-\alpha-\varphi<0$ ou $\beta_2=\alpha-\varphi<0$.}
+    \label{fig:cone_propagation}
+\end{figure}

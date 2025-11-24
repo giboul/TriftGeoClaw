@@ -1,0 +1,35 @@
+\section{Approche}
+
+L'approche analytique du problème se limite aujourd'hui aux tentatives d'adimensionnalisation \citep{heller}.
+
+Cette option est ici rejetée car l'effet de la faible densité de la neige y est mal estimé \citep{zitti}.
+L'absence de limites physiques ainsi que l'ambigüité de la définition de la profondeur $h_\ast$ pour un cas pratique participent également au rejet de cette approche.
+Dans ce sens, l'approche numérique est avantageuse en sus d'être moins coûteuse qu'un modèle physique.
+
+L'inconvénient est qu'un seul modèle ne saurait suffire puisque la rhéologie de la neige est foncièrement différente de celle de l'eau.
+Utiliser un modèle dédié à l'avalanche et un autre dédié à la vague permet de simplifier les équations à résoudre et d'employer des modèles numériques existants.
+Pour relier le modèle de l'avalanche à celui de la vague,
+le choix fait ici est de supposer une transformation instantanée de la neige en eau à une certaine distance de la retenue. % Gives away the solution
+
+Encore faut-il que cette transformation subite ne viole pas les équations résolues.
+En pratique, ce sont majoritairement les équations de Saint-Venant qui sont employées pour les avalanches comme pour les vagues.
+Elles traitent des conservations de la masse et de la quantité de mouvement.
+La transformation doit donc conserver ces deux quantités.
+
+% Les équations employées en pratique sont les équations de Saint-Venant qui décrivent la conservation de la masse et de la quantité de mouvement, moyennée selon la verticale et avec une pression hydrostatique.
+
+% \begin{align}
+%     \frac{\partial h}{\partial t} + \frac{\partial h\bar{u}}{\partial x} + \frac{\partial h\bar{v}}{\partial y} &= 0 \label{eq:saintvenantm}\\
+%     \frac{\partial h\bar{u}}{\partial t} + \frac{\partial h\bar{u}^2}{\partial x} + \frac{\partial h\bar{u}\bar{v}}{\partial y} + g h \frac{\partial h}{\partial x} &= - g h\frac{\partial z}{\partial x} - \frac{\tau_x}{\varrho} \label{eq:saintvenantx}\\
+%     \frac{\partial h\bar{v}}{\partial t} + \frac{\partial h\bar{u}\bar{v}}{\partial x} + \frac{\partial h\bar{v}^2}{\partial y} + g h \frac{\partial h}{\partial y} &= - g h\frac{\partial z}{\partial y} - \frac{\tau_y}{\varrho} \label{eq:saintvenanty}
+% \end{align}
+
+% \begin{align}
+%     \frac{\partial h}{\partial t} + \bm{\nabla\cdot}(h\bar{\bm{u}}) &= 0\\
+%     \frac{\partial h\bm{\bar{u}}}{\partial t} + \bm{\nabla\cdot} (h\bm{\bar{u}\bar{u}}) &= - g h\nabla (h + z) - \frac{\bm{\tau}}{\varrho}
+% \end{align}
+
+% $$\bm{\bar{u}}=\begin{pmatrix}\bar u, \bar v\end{pmatrix}$$
+
+% $$\bm \tau = \mu\varrho g h \frac{\bm{\bar u}}{|\bm u|} + \varrho \bm u |\bm u|\frac{g}{\xi}$$
+% $$\bm \tau = \frac{g}{K^2h^{7/3}}h^2\bm u|\bm u|$$

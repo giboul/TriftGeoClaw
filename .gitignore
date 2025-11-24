@@ -25,8 +25,8 @@ xgeoclaw
 # Hidden files
 .*
 # Outputs
-_*
-_*/
+*/
+!article/
 # Latex
 *.aux
 *.toc

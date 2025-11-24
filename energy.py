@@ -169,6 +169,8 @@ def compute_energies_masses(outdir: str="_output",
     Ml = np.zeros(wave_fg.nout, np.float64)
     dx = (wave_fg.x2 - wave_fg.x1) / wave_fg.nx
     dy = (wave_fg.y2 - wave_fg.y1) / wave_fg.ny
+    xc = np.clip(xc, wave_fg.x.min(), wave_fg.x.max())
+    yc = np.clip(yc, wave_fg.y.min(), wave_fg.y.max())
     for i, t in enumerate(wave_fg.times):
         q = wave_fg.read_frame(i+1).q
         qc = np.array((
@@ -221,6 +223,7 @@ def parse_args():
 def main(*args, **kwargs):
     data = compute_energies_masses(*args, **kwargs)
     plot(*[v for d in data for v in d])
+    print(f"{data[0][1].max():.2e}, {data[2][1].max():.2e}")
     plt.show()
 
 

@@ -245,9 +245,27 @@ def read_world_image(path):
     return im, (xul, xul+nx*dx, yul+ny*dy, yul)
 
 
+def area(pts):  # From the divergence theorem
+    x, y = np.array(pts).T
+    dx = np.diff(x)
+    dy = np.diff(y)
+    return np.abs(0.5 * (y[:-1]*dx-x[:-1]*dy).sum())
+
+
 def find_contour(mask, extent, nx, ny):
     xmin, xmax, ymin, ymax = extent
-    x, y = find_contours(mask, 0.5)[0].T
+    contours = find_contours(mask, 0.5)
+    
+    # Find greatest contour
+    contour = contours[0]
+    a = area(contour)
+    for c in contours:
+        ac = area(c)
+        if ac > a:
+            contour = c
+            a = ac
+
+    x, y = contour.T
     x = xmin + x/nx * (xmax - xmin)
     y = ymax - y/ny * (ymax - ymin)
     return np.column_stack((x, y))

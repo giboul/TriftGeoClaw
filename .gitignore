@@ -27,10 +27,11 @@ xgeoclaw
 # Outputs
 */
 !article/
+!article/media
 # Latex
 *.aux
 *.toc
 *.out
 *.bbl
 *.blg
-svg-inkscape
+svg-inkscape/

@@ -15,21 +15,3 @@ Encore faut-il que cette transformation subite ne viole pas les équations réso
 En pratique, ce sont majoritairement les équations de Saint-Venant qui sont employées pour les avalanches comme pour les vagues.
 Elles traitent des conservations de la masse et de la quantité de mouvement.
 La transformation doit donc conserver ces deux quantités.
-
-% Les équations employées en pratique sont les équations de Saint-Venant qui décrivent la conservation de la masse et de la quantité de mouvement, moyennée selon la verticale et avec une pression hydrostatique.
-
-% \begin{align}
-%     \frac{\partial h}{\partial t} + \frac{\partial h\bar{u}}{\partial x} + \frac{\partial h\bar{v}}{\partial y} &= 0 \label{eq:saintvenantm}\\
-%     \frac{\partial h\bar{u}}{\partial t} + \frac{\partial h\bar{u}^2}{\partial x} + \frac{\partial h\bar{u}\bar{v}}{\partial y} + g h \frac{\partial h}{\partial x} &= - g h\frac{\partial z}{\partial x} - \frac{\tau_x}{\varrho} \label{eq:saintvenantx}\\
-%     \frac{\partial h\bar{v}}{\partial t} + \frac{\partial h\bar{u}\bar{v}}{\partial x} + \frac{\partial h\bar{v}^2}{\partial y} + g h \frac{\partial h}{\partial y} &= - g h\frac{\partial z}{\partial y} - \frac{\tau_y}{\varrho} \label{eq:saintvenanty}
-% \end{align}
-
-% \begin{align}
-%     \frac{\partial h}{\partial t} + \bm{\nabla\cdot}(h\bar{\bm{u}}) &= 0\\
-%     \frac{\partial h\bm{\bar{u}}}{\partial t} + \bm{\nabla\cdot} (h\bm{\bar{u}\bar{u}}) &= - g h\nabla (h + z) - \frac{\bm{\tau}}{\varrho}
-% \end{align}
-
-% $$\bm{\bar{u}}=\begin{pmatrix}\bar u, \bar v\end{pmatrix}$$
-
-% $$\bm \tau = \mu\varrho g h \frac{\bm{\bar u}}{|\bm u|} + \varrho \bm u |\bm u|\frac{g}{\xi}$$
-% $$\bm \tau = \frac{g}{K^2h^{7/3}}h^2\bm u|\bm u|$$

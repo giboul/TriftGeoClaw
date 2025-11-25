@@ -14,8 +14,6 @@ $$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}
     \Rightarrow \begin{pmatrix}h\varrho/\varrho' \\\bm u\end{pmatrix} = \begin{pmatrix}h'\\\bm u'\end{pmatrix}
 \end{equation}
 
-% Ce résultat est important car les solveurs numériques des équations de Saint-Venant ont pour inconnue le vecteur $\bm q_n\mathrm dA = (h, hu, hv)^\intercal~\mathrm dA$; la masse volumique constante est retranchée au vecteur des inconnues $\bm q=\varrho \bm q_n$. Changer la masse volumique et migrer les quantités $\bm q$ d'un modèle à l'autre ne suffit donc pas à insérer une avalanche équivalente; la correction de la hauteur par $\kappa\doteq\varrho/\varrho'$ reste nécessaire. Un exemple pour $\kappa=1/2$ est donnée à la \autoref{fig:avalanches_equivalentes}.
-
 Pour que l'avalanche $\mathcal A'$ de masse volumique $\varrho'$ soit équivalente à l'avalanche $\mathcal A$ de masse volumique $\varrho$, il faut donc corriger la hauteur d'écoulement par la densité relative $\kappa=\varrho/\varrho'$.
 
 L'hypothèse de la transformation instantanée est conservative d'un point de vue énergétique : l'amortissement de l'impulsion par la compressibilité de la neige est négligé.
@@ -44,7 +42,6 @@ Lorsqu'il est supercritique ($u>\sqrt{gh}$), la zone perturbée forme un cône d
 Il y a conflit lorsque cette zone d'influence coupe la condition de bord.
 Une manière d'écarter ce risque est d'imposer une condition de bord curviligne suivant une ligne de niveau.
 Les avalanches ayant tendance à suivre la pente, elles coulent perpendiculairement aux lignes de niveau et donc à la condition de bord, évitant ainsi les conflits d'information pour peu que le régime soit supercritique.
-%: leur vitesse peut monter à \SI{60}{\meter\per\second} alors que la hauteur n'est que de quelques mètres. Par exemple, une avalanche de \SI{3}{\meter} de hauteur est en régime supercritique dès que la vitesse dépasse \SI{6}{\meter\per\second} ($\mathrm{Fr}=u/\sqrt{gh}=\num{1,11}>1$). 
 
 \begin{figure}
     \centering

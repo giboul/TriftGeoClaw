@@ -17,7 +17,8 @@ def animation(outdir,
               file_name="",
               init_frame=1,
               animate=False,
-              world_png=""):
+              world_png="",
+              colorbar_label=""):
 
     outdir = Path(outdir)
     fgout_grid = fgout_tools.FGoutGrid(fgno, outdir)
@@ -52,8 +53,9 @@ def animation(outdir,
     p.add_mesh(bathy, texture=tex, scalars=scalars, cmap=cmaps[0], clim=(0, 2500), show_scalar_bar=False)
 
     surf = pv.StructuredGrid(X, Y, np.where(fgout_init.h>0, fgout_init.eta, np.nan))
-    surf[color_var] = get_value(fgout_init, fgout_init, color_var).T.flatten()
-    p.add_mesh(surf, scalars=color_var, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
+    label = colorbar_label or color_var
+    surf[label] = get_value(fgout_init, fgout_init, color_var).T.flatten()
+    p.add_mesh(surf, scalars=label, cmap=cmaps[1], clim=clim, show_scalar_bar=True)
 
     state = dict(i=init_frame)
     def update(i):
@@ -61,7 +63,7 @@ def animation(outdir,
         fgout.dh = fgout.eta - fgout_init.eta
         bathy.points[:, 2] = fgout.B.T.flatten()
         surf.points[:, 2] = np.where(fgout.h>0, fgout.eta, np.nan).T.flatten()
-        surf[color_var] = get_value(fgout, fgout_init, color_var).T.flatten()
+        surf[label] = get_value(fgout, fgout_init, color_var).T.flatten()
 
     def update_index(increment=None, value=None):
         if increment is not None:
@@ -86,6 +88,15 @@ def animation(outdir,
         for i, t in enumerate(fgout_grid.times[s:], start=s):
             update(i)
             p.write_frame()
+    
+    def save_image():
+        snapshot = "snapshot_"
+        i = max([int(path.stem[len(snapshot):]) for path in Path().glob(f"{snapshot}*.svg")] or [0]) + 1
+        filename = f"{snapshot}{i}.svg"
+        p.save_graphic(
+            filename,
+            title=f"Frame {state['i']}: t={fgout_grid.times[state['i']-1]}"
+        )
 
     if animate is True:
         p.add_timer_event(max_steps=len(fgout_grid.times), duration=500, callback=update)
@@ -96,6 +107,7 @@ def animation(outdir,
         p.add_key_event("k", next_frame)
         p.add_key_event("l", nextt_frame)
         p.add_key_event("m", save_movie)
+        p.add_key_event("s", save_image)
         p.show()
 
 
@@ -116,6 +128,7 @@ def parse_args():
     parser.add_argument("--init_frame", "-i", type=int, default=1)
     parser.add_argument("--animate", "-a", action="store_true")
     parser.add_argument("--world_png", "-w", type=Path)
+    parser.add_argument("--colorbar_label", "-t", type=str)
     args = parser.parse_args()
     return args
 

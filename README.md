@@ -77,7 +77,7 @@ The initialization of this array is done in [`helpers.f90:init_bc()`](helpers.f9
 
 #### From the source term (`src`)
 
-Same as boundary condition but with `b4step2.f90` instead of `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `lake_level+overhang`. It is first interpolated in time, then in space. It is a curvilinear boundary condition if you will.
+Same as boundary condition with `bc2amr.f90`. This enforces the results from AVAC with the damping coefficient on all cells whose level `z` is higher than `config.yaml:min_alt_avac`. It is first interpolated in time, then in space. It is a curvilinear boundary condition if you will.
 
 With this mode of flux introcution, the variable `q_avac` has 4 dimensions again: `q_avac(time, variable, x, y)` where
 

@@ -1,4 +1,4 @@
-\section{Mise en pratique:\\Insertion de l'avalanche équivalente}
+\section{Mise en pratique~:\\Insertion de l'avalanche équivalente}
 
 Dans le cadre des vagues d'impulsion causées par les avalanches, l'avalanche de référence est faite de neige (de masse volumique $\SI{300}{\kilo\gram\per\meter\cubed}<\varrho_\text{neige}<\SI{500}{\kilo\gram\per\meter\cubed}$) et l'avalanche équivalente est faite d'eau ($\varrho_\text{eau}=\SI{1000}{\kilo\gram\per\meter\cubed}$).
 La hauteur d'écoulement $h_\text{neige}$ doit donc être corrigée par $\kappa=\varrho_\text{eau}/\varrho_\text{neige}$ pour obtenir $h_\text{eau}=\kappa h_\text{neige}$ selon l'\autoref{eq:equiv}.
@@ -18,7 +18,7 @@ La condition de bord longe finalement le domaine du calcul en faisant un détour
     \textit{(b)} L'avalanche équivalente est ensuite insérée dans le modèle d'eau au-dessus d'une ligne de niveau surplombant le lac.
     Cette ligne doit être à un niveau proche de celui du lac pour minimiser la distance parcourue par l'avalanche sous forme d'eau.
     \textit{(c)} L'avalanche équivalente peut aussi être introduite par une condition de bord curviligne (suivant la ligne de niveau) pour alléger les calculs, ce qui limite l'espace laissé au runup en contrepartie.
-    Une implémentation de \textit{(b)} avec \textsc{GeoClaw} est disponible en ligne : \href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}.}
+    Une implémentation de \textit{(b)} avec \textsc{GeoClaw} est disponible en ligne~: \href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}.}
     \label{fig:resume}
 \end{figure}
 
@@ -30,12 +30,12 @@ il est prévu de mettre un barrage à l'aval direct du glacier \citep{manso}.
 Posé à \SI{1767}{\msm} et entouré de pentes raides, le réservoir sera exposé aux avalanches,
 ce qui en fait un cas d'étude pour essayer la méthode proposée.
 Un exemple de résultat est donné à la \autoref{fig:Trift} où les avalanches sont calculées au préalable avec AVAC\footnote{
-    AVAC est un code GeoClaw pour simuler des avalanches lourdes. Il est disponible en ligne:
+    AVAC est un code GeoClaw pour simuler des avalanches lourdes. Il est disponible en ligne~:
     \href{https://github.com/cancey/AVAC}{https://github.com/cancey/AVAC}.
 }.
 La vague d'impulsion mesure \SI{5}{\meter} au maximum et se diffuse avant d'atteindre le barrage.
 
-Le débordement est causé par une combinaison de deux phénomènes :
+Le débordement est causé par une combinaison de deux phénomènes~:
 \begin{itemize}
     \item en percutant le barrage, la vague transforme son énergie cinétique en énergie potentielle, augmentant considérablement sa hauteur et
     \item les réfléctions des vagues sur les berges peuvent occasionnellement s'additionner et former une vague éphémère.

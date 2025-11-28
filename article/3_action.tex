@@ -1,4 +1,4 @@
-\section{Transformation subite de la neige en eau:\\une avalanche équivalente}
+\section{Transformation subite de la neige en eau~:\\une avalanche équivalente}
 
 Le principe des modèles de Saint-Venant est de moyenner sur toute la hauteur les équations locales de la conservation de la masse et de la quantité de mouvement pour un fluide incompressible puis de supprimer les termes de faible influence.
 Les inconnues pour chaque parcelle d'aire $\mathrm dA$ sont finalement la masse $\varrho h~\mathrm dA$ et la quantité de mouvement $\varrho h\bm u~\mathrm dA$ de la colonne associée.
@@ -16,7 +16,7 @@ $$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}
 
 Pour que l'avalanche $\mathcal A'$ de masse volumique $\varrho'$ soit équivalente à l'avalanche $\mathcal A$ de masse volumique $\varrho$, il faut donc corriger la hauteur d'écoulement par la densité relative $\kappa=\varrho/\varrho'$.
 
-L'hypothèse de la transformation instantanée est conservative d'un point de vue énergétique : l'amortissement de l'impulsion par la compressibilité de la neige est négligé.
+L'hypothèse de la transformation instantanée est conservative d'un point de vue énergétique~: l'amortissement de l'impulsion par la compressibilité de la neige est négligé.
 Cette hypothèse est semblable au choc élastique, avec un coefficient de restitution de \SI{100}{\percent}.
 
 \begin{figure}
@@ -30,7 +30,7 @@ Cette hypothèse est semblable au choc élastique, avec un coefficient de restit
 \section{Condition de bord et conflit d'information}
 
 Une fois l'avalanche équivalente définie, elle doit être introduite correctement par les conditions de bord.
-En général, coupler deux modèles numériques implique une interaction entre eux : le premier donne des informations au deuxième et vice-versa.
+En général, coupler deux modèles numériques implique une interaction entre eux~: le premier donne des informations au deuxième et vice-versa.
 Cependant, les avalanches coulantes sont typiquement un écoulement supercritique.
 Cela veut dire qu'avec une condition de bord \emph{bien orientée}, le modèle de vague n'a pas besoin de communiquer ses résultats au modèle de neige car l'information ne remonte pas.
 C'est un avantage considérable car il suffirait d'extraire les résultats de la simulation de l'avalanche pour les nourrir au modèle de vagues au lieu de coupler les deux modèles.

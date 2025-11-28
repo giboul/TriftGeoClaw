@@ -38,3 +38,5 @@ amr_ratios:
 max_refinement: -1
 
 dry_tolerance: 1e-3
+
+verbosity: 0

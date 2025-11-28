@@ -92,8 +92,17 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     use amr_module, only: mthbc, xlower, ylower, xupper, yupper
     use amr_module, only: xperdom, yperdom, spheredom
 
-    use helpers, only: q_avac, times, damping, interp_time, interp_bc_space, &
-        mode
+    use helpers, only: q_avac, &
+                       times, &
+                       damping, &
+                       interp_time, &
+                       interp_bc_space, &
+                       interp_src, &
+                       closest_inf, &
+                       closest_sup, &
+                       AVAC_fgrid, &
+                       min_alt_avac, &
+                       mode
 
     implicit none
 
@@ -106,8 +115,8 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     real(kind=8), intent(in out) :: aux(naux, nrow, ncol)
 
 ! Local storage
-    integer :: i, j, i_xy, it, ibeg, jbeg, nxl, nxr, nyb, nyt
-    real(kind=8) :: hxmarg, hymarg, xc, yc
+    integer :: i, j, i_xy, it, ibeg, jbeg, nxl, nxr, nyb, nyt, inf, sup
+    real(kind=8) :: hxmarg, hymarg, xc, yc, alpha
     real(kind=8), &
     dimension(size(q_avac,2),size(q_avac,3),size(q_avac,4)) :: qt
 
@@ -120,9 +129,33 @@ subroutine bc2amr(val, aux, nrow, ncol, meqn, naux, &
     end if
 
 ! Interpolate AVAC state in time before interpolating in space
-    if (mode=="bc") then
+    if (trim(mode)=="bc") then
         qt = interp_time(time, times, q_avac)
     end if
+
+    ! ----------------------------------------------------------------
+    ! AVAC inflows
+    if (trim(mode) == "src") then ! introduce AVAC flows   
+      inf = closest_inf(time, times)
+      sup = closest_sup(time, times)
+      alpha = (time-times(inf)) / (times(sup) - times(inf))
+      do j = 1, ncol ! Loop over all cells
+        yc = ylo_patch + (j - 0.5d0) * hy
+        do i = 1, nrow
+          xc = xlo_patch + (i - 0.5d0) * hx
+          ! min_alt_avac < z => high enough
+          if (min_alt_avac<aux(1,i,j)) then
+            ! if times are coherent (?) ! TODO check
+            if (times(inf)<time.and.time<times(sup).and.inf<sup) then
+                val(1:3,i,j) = interp_src( &
+                    xc, yc, AVAC_fgrid, alpha, q_avac(inf:sup,1:3,:,:)&
+                ) * damping
+            end if
+          end if
+        end do
+      end do
+    end if
+    ! ----------------------------------------------------------------
 
 ! Each check has an initial check to ensure that the boundary is a real
 ! boundary condition and otherwise skips the code.  Otherwise

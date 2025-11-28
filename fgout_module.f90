@@ -30,7 +30,8 @@ module fgout_module
     end type fgout_grid
 
 
-    logical :: module_setup = .false.
+    ! logical, private :: module_setup = .false.
+    logical :: module_setup = .false.  ! Used to read the AVAC fgout files
 
     ! Fixed grid arrays and sizes
     integer :: FGOUT_num_grids

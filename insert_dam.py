@@ -41,8 +41,9 @@ def insert_dam(dams: ArrayLike,
 
 
 def parse_args():
-    from config import config
+    from config import load_config
     from argparse import ArgumentParser
+    config = load_config()
     parser = ArgumentParser()
     parser.add_argument("--dams", "-d", type=Path, default=config["dams"])
     parser.add_argument("--dam_alts", "-a", type=float, default=config["dam_alts"], nargs="?")

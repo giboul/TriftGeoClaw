@@ -103,8 +103,9 @@ def write(AVAC_outdir, extent, outdir, n):
 
 
 def parse_args():
-    from config import config
+    from config import load_config
     from argparse import ArgumentParser
+    config = load_config()
     parser = ArgumentParser()
     config_extent = config["lower"][0], config["upper"][0], config["lower"][1], config["upper"][1]
     parser.add_argument("--extent", "-e", type=float, nargs=4, default=config_extent)

@@ -16,13 +16,12 @@ def load_yaml(path):
     return contents
 
 
-defaults = load_yaml("defaults.yaml")
-config = defaults | load_yaml("config.yaml")
+def load_config(path="config.yaml"):
+    defaults = load_yaml(path)
+    config = defaults | load_yaml(path)
+    return config
 
 
 if __name__ == "__main__":
-    for k, v in defaults.items():
-        print(f"{k} : {v}")
-    print("---")
-    for k, v in config.items():
+    for k, v in load_config().items():
         print(f"{k} : {v}")

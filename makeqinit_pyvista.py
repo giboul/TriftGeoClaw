@@ -103,8 +103,9 @@ def iflood(x: ArrayLike,
 
 
 def parse_args():
-    from config import config
+    from config import load_config
     from argparse import ArgumentParser
+    config = load_config()
     parser = ArgumentParser()
     parser.add_argument("--bathymetry", "-b", default=config["bathymetry"], type=Path)
     parser.add_argument("--lake_alt", "-a", default=config["lake_alt"], type=int)

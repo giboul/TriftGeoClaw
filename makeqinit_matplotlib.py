@@ -54,8 +54,9 @@ def save_qinit(x, y, Z):
     print("Done.")
 
 def parse_args():
-    from config import config
+    from config import load_config
     from argparse import ArgumentParser
+    config = load_config()
     parser = ArgumentParser()
     parser.add_argument("-b", "--bathymetry", default=config["base_bathymetry"], type=Path)
     parser.add_argument("-l", "--lake_alt", default=config["lake_alt"], type=float)

@@ -13,8 +13,10 @@ from clawpack.clawutil.data import ClawRunData
 from clawpack.geoclaw.fgout_tools import FGoutGrid
 from clawpack.geoclaw.fgmax_tools import FGmaxGrid
 import bc_inflows
-from config import config
+from config import load_config
 
+
+config = load_config()
 
 def setrun(claw_pkg='geoclaw',
            AVAC_outdir: str=None,

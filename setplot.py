@@ -13,8 +13,10 @@ from topo_utils import read_world_image
 from clawpack.visclaw.data import ClawPlotData
 from clawpack.clawutil.data import ClawData
 from clawpack.visclaw import geoplot, gaugetools, plot_timing_stats
-from config import config
+from config import load_config
 
+
+config = load_config()
 
 def mask_coarse(current_data):
     patch = current_data.framesoln.state.patch

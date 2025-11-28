@@ -26,6 +26,9 @@ xgeoclaw
 .*
 # Outputs
 _*/
+# Other directories
+avac*/
+claw*/
 # Latex
 *.aux
 *.toc

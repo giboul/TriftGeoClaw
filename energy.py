@@ -11,11 +11,10 @@ from clawpack.clawutil.data import ClawData
 from clawpack.visclaw.gridtools import grid_output_2d
 from clawpack.pyclaw.solution import Solution
 from clawpack.geoclaw import fgout_tools, fgmax_tools
-try:
-    from config import config
-except ImportError:
-    config = dict()
+from config import load_config
 
+
+config = load_config()
 
 def divide(a, b, fill=0., rtol=1e-05, atol=1e-08):
     c = np.empty(a.shape, dtype=np.float64)

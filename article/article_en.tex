@@ -34,7 +34,7 @@ This enables the separate use of existing numerical avalanche and tsunami models
 This method has the advantage of being physically based (Saint-Venant equations) and conservative, since the energy dissipation associated with shock absorption due to snow compressibility is neglected.
 The wave energy is therefore limited to that of the avalanche, and the resulting waves are all the more realistic.
 
-The case of the future Trift dam \citep{manso} is considered here, as the reservoir’s exposure to avalanches makes it an ideal case study.
+The case of the future Trift dam \citep{manso} is considered here, as the reservoir's exposure to avalanches makes it an ideal case study.
 
 % Background
 \section{Introduction}
@@ -70,7 +70,7 @@ For each surface element $\mathrm dA$, the unknowns are the mass $\varrho h~\mat
 Define two avalanches $\mathcal A$ and $\mathcal A'$ as equivalent if their mass $m$ and $m'$ and momentum $\bm q$ and $\bm q'$ are equal everywhere.
 For two such avalanches with different densities $\varrho$ and $\varrho'$,
 their flow depths are related by the factor $\kappa\doteq\varrho/\varrho'$.
-When $\varrho'=\varrho_\text{water}$, $\kappa$ is simply the inverse relative density of avalanche $\mathcal A$.
+When $\varrho'=\varrho_\text{water}$, $\kappa$ is simply the relative density of avalanche $\mathcal A$.
 
 $$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}
 \Rightarrow\begin{pmatrix}\varrho h\\\varrho h \bm u\end{pmatrix} = \begin{pmatrix}\varrho' h'\\\varrho' h' \bm u'\end{pmatrix}$$
@@ -100,7 +100,7 @@ This means that with a \emph{properly oriented} boundary condition, the wave mod
 This is highly advantageous: one can simply extract results from the avalanche model and input them into the wave model without explicit coupling.
 
 To clarify what a \emph{properly oriented} boundary condition is, we examine the influence region of a perturbation.
-For first-order advection–diffusion, a perturbation propagates over $\delta t$ by a translation $\bm u ~\delta t$ plus diffusion $\sqrt{gh} ~\delta t$.
+For first-order advection-diffusion, a perturbation propagates over $\delta t$ by a translation $\bm u ~\delta t$ plus diffusion $\sqrt{gh} ~\delta t$.
 When flow is subcritical ($u<\sqrt{gh}$), the perturbation spreads in all directions.
 When supercritical ($u>\sqrt{gh}$), the perturbed region forms a cone whose angle depends on the Froude angle $\varphi\doteq\arcsin(1/\mathrm{Fr})$, as shown in \autoref{fig:cone_propagation}.
 A conflict occurs when this perturbed region intersects the boundary.
@@ -118,7 +118,7 @@ Avalanches tend to follow the slope, flowing perpendicular to contour lines and 
 \section{Practical Implementation:\\Insertion of the Equivalent Avalanche}
 
 For impulse waves caused by avalanches, the reference avalanche consists of snow (density $\SI{300}{\kilo\gram\per\meter\cubed}<\varrho_\text{snow}<\SI{500}{\kilo\gram\per\meter\cubed}$) and the equivalent avalanche consists of water ($\varrho_\text{water}=\SI{1000}{\kilo\gram\per\meter\cubed}$).
-Thus, the flow depth $h_\text{snow}$ must be corrected by $\kappa=\varrho_\text{water}/\varrho_\text{snow}$ to obtain $h_\text{water}=\kappa h_\text{snow}$ according to \autoref{eq:equiv}.
+Thus, the flow depth $h_\text{snow}$ must be corrected by the snow's relative density $\kappa=\varrho_\text{snow}/\varrho_\text{water}$ to obtain $h_\text{water}=\kappa h_\text{snow}$ according to \autoref{eq:equiv}.
 
 Because the rheology of snow and water differs, the distance traveled by the wave while still represented as water must be minimized so that the mass and momentum fluxes at impact match those of the snow model.
 In other words, the boundary elevation $z_b$ must be slightly higher than the lake level $z_l$ by an offset $\delta z=z_b-z_l$.
@@ -131,7 +131,7 @@ The boundary therefore follows the edges of the computational domain, detouring 
     \centering
     \includesvg[width=\linewidth]{media/simulations_en.svg}
     \caption{Simulation schematics.
-    \textit{(a)} The avalanche is first simulated with the snow model, then its quantities $(h, hu, hv)^\intercal$ are scaled by $\kappa=\varrho_\text{water}/\varrho_\text{snow}$.
+    \textit{(a)} The avalanche is first simulated with the snow model, then its quantities $(h, hu, hv)^\intercal$ are scaled by the snow's relative density $\kappa=\varrho_\text{snow}/\varrho_\text{water}$.
     \textit{(b)} The equivalent avalanche is then introduced into the water model above a contour line slightly higher than the lake.
     This line must be close to the lake level to minimize the distance the equivalent avalanche travels as water.
     \textit{(c)} The equivalent avalanche may also be introduced through a curvilinear boundary condition (following the contour line) to lighten computations, at the cost of reducing space available for runup.
@@ -190,14 +190,14 @@ Here, we introduce only the mass and momentum fluxes with a density correction.
 The effects of more subtle quantities are not represented.
 For example, flow cohesion—important in wave formation—is absent \citep{zhenzu}.
 The same applies to snow compressibility.
-The complexity of the snow–water mixture is also ignored because solving two-phase Saint-Venant equations is computationally expensive\footnote{
+The complexity of the snow-water mixture is also ignored because solving two-phase Saint-Venant equations is computationally expensive\footnote{
 The D-Claw project \citep{dclaw} solves two-phase Saint-Venant equations.
 }.
 
 \section{Conclusion}
 
 Although the interaction between two phases around an impulse wave posed difficulties,
-the assumptions of instantaneous snow–water transformation and supercritical flow allowed us to approximate and implement the problem\footnote{\href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}}.
+the assumptions of instantaneous snow-water transformation and supercritical flow allowed us to approximate and implement the problem\footnote{\href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}}.
 The proposed method makes it possible to simulate an impulse wave given a topographic survey and a prior avalanche simulation.
 Even if phase interaction details are neglected, the method offers a credible alternative to empirical relations.
 

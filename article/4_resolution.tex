@@ -1,7 +1,7 @@
 \section{Mise en pratique~:\\Insertion de l'avalanche équivalente}
 
 Dans le cadre des vagues d'impulsion causées par les avalanches, l'avalanche de référence est faite de neige (de masse volumique $\SI{300}{\kilo\gram\per\meter\cubed}<\varrho_\text{neige}<\SI{500}{\kilo\gram\per\meter\cubed}$) et l'avalanche équivalente est faite d'eau ($\varrho_\text{eau}=\SI{1000}{\kilo\gram\per\meter\cubed}$).
-La hauteur d'écoulement $h_\text{neige}$ doit donc être corrigée par $\kappa=\varrho_\text{eau}/\varrho_\text{neige}$ pour obtenir $h_\text{eau}=\kappa h_\text{neige}$ selon l'\autoref{eq:equiv}.
+La hauteur d'écoulement $h_\text{neige}$ doit donc être corrigée par la densité relative de la neige $\kappa=\varrho_\text{neige}/\varrho_\text{eau}$ pour obtenir $h_\text{eau}=\kappa h_\text{neige}$ selon l'\autoref{eq:equiv}.
 
 La rhéologie de l'avalanche et de l'eau étant différentes, il faut minimiser la distance parcourue par la vague sous forme d'eau afin que les propriétés de l'avalanche (flux de masse et de quantité de mouvement) au moment de l'impact soient fidèles aux résultats du modèle de neige.
 En d'autres termes, le niveau de la condition de bord $z_b$ doit être supérieur à celui du lac $z_l$ d'un léger surplomb $\delta z=z_b-z_l$.
@@ -14,7 +14,7 @@ La condition de bord longe finalement le domaine du calcul en faisant un détour
     \centering
     \includesvg[width=\linewidth]{media/simulations.svg}
     \caption{Schémas des simulations.
-    \textit{(a)} L'avalanche est d'abord simulée avec le modèle de neige puis ses quantités $(h, hu, hv)^\intercal$ sont pondérés par $\kappa=\varrho_\text{eau}/\varrho_\text{neige}$.
+    \textit{(a)} L'avalanche est d'abord simulée avec le modèle de neige puis ses quantités $(h, hu, hv)^\intercal$ sont pondérées par la densité relative de la neige $\kappa=\varrho_\text{neige}/\varrho_\text{eau}$.
     \textit{(b)} L'avalanche équivalente est ensuite insérée dans le modèle d'eau au-dessus d'une ligne de niveau surplombant le lac.
     Cette ligne doit être à un niveau proche de celui du lac pour minimiser la distance parcourue par l'avalanche sous forme d'eau.
     \textit{(c)} L'avalanche équivalente peut aussi être introduite par une condition de bord curviligne (suivant la ligne de niveau) pour alléger les calculs, ce qui limite l'espace laissé au runup en contrepartie.

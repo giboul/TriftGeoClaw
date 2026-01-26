@@ -365,7 +365,7 @@ def setrun(claw_pkg='geoclaw',
 
     # == setprob data ==
     # Interacting with AVAC
-    probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    probdata = rundata.new_UserData(name='probdata', fname='setprob.data')
     probdata.add_param('mode', config["mode"], 'The method for introucing the avalanche')
     probdata.add_param('damping', float(avacprobdata.rho)/rundata.geo_data.rho, 'rho_snow/rho_water')
     probdata.add_param('min_alt_avac', float(config['min_alt_avac']),  'Lake altitude')

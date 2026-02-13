@@ -2,16 +2,8 @@
 
 L'approche analytique du problème se limite aujourd'hui aux tentatives d'adimensionnalisation \citep{heller}.
 
-Cette option est ici rejetée car l'effet de la faible densité de la neige y est mal estimé \citep{zitti}.
-L'absence de limites physiques ainsi que l'ambigüité de la définition de la profondeur $h_\ast$ pour un cas pratique participent également au rejet de cette approche.
-Dans ce sens, l'approche numérique est avantageuse en sus d'être moins coûteuse qu'un modèle physique.
+Cette option est ici rejetée car l'effet de la faible densité de la neige y est mal estimé \citep{zitti}. L'absence de limites physiques ainsi que l'ambigüité de la définition de la profondeur $h_\ast$ pour un cas pratique participent également au rejet de cette approche. Dans ce sens, l'alternative numérique est avantageuse en sus d'être moins coûteuse qu'un modèle physique.
 
-L'inconvénient est qu'un seul modèle ne saurait suffire puisque la rhéologie de la neige est foncièrement différente de celle de l'eau.
-Utiliser un modèle dédié à l'avalanche et un autre dédié à la vague permet de simplifier les équations à résoudre et d'employer des modèles numériques existants.
-Pour relier le modèle de l'avalanche à celui de la vague,
-le choix fait ici est de supposer une transformation instantanée de la neige en eau à une certaine distance de la retenue. % Gives away the solution
+L'inconvénient est qu'un seul modèle ne saurait suffire puisque la rhéologie de la neige est foncièrement différente de celle de l'eau. Utiliser un modèle dédié à l'avalanche et un autre dédié à la vague permet de simplifier les équations à résoudre et d'employer des modèles numériques existants. Pour relier le modèle de l'avalanche à celui de la vague, le choix fait ici est de supposer une transformation instantanée de la neige en eau à une certaine distance de la retenue. En supposant en plus que l'avalanche est rapide et peu profonde (écoulement supercritique), il n'y a pas d'influence de l'impulsion sur l'avalanche, ce qui permet de ne coupler que partiellement les deux modèles numériques.% Gives away the solution
 
-Encore faut-il que cette transformation subite ne viole pas les équations résolues.
-En pratique, ce sont majoritairement les équations de Saint-Venant qui sont employées pour les avalanches comme pour les vagues.
-Elles traitent des conservations de la masse et de la quantité de mouvement.
-La transformation doit donc conserver ces deux quantités.
+Encore faut-il veiller à ce que cette transformation subite respecte les équations résolues. En pratique, ce sont majoritairement les équations de Saint-Venant qui sont employées pour les avalanches comme pour les vagues. Elles traitent des conservations de la masse et de la quantité de mouvement. La transformation doit donc conserver ces deux quantités.

@@ -2,8 +2,7 @@
 
 Le principe des modèles de Saint-Venant est de moyenner sur toute la hauteur les équations locales de la conservation de la masse et de la quantité de mouvement pour un fluide incompressible puis de supprimer les termes de faible influence. Les inconnues pour chaque parcelle d'aire $\mathrm dA$ sont finalement la masse $\varrho h~\mathrm dA$ et la quantité de mouvement $\varrho h\bm u~\mathrm dA$ de la colonne associée. Définissons les critères d'équivalence entre deux avalanches $\mathcal A$ et $\mathcal A'$ comme l'égalité de leur masse $m$ et $m'$ et de leur quantité de mouvement $\bm q$ et $\bm q'$ en tout point de l'espace. Pour deux avalanches équivalentes mais de masses volumiques différentes $\varrho$ et $\varrho'$, il apparaît alors que leur hauteurs d'écoulement sont reliées par un facteur $\kappa\doteq\varrho/\varrho'$. Lorsque $\varrho'=\varrho_\text{eau}$, $\kappa$ n'est autre que la densité relative de l'avalanche $\mathcal A$. 
 
-$$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}
-\Rightarrow\begin{pmatrix}\varrho h\\\varrho h \bm u\end{pmatrix} = \begin{pmatrix}\varrho' h'\\\varrho' h' \bm u'\end{pmatrix}$$
+$$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}\Rightarrow\begin{pmatrix}\varrho h\\\varrho h \bm u\end{pmatrix} = \begin{pmatrix}\varrho' h'\\\varrho' h' \bm u'\end{pmatrix}$$
 
 \begin{equation}\label{eq:equiv}
     \Rightarrow \begin{pmatrix}h\varrho/\varrho' \\\bm u\end{pmatrix} = \begin{pmatrix}h'\\\bm u'\end{pmatrix}
@@ -11,8 +10,7 @@ $$\begin{pmatrix}m\\\bm q\end{pmatrix} =\begin{pmatrix}m'\\\bm q'\end{pmatrix}
 
 Pour que l'avalanche $\mathcal A'$ de masse volumique $\varrho'$ soit équivalente à l'avalanche $\mathcal A$ de masse volumique $\varrho$, il faut donc corriger la hauteur d'écoulement par la densité relative $\kappa=\varrho/\varrho'$.
 
-L'hypothèse de la transformation instantanée est conservative d'un point de vue énergétique~: l'amortissement de l'impulsion par la compressibilité de la neige est négligé.
-Cette hypothèse est semblable au choc élastique, avec un coefficient de restitution de \SI{100}{\percent}.
+L'hypothèse de la transformation instantanée est conservative d'un point de vue énergétique. Pour donner un exemple de source de dissipation~; l'amortissement de l'impulsion par la compaction de la neige est négligé. Cette hypothèse est semblable au choc élastique, avec un coefficient de restitution de \SI{100}{\percent}.
 
 \begin{figure}
     \centering
@@ -31,7 +29,6 @@ Pour préciser ce qu'est une condition de bord \emph{bien orientée}, il faut ob
 \begin{figure}
     \centering
     \includesvg[width=0.7\linewidth]{media/froude.svg}
-    \caption{Cône de propagation de l'information pour une advection linéaire en régime supercritique. Les cercles représentent l'étendue de la perturbation à un instant $t_0+~\delta t$. Le régime est supercritique tant que $\varphi=\arcsin\left(\sqrt{gh}/u\right)<\SI{90}{\degree}$, ce qui implique bien que $\mathrm{Fr}>1$.
-    Il y a conflit d'information entre la condition de bord et la zone de perturbation quand $\beta_1=\pi-\alpha-\varphi<0$ ou $\beta_2=\alpha-\varphi<0$.}
+    \caption{Cône de propagation de l'information pour une advection linéaire en régime supercritique. Les cercles représentent l'étendue de la perturbation à un instant $t_0+~\delta t$. Le régime est supercritique tant que $\varphi=\arcsin\left(\sqrt{gh}/u\right)<\SI{90}{\degree}$, ce qui implique bien que $\mathrm{Fr}>1$. Il y a conflit d'information entre la condition de bord et la zone de perturbation quand $\beta_1=\pi-\alpha-\varphi<0$ ou $\beta_2=\alpha-\varphi<0$.}
     \label{fig:cone_propagation}
 \end{figure}

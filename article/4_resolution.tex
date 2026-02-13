@@ -72,18 +72,8 @@ La \autoref{fig:energie} compare les régressions de \cite{zitti} et \cite{zhenz
 
 \section{Limites de la méthode}
 
-En effet, on ne fait ici qu'introduire les flux de masse et de quantité de mouvement
-avec une correction de la densité de l'écoulement.
-L'effet de toute autre quantité plus subtile échappe à ce modèle.
-Par exemple, un paramètre absent est la cohésion de l'écoulement qui a son importance dans la formation de la vague \citep{zhenzu}.
-Le même argument vaut pour la compressibilité de la neige.
-La complexité du mélange neige-eau est également délaissée car la résolution d'un mélange peut être lourd\footnote{
-Le projet D-claw \citep{dclaw} traite la résolution des équations de Saint-Venant biphasiques.
-}.
+En effet, on ne fait ici qu'introduire les flux de masse et de quantité de mouvement avec une correction de la densité de l'écoulement. L'effet de toute autre quantité plus subtile comme la compaction \citep{kyburz}  ou la cohésion \citep{zhenzu}  de la neige échappe à ce modèle. La complexité du mélange neige-eau est également délaissée car la résolution d'un mélange peut être lourde\footnote{Le projet D-claw \citep{dclaw} traite la résolution des équations de Saint-Venant biphasiques.}.
 
 \section{Conclusion}
 
-Alors que l'interaction entre deux phases autour de la vague d'impulsion posait problème,
-les hypothèses d'une transformation subite de la neige en eau et d'un écoulement supercritique ont suffi à approcher le problème puis à l'implémenter\footnote{\href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}}.
-La méthode proposée permet finalement de simuler une vague d'impulsion à condition d'avoir un relevé topographique et d'avoir simulé l'avalanche au préalable.
-Bien que les détails de l'interaction entre les deux phases soient négligés, la méthode offre une alternative crédible aux relations empiriques.
+Alors que l'interaction entre deux phases autour de la vague d'impulsion posait problème, les hypothèses d'une transformation subite de la neige en eau et d'un écoulement supercritique ont suffi à approcher le problème puis à l'implémenter\footnote{\href{https://github.com/giboul/TriftGeoClaw}{https://github.com/giboul/TriftGeoClaw}}. La méthode proposée permet finalement de simuler une vague d'impulsion à condition d'avoir un relevé topographique et d'avoir simulé l'avalanche au préalable. Bien que les détails de l'interaction entre les deux phases soient négligés, la méthode offre une alternative crédible aux relations empiriques.

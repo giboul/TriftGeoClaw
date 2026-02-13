@@ -108,6 +108,8 @@ def animation(outdir,
         p.add_key_event("l", nextt_frame)
         p.add_key_event("m", save_movie)
         p.add_key_event("s", save_image)
+        p.add_key_event("Left", prev_frame)
+        p.add_key_event("Right", next_frame)
         p.show()
 
 

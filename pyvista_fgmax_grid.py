@@ -14,14 +14,14 @@ def view3d(outdir,
            fgno=1,
            cmaps=("qist_earth", "jet"),
            clim=(-1, 1),
-           grid_filename="avac_fgmax_grids.data"):
+           grid_filename="fgmax_grids.data"):
 
     outdir = Path(outdir)
 
     fg = fgmax_tools.FGmaxGrid()
     fg.outdir = outdir
     fg.read_fgmax_grids_data(fgno, outdir / grid_filename)
-    fg.read_output()
+    fg.read_output(outdir=outdir)
 
     X = fg.X
     Y = fg.Y

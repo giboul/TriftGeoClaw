@@ -22,6 +22,7 @@ xgeoclaw
 *.shp
 *.shx
 *.qmd
+*.xml
 # Hidden files
 .*
 # Outputs

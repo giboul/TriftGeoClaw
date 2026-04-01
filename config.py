@@ -16,8 +16,8 @@ def load_yaml(path):
     return contents
 
 
-def load_config(path="config.yaml"):
-    defaults = load_yaml(path)
+def load_config(path="config.yaml", defaults="defaults.yaml"):
+    defaults = load_yaml(defaults)
     config = defaults | load_yaml(path)
     return config
 
